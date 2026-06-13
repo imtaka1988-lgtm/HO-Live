@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260" role="img" aria-label="海鸥直播看板娘">
+  <defs>
+    <linearGradient id="hair" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#342a55"/>
+      <stop offset="1" stop-color="#171827"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff8a2a"/>
+      <stop offset="1" stop-color="#ff6a00"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#000" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M58 114c-20 16-31 42-25 68 8 35 38 58 78 58s70-23 78-58c6-26-5-52-25-68 0-47-26-84-53-84S58 67 58 114z" fill="url(#hair)"/>
+    <path d="M50 220c9-38 31-61 61-61s52 23 61 61c-16 15-37 23-61 23s-45-8-61-23z" fill="#fff"/>
+    <path d="M66 218c7-26 23-43 45-43s38 17 45 43c-12 10-27 16-45 16s-33-6-45-16z" fill="#f6f1ec"/>
+    <path d="M86 170h50l-25 45z" fill="url(#orange)"/>
+    <path d="M76 102c4-32 19-51 35-51s31 19 35 51c10 7 16 20 16 35 0 31-23 56-51 56s-51-25-51-56c0-15 6-28 16-35z" fill="#ffd9c8"/>
+    <path d="M73 111c13-8 23-22 29-41 16 22 36 33 58 35-5-35-24-58-49-58-27 0-47 26-52 63 5 2 10 2 14 1z" fill="url(#hair)"/>
+    <circle cx="91" cy="137" r="5" fill="#26233b"/>
+    <circle cx="131" cy="137" r="5" fill="#26233b"/>
+    <path d="M102 158c5 5 13 5 18 0" fill="none" stroke="#c75c57" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="78" cy="153" r="8" fill="#ff9f9a" opacity=".45"/>
+    <circle cx="144" cy="153" r="8" fill="#ff9f9a" opacity=".45"/>
+    <path d="M43 155c-12-5-20-16-20-28 18 1 32 9 41 24z" fill="#fff" opacity=".92"/>
+    <path d="M179 155c12-5 20-16 20-28-18 1-32 9-41 24z" fill="#fff" opacity=".92"/>
+    <path d="M43 155c10-1 17-3 21-4M179 155c-10-1-17-3-21-4" stroke="#ff8a2a" stroke-width="4" stroke-linecap="round"/>
+    <path d="M72 203c23 11 54 11 78 0" fill="none" stroke="#ff6a00" stroke-width="8" stroke-linecap="round"/>
+    <path d="M111 24l8 17 19 2-14 13 4 19-17-9-17 9 4-19-14-13 19-2z" fill="url(#orange)"/>
+  </g>
+</svg>
