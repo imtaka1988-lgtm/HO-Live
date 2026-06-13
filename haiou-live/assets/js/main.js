@@ -10,6 +10,7 @@
 import { loadConfig, applyTheme, state } from './config.js';
 import { renderGlobalChrome, renderFooter } from './ui.js';
 import { bootPage } from './router.js';
+import { initMascot } from './mascot.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -18,6 +19,7 @@ async function main() {
   renderGlobalChrome();
   bootPage();
   renderFooter();
+  initMascot();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));
