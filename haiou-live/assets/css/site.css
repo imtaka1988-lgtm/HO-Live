@@ -1,0 +1,1134 @@
+/*
+  海鸥直播模板 V3
+*/
+:root {
+  --brand-yellow: #ff6a00; --brand-yellow-deep: #e85d00; --brand-dark: #242745; --brand-black: #1f2024;
+  --page-bg: #eef0f5; --card-bg: #fff; --text-main: #111827; --text-sub: #6b7280; --border-color: #e5e7eb;
+  --danger: #ff3045; --success: #20c997; --header-bg-pc: #fff; --header-bg-mobile: #202124;
+  --header-nav-active-bg: #ff6a00; --header-nav-active-text: #fff; --mobile-tab-bg: #ff6a00; --mobile-bottom-bg: #fff;
+  --hero-bg: #080617; --room-bg: #242745; --live-badge-bg: #ff3045; --quality-badge-bg: #121212;
+  --schedule-side-line: #ff6a00; --radius-card: 8px; --shadow-card: 0 8px 24px rgba(15,23,42,.08); --max-width: 1220px;
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{font-family:Arial,"Microsoft YaHei","PingFang SC",sans-serif;background:var(--page-bg);color:var(--text-main);font-size:14px}
+a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;border:0}img{display:block;max-width:100%}
+.container{max-width:var(--max-width);margin:0 auto}.pc-only{display:block}.mobile-only{display:none}.hide{display:none!important}
+.site-header{height:72px;background:var(--header-bg-pc);border-bottom:1px solid rgba(0,0,0,.06);box-shadow:0 2px 8px rgba(15,23,42,.04);position:sticky;top:0;z-index:50}
+.site-header.is-hero{background:var(--hero-bg);color:#fff}
+.site-header.is-hero .pc-nav a{color:rgba(255,255,255,.85)}
+.site-header.is-hero .pc-nav a.is-active{background:var(--header-nav-active-bg);color:var(--header-nav-active-text)}
+.site-header .container{height:100%;display:flex;align-items:center;justify-content:space-between}
+.logo-link{display:flex;align-items:center;flex:0 0 230px}.logo-link img{width:170px}
+.pc-nav{display:flex;align-items:center;gap:36px;font-size:16px}.pc-nav a{padding:11px 18px;border-radius:5px;position:relative}
+.pc-nav a.is-active{background:var(--header-nav-active-bg);color:var(--header-nav-active-text)}
+.pc-nav a.hot::after{content:"HOT";position:absolute;right:-20px;top:0;background:var(--danger);color:#fff;border-radius:8px 8px 8px 0;padding:1px 5px;font-size:10px;font-weight:700}
+.pc-login{color:var(--brand-yellow-deep);display:flex;gap:10px;align-items:center;font-size:15px;flex:0 0 230px;justify-content:flex-end}
+.mobile-header{display:none;background:var(--header-bg-mobile);height:42px;align-items:center;justify-content:space-between;padding:0 12px;position:sticky;top:0;z-index:60}
+.mobile-header img{width:110px;flex-shrink:0}.mobile-header .mini-btn{background:var(--brand-yellow);color:#fff;border-radius:4px;height:26px;padding:0 10px;font-size:12px;font-weight:700;flex-shrink:0;white-space:nowrap}.mobile-header .spacer{flex:1}
+.mobile-tabbar{display:none;background:var(--mobile-tab-bg);color:#fff;height:43px;align-items:center;gap:26px;padding:0 16px;font-size:15px;font-weight:700;position:sticky;top:42px;z-index:55}
+.mobile-tabbar a{height:43px;line-height:43px;position:relative;display:inline-flex;align-items:center}.mobile-tabbar a.is-active::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:18px;height:4px;border-radius:9px;background:#fff}
+
+/* ——— PC 首页 Hero ——— */
+.home-hero{background:var(--hero-bg);height:560px;color:#fff;position:relative;overflow:hidden}
+.home-hero::before,.home-hero::after{content:"";position:absolute;top:0;bottom:0;width:calc((100vw - var(--max-width)) / 2 + 260px);background-size:cover;background-position:center;opacity:.6}
+.home-hero::before{left:0;background-image:linear-gradient(90deg,rgba(0,0,0,.25),rgba(0,0,0,.65)),url('../img/bg-hero-left.svg')}
+.home-hero::after{right:0;background-image:linear-gradient(270deg,rgba(0,0,0,.15),rgba(0,0,0,.65)),url('../img/bg-hero-right.svg')}
+.home-hero-inner{position:relative;z-index:2;max-width:var(--max-width);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px;height:100%;padding:20px 0}
+.hero-player-zone{min-width:0;border-radius:var(--radius-card);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background-size:cover;background-position:center;background-color:#111}
+.hero-player-zone::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:1}
+.hero-preview-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;opacity:0;transition:opacity .2s ease;z-index:0}.hero-preview-video.is-ready{opacity:1}
+.hero-enter-btn{position:relative;z-index:2;background:rgba(31,31,31,.6);color:#ffd95a;font-weight:900;font-size:20px;border-radius:8px;padding:14px 32px;display:inline-block}
+.hero-enter-btn:hover{background:rgba(31,31,31,.85)}
+.hero-side-cards{width:180px;min-width:180px;display:flex;flex-direction:column;gap:8px}
+.hero-side-card{border:2px solid transparent;border-radius:6px;overflow:hidden;background:#111;flex:1 0 0;cursor:pointer;transition:border-color .15s}.hero-side-card.is-active{border-color:var(--brand-yellow)}.hero-side-card:hover{border-color:#fff}.hero-side-card img{width:100%;height:100%;object-fit:cover;display:block}
+.scoreboard-panel{display:none}
+
+.home-main{background:var(--page-bg);padding:20px 0 0}
+.section-head{display:flex;justify-content:space-between;align-items:center;margin:42px 0 20px}
+.section-head h2{margin:0;font-size:26px;font-weight:900;position:relative;padding-left:16px}
+.section-head h2::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:4px;border-radius:2px;background:var(--brand-yellow)}
+.live-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.live-card{background:var(--card-bg);border-radius:var(--radius-card);overflow:hidden;box-shadow:var(--shadow-card);transition:transform .18s}
+.live-card:hover{transform:translateY(-4px)}.live-cover{position:relative;height:136px;overflow:hidden;background:#ddd}.live-cover img{width:100%;height:100%;object-fit:cover}
+.live-badge{position:absolute;top:8px;right:8px;background:var(--live-badge-bg);color:#fff;padding:5px 8px;border-radius:3px;font-size:11px;font-weight:800}
+.live-info{padding:8px 12px}.live-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.live-meta{display:flex;justify-content:space-between;color:var(--text-sub);font-size:12px}
+.live-host{display:flex;align-items:center;gap:5px}.live-host img{width:22px;height:22px;border-radius:50%}
+.page-shell{min-height:calc(100vh - 72px);padding:34px 0 80px}
+.tab-row{display:flex;gap:48px;align-items:center;margin:0 0 28px}
+.tab-row a{font-size:18px;color:var(--text-sub);padding:10px 0}.tab-row a.is-active{color:#111;font-weight:800}
+.tab-row a.is-active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;border-radius:10px;background:var(--brand-yellow)}
+.room-stage{background:var(--room-bg);padding:12px 0 10px}
+.room-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+.player-panel,.chat-panel{background:#fff;border-radius:4px;overflow:hidden}
+.player-head{height:86px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.player-host{display:flex;gap:14px;align-items:center}.player-host img{width:58px;height:58px;border-radius:50%}
+.player-host h1{margin:0 0 6px;font-size:22px}.player-host p{margin:0;color:var(--text-sub)}
+.follow-btn{background:var(--brand-yellow);color:#fff;border-radius:22px;padding:10px 24px;font-size:17px;font-weight:700}
+.video-box{height:520px;background:#0b0b0b;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.video-box video{width:100%;height:100%;background:#000;object-fit:contain}
+.video-placeholder{color:#fff;text-align:center}.video-placeholder b{display:block;font-size:28px;margin-bottom:12px;color:var(--brand-yellow)}
+.player-bottom{display:flex;align-items:center;min-height:62px;border-top:1px solid var(--border-color);padding:0 18px}
+.player-ad-bar{display:flex;align-items:center;gap:12px;flex:1;text-decoration:none;color:inherit}
+.player-ad-bar img{height:42px;object-fit:contain;border-radius:4px;flex-shrink:0}
+.player-ad-bar .ad-body{flex:1;min-width:0}.player-ad-bar .ad-title{font-weight:700;font-size:14px}
+.player-ad-bar .ad-btn{background:var(--brand-yellow);color:#fff;font-weight:700;font-size:13px;border-radius:4px;padding:6px 14px;flex-shrink:0}
+.chat-notice{padding:14px;border-bottom:1px solid var(--border-color);font-weight:700}
+.chat-tabs{display:flex;border-bottom:1px solid var(--border-color)}.chat-tabs span{flex:1;text-align:center;padding:12px 0;font-weight:700;cursor:pointer;color:var(--text-sub)}.chat-tabs span.is-active{color:#111;border-bottom:3px solid var(--brand-yellow)}
+.chat-body{height:480px;overflow:auto;padding:10px 12px}.chat-input{display:grid;grid-template-columns:1fr 58px;border-top:1px solid var(--border-color)}.chat-input input{height:46px;border:0;padding:0 12px}.chat-input button{background:#f2f2f2;color:#999}
+.room-below{padding:28px 0 0}.room-below h2{font-size:26px;margin:0 0 18px}
+
+/* ——— 实时指数卡片（PC 自适应 / 手机固定） ——— */
+.odds-scroll{display:flex;gap:var(--odds-gap,16px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;padding:4px 0 8px;-webkit-overflow-scrolling:touch}
+.odds-scroll::-webkit-scrollbar{display:none}
+.odds-loading{padding:20px;color:#999;font-size:13px}
+@media (min-width:769px){.odds-card{flex:0 0 var(--odds-card-width,calc((100% - 32px)/3));max-width:var(--odds-card-width,calc((100% - 32px)/3));min-width:0;box-sizing:border-box;scroll-snap-align:start;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.04);overflow:hidden}}
+@media (max-width:768px){.odds-card{flex:0 0 var(--odds-card-width,320px);max-width:var(--odds-card-width,360px);scroll-snap-align:start;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.04);overflow:hidden}.mobile-odds-card{flex:0 0 calc(100vw - 32px)!important;max-width:360px!important}}
+.odds-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.odds-sport{font-size:11px;color:var(--brand-yellow-deep);font-weight:700}
+.odds-time{font-size:11px;color:var(--text-sub)}
+.odds-teams{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-main);line-height:1.3;word-break:break-word}
+.odds-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;font-size:11px}
+.odds-label{width:28px;color:var(--text-sub);flex-shrink:0;font-weight:700}
+.odds-item{flex:1;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.odds-item b{color:var(--brand-yellow-deep)}
+.odds-footer{margin-top:6px;font-size:10px;color:#bbb;text-align:right}
+.odds-disclaimer{color:#999;font-size:11px;margin-top:4px}
+
+/* ——— 右侧悬浮按钮 ——— */
+.side-toolbar{position:fixed!important;right:8px!important;left:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:1000!important;display:flex!important;flex-direction:column!important;gap:8px!important}
+.side-toolbar a,.side-toolbar button{width:44px;min-height:44px;border:1px solid var(--border-color);background:#fff;color:var(--text-main);border-radius:6px;font-size:13px;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.side-toolbar a:hover,.side-toolbar button:hover{background:var(--brand-yellow);color:#fff;border-color:var(--brand-yellow)}
+
+/* ——— 底部 footer ——— */
+.footer{position:static!important;left:auto!important;right:auto!important;bottom:auto!important;width:100%;margin-top:90px;background:var(--brand-dark);color:#d9def7;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center}
+.footer img{width:58px;margin:0 auto 22px;display:block}
+.footer a{color:#d9def7;margin:0 26px}
+
+/* ——— 赛事直播页 ——— */
+.schedule-live-grid {
+  margin-top: 16px;
+}
+
+/* ——— 全局弹窗 ——— */
+.global-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.global-modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 20px;
+  width: calc(100vw - 48px);
+  max-width: 380px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.18);
+}
+.global-modal-box h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+  text-align: center;
+  color: #111;
+}
+.global-modal-body {
+  color: #555;
+  line-height: 1.65;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.global-modal-btn {
+  width: 100%;
+  height: 44px;
+  background: var(--brand-yellow);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* app/login/etc */
+.app-page{background:#eee;min-height:100vh;display:flex;justify-content:center}.app-card{width:780px;min-height:860px;background:#fff;text-align:center;padding:40px 10px;position:relative}.app-card .app-logo{width:170px;margin:0 auto 34px}
+.app-tabs{width:720px;margin:0 auto 60px;display:grid;grid-template-columns:1fr 1fr;height:52px}.app-tabs a{display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700}.app-tabs a:first-child{background:var(--brand-yellow)}.app-tabs a:last-child{background:#1d1b3d}
+.back-home-btn{position:absolute;top:14px;left:16px;z-index:10;display:inline-block;color:#111;font-weight:700;font-size:15px;background:#fff;padding:8px 16px;border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.simple-page{background:#fff;min-height:100vh}.login-box{max-width:360px;margin:0 auto;padding:64px 22px}
+.admin-box{max-width:980px;margin:0 auto;padding:30px 0}.admin-card{background:#fff;border-radius:var(--radius-card);box-shadow:var(--shadow-card);padding:22px;margin-bottom:18px}
+.admin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.admin-field label{display:block;color:var(--text-sub);margin-bottom:6px}.admin-field input{width:100%;height:38px;border:1px solid var(--border-color);padding:0 10px}
+.admin-actions button{background:var(--brand-yellow);color:#fff;border-radius:4px;padding:10px 18px;margin-right:8px}
+
+/* mobile */
+@media(max-width:780px){
+  body{background:#fff;padding-bottom:110px;font-size:13px}.pc-only{display:none!important}.mobile-only{display:block}
+  .site-header{display:none}.mobile-header,.mobile-tabbar{display:flex}
+  .container{width:100%;max-width:none;padding:0 12px}
+  .home-hero,.home-main,.page-shell,.room-stage{display:none}
+  .mobile-page{display:block;background:#fff;min-height:calc(100vh - 85px)}
+   .mobile-odds-section{margin-bottom:8px}
+   .m-hero-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:12px 12px 6px;margin-bottom:4px}.m-hero-scroll::-webkit-scrollbar{display:none}
+   .m-hero-card{flex:0 0 calc(100vw - 48px);scroll-snap-align:start;border-radius:8px;overflow:hidden;position:relative;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(0,0,0,.1)}
+   .m-hero-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}
+   .m-hero-title{position:absolute;bottom:0;left:0;right:0;padding:12px 10px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:#fff;font-size:14px;font-weight:700;line-height:1.3}
+  .m-section-title{font-size:18px;font-weight:900;margin:18px 12px 12px}
+  .m-live-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px}.m-live-grid .live-cover{height:96px}
+  .m-live-grid .live-card{border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.05);position:relative}.m-live-grid .live-title{font-size:13px}
+  .m-live-grid .live-host{display:none}
+   .schedule-mobile-grid{padding:0 12px 90px}
+  .m-match-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 12px 8px}.m-match-scroll::-webkit-scrollbar{display:none}
+  .m-match-scroll-card{flex:0 0 160px;scroll-snap-align:start;background:var(--card-bg);border-radius:8px;padding:10px;box-shadow:0 1px 6px rgba(0,0,0,.06);text-decoration:none;color:inherit}
+  .m-bottom-nav{position:fixed;left:0;right:0;bottom:0;height:56px;background:var(--mobile-bottom-bg);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #e5e7eb;z-index:90}
+  .m-bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#333;font-size:12px}
+  .m-bottom-nav a.is-active{color:var(--brand-yellow-deep)}
+   .m-bottom-nav .nav-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:18px}
+   .m-bottom-nav a:nth-child(1) .nav-ico::before{content:'\1F3E0'}
+   .m-bottom-nav a:nth-child(2) .nav-ico::before{content:'\25B6'}
+   .m-bottom-nav a:nth-child(3) .nav-ico::before{content:'\26BD'}
+   .m-bottom-nav a:nth-child(4) .nav-ico::before{content:'\1F464'}
+   .m-float-ad{position:fixed;left:0;right:0;bottom:56px;height:44px;background:rgba(0,0,0,.78);color:#fff;display:flex;align-items:center;gap:8px;z-index:80;padding:0 10px;overflow:hidden;box-sizing:border-box}
+   .m-float-ad img{width:28px;height:28px;flex:0 0 28px;object-fit:contain;display:block}
+   .m-float-ad .text{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;line-height:44px}
+   .m-float-ad .download{flex:0 0 auto;height:32px;line-height:32px;padding:0 12px;border-radius:4px;background:var(--brand-yellow);color:#111;font-weight:800;font-size:13px;white-space:nowrap}
+   .m-float-ad .close{flex:0 0 auto;font-size:14px;line-height:1}
+  body[data-page=room]{overflow:hidden;padding-bottom:0}
+  .mobile-room .room-stage{display:flex;flex-direction:column;padding:0;background:#fff;height:calc(100vh - 42px);height:calc(var(--room-vh,100dvh) - 42px)}
+  .mobile-room .room-grid{display:flex;flex-direction:column;flex:1;min-height:0}
+  .mobile-room .player-panel{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:0}
+  .mobile-room .player-head{display:none}
+  .mobile-room .video-box{width:100%;aspect-ratio:16/9;height:auto;flex-shrink:0}
+  .mobile-room .player-bottom,.mobile-room .chat-panel,.mobile-room .room-below{display:none}
+  body[data-page=room] .m-bottom-nav{display:none!important}
+  .mobile-chat-section{background:#fff;display:flex;flex-direction:column;flex:1;min-height:0}
+  .mobile-chat-tabs{display:flex;border-bottom:1px solid var(--border-color);flex-shrink:0}
+  .mobile-chat-tabs span{flex:1;text-align:center;padding:14px 0;font-weight:800;font-size:16px;cursor:pointer;color:var(--text-sub)}
+  .mobile-chat-tabs span.is-active{color:#111;border-bottom:4px solid var(--brand-yellow)}
+  .mobile-chat-body{flex:1;overflow-y:auto;padding:10px 12px;-webkit-overflow-scrolling:touch}
+  .mobile-chat-input{flex-shrink:0;display:grid;grid-template-columns:1fr 58px;border-top:1px solid var(--border-color);padding:10px 12px;background:#fff}
+  .mobile-chat-input input{height:40px;border:1px solid var(--border-color);border-radius:4px;padding:0 10px;font-size:14px}
+  .mobile-chat-input button{background:var(--brand-yellow);color:#fff;border-radius:4px;font-size:14px;font-weight:700}
+  .admin-grid{grid-template-columns:1fr}
+}
+@media(min-width:781px){.mobile-page,.m-bottom-nav,.m-float-ad{display:none!important}}
+
+/* ===== 手机直播间播放器宽度修复 ===== */
+.mobile-room .container{padding:0}
+
+/* ===== 聊天室消息样式 ===== */
+.chat-msg{display:block;padding:4px 0;font-size:13px;line-height:1.7;word-break:break-all;overflow-wrap:anywhere;color:var(--text-main)}
+.chat-msg-anchor .chat-name{color:var(--brand-yellow)}
+.chat-name{font-weight:700;color:var(--text-main)}
+.lv{display:inline-block;font-size:10px;font-weight:800;border-radius:3px;padding:1px 5px;vertical-align:middle;margin-right:2px}
+.lv-low{background:#9e9e9e;color:#fff}
+.lv-mid{background:#4caf50;color:#fff}
+.lv-high{background:#2196f3;color:#fff}
+.lv-vip{background:linear-gradient(90deg,#f7971e,#ffd200);color:#fff}
+
+/* ===== 主播资料样式 ===== */
+.chat-profile{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.chat-profile-empty{padding:24px;text-align:center;color:var(--text-sub)}
+.profile-card{background:#f5f7fa;border-radius:8px;padding:12px 14px}
+.profile-name{font-size:16px;font-weight:800;margin-bottom:6px;color:var(--text-main)}
+.profile-intro{font-size:13px;color:var(--text-sub);line-height:1.6}
+.profile-stat{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #e5e7eb}
+.profile-stat:last-child{border-bottom:none}
+.profile-stat span{font-size:13px;color:var(--text-sub)}
+.profile-stat b{font-size:14px;font-weight:800;color:var(--brand-yellow)}
+.profile-label{font-size:12px;color:var(--text-sub);margin-bottom:8px;font-weight:700}
+.profile-tags{display:flex;flex-wrap:wrap;gap:6px}
+.profile-tag{background:var(--brand-yellow);color:#fff;font-size:12px;font-weight:700;border-radius:4px;padding:3px 8px}
+.profile-contact{font-size:13px;color:var(--text-main)}
+.profile-qr{text-align:center}
+.profile-qr img{width:120px;height:120px;margin:0 auto 8px;border-radius:8px;display:block}
+.profile-qr-text{font-size:12px;color:var(--text-sub)}
+
+/* ===== Admin layout compact fix ===== */
+body[data-page="admin"] #siteHeader,
+body[data-page="admin"] #mobileHeader,
+body[data-page="admin"] #mobileTabs {
+  display: none !important;
+}
+
+body[data-page="admin"] .page-shell {
+  padding-top: 16px !important;
+}
+
+body[data-page="admin"] .admin-box {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+
+body[data-page="admin"] .admin-login-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px !important;
+  margin-bottom: 12px;
+}
+
+body[data-page="admin"] .admin-login-status h1 {
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+body[data-page="admin"] .admin-login-status p {
+  margin: 0 !important;
+  font-size: 14px !important;
+  color: #666;
+}
+
+body[data-page="admin"] .admin-login-status .admin-actions {
+  margin-top: 0 !important;
+}
+
+body[data-page="admin"] .admin-login-status button {
+  padding: 7px 12px;
+}
+
+@media (max-width: 768px) {
+  body[data-page="admin"] .admin-box {
+    padding: 10px 10px 30px;
+  }
+
+  body[data-page="admin"] .admin-login-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* ===== Admin cover preview ===== */
+body[data-page="admin"] .admin-cover-preview {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body[data-page="admin"] .admin-cover-preview img {
+  width: 160px;
+  height: 90px;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #f3f4f6;
+}
+
+body[data-page="admin"] .admin-cover-preview span {
+  font-size: 12px;
+  color: #888;
+}
+
+/* ===== 登录 / 注册页美化 ===== */
+body[data-page="login"] {
+  background:
+    radial-gradient(circle at top left, rgba(255, 199, 39, .18), transparent 34%),
+    linear-gradient(180deg, #fff7df 0%, #f8fafc 42%, #f3f4f6 100%);
+}
+
+body[data-page="login"] .simple-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 42px 16px 80px;
+}
+
+body[data-page="login"] .login-box {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, .96);
+  border: 1px solid rgba(15, 23, 42, .06);
+  border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, .12);
+  padding: 34px 32px 30px;
+  position: relative;
+}
+
+body[data-page="login"] .back-link {
+  position: absolute;
+  left: 22px;
+  top: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 26px;
+  text-decoration: none;
+}
+
+body[data-page="login"] .login-box h1 {
+  text-align: center;
+  font-size: 28px;
+  line-height: 1.2;
+  margin: 8px 0 10px;
+  color: #111827;
+  font-weight: 800;
+}
+
+body[data-page="login"] .login-box p {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  margin: 0 0 24px;
+}
+
+body[data-page="login"] .login-box p a {
+  color: #d97706;
+  text-decoration: none;
+}
+
+body[data-page="login"] .form-line {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 0 14px;
+  margin-bottom: 14px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+body[data-page="login"] .form-line:focus-within {
+  background: #fff;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, .14);
+}
+
+body[data-page="login"] .form-line strong {
+  color: #111827;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+body[data-page="login"] .form-line input {
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  height: 100%;
+  font-size: 15px;
+  color: #111827;
+}
+
+body[data-page="login"] .form-line input::placeholder {
+  color: #9ca3af;
+}
+
+body[data-page="login"] .login-submit {
+  width: 100%;
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(249, 115, 22, .22);
+  margin-top: 4px;
+}
+
+body[data-page="login"] .login-submit:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+body[data-page="login"] .login-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+body[data-page="login"] .login-actions a {
+  color: #6b7280;
+  text-decoration: none;
+}
+
+body[data-page="login"] .login-actions a:last-child {
+  color: #d97706;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  body[data-page="login"] #mobileTabs {
+    display: none !important;
+  }
+
+  body[data-page="login"] .simple-page {
+    min-height: calc(100vh - 56px);
+    align-items: flex-start;
+    padding: 34px 14px 40px;
+  }
+
+  body[data-page="login"] .login-box {
+    max-width: none;
+    border-radius: 20px;
+    padding: 32px 20px 26px;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, .10);
+  }
+
+  body[data-page="login"] .login-box h1 {
+    font-size: 26px;
+  }
+
+  body[data-page="login"] .form-line,
+  body[data-page="login"] .login-submit {
+    height: 50px;
+  }
+}
+
+/* ===== 我的页面美化 ===== */
+.user-page {
+  background: #f6f7fb;
+  min-height: calc(100vh - 56px);
+  padding-bottom: 84px;
+}
+
+.user-empty-card {
+  margin: 18px 14px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 34px 18px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+}
+
+.user-empty-card img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin-bottom: 14px;
+}
+
+.user-empty-card h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: #111827;
+}
+
+.user-empty-card p {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+
+.user-main-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 130px;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 800;
+  border: 0;
+}
+
+.user-head-v2 {
+  margin: 14px;
+  padding: 20px 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-profile-v2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-profile-v2 img {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid rgba(255,255,255,.6);
+}
+
+.user-profile-v2 h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: #fff;
+}
+
+.user-profile-v2 p {
+  margin: 0;
+  color: rgba(255,255,255,.72);
+  font-size: 13px;
+}
+
+.user-logout-mini {
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.user-stats-v2 {
+  margin: -2px 14px 14px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 16px 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+}
+
+.user-stats-v2 div {
+  text-align: center;
+}
+
+.user-stats-v2 b {
+  display: block;
+  font-size: 18px;
+  color: #111827;
+}
+
+.user-stats-v2 span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.user-menu-v2 {
+  margin: 14px;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+}
+
+.user-menu-v2 a {
+  min-height: 52px;
+  padding: 0 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.user-menu-v2 a:last-child {
+  border-bottom: 0;
+}
+
+.user-pc-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .08);
+}
+
+.user-pc-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-pc-head img {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: #f3f4f6;
+}
+
+.user-pc-head h2 {
+  margin: 0 0 6px;
+  font-size: 26px;
+}
+
+.user-pc-head p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.user-logout-btn {
+  margin-left: auto;
+  border: 0;
+  background: #111827;
+  color: #fff;
+  border-radius: 999px;
+  padding: 9px 18px;
+  cursor: pointer;
+}
+
+.user-pc-stats {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.user-pc-stats div {
+  background: #f9fafb;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+}
+
+.user-pc-stats b {
+  display: block;
+  font-size: 22px;
+  color: #111827;
+}
+
+.user-pc-stats span {
+  display: block;
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* ===== 世界杯赛程页 ===== */
+.wc-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.wc-page-head h2 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  color: #111827;
+}
+
+.wc-page-head p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.wc-page-head span,
+.m-wc-updated {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.wc-day-card {
+  background: #fff;
+  border-radius: 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, .07);
+  overflow: hidden;
+}
+
+.wc-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #111827, #374151);
+  color: #fff;
+}
+
+.wc-day-head h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.wc-day-head span {
+  color: rgba(255,255,255,.72);
+  font-size: 13px;
+}
+
+.wc-table {
+  padding: 4px 0;
+}
+
+.wc-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 100px 120px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.wc-row:last-child {
+  border-bottom: 0;
+}
+
+.wc-time {
+  font-size: 22px;
+  font-weight: 900;
+  color: #f97316;
+}
+
+.wc-league {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.wc-teams {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.wc-teams b {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.wc-status {
+  justify-self: start;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.wc-status.is-live,
+.m-wc-top em.is-live {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.wc-status.is-wait,
+.m-wc-top em.is-wait {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.wc-status.is-end,
+.m-wc-top em.is-end {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.wc-watch-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.wc-no-room {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.wc-empty,
+.wc-schedule-loading {
+  background: #fff;
+  border-radius: 16px;
+  padding: 34px 16px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+.wc-mobile-page {
+  background: #f6f7fb;
+  padding-bottom: 86px;
+}
+
+.m-wc-updated {
+  padding: 0 12px 8px;
+}
+
+.m-wc-day {
+  margin: 0 12px 16px;
+}
+
+.m-wc-day-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #111827;
+  margin: 8px 0 10px;
+}
+
+.m-wc-card {
+  display: block;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 10px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+}
+
+.m-wc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.m-wc-top span {
+  font-size: 20px;
+  font-weight: 900;
+  color: #f97316;
+}
+
+.m-wc-top em {
+  font-style: normal;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.m-wc-league {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.m-wc-teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.m-wc-teams b {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .wc-schedule-loading,
+  .wc-empty {
+    margin: 0 12px;
+  }
+}
+
+/* ===== 聊天室等级标签美化 ===== */
+.chat-msg {
+  line-height: 1.8;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+
+.chat-name {
+  font-weight: 800;
+  color: #111827;
+  margin: 0 4px;
+}
+
+.chat-text {
+  color: #1f2937;
+}
+
+.lv {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  margin-right: 5px;
+  vertical-align: 1px;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.12);
+}
+
+.lv-low {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+}
+
+.lv-mid {
+  background: linear-gradient(135deg, #38bdf8, #2563eb);
+}
+
+.lv-high {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+}
+
+.lv-vip {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+}
+
+.lv-king {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  box-shadow: 0 0 8px rgba(239, 68, 68, .28);
+}
+
+.lv-anchor {
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  min-width: 42px;
+}
+
+.chat-msg-anchor {
+  background: rgba(255, 247, 237, .8);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+/* ===== WebSocket 聊天输入状态 ===== */
+.chat-input button:disabled,
+.mobile-chat-input button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.chat-input input::placeholder,
+.mobile-chat-input input::placeholder {
+  color: #9ca3af;
+}
+
+.chat-input input:not([readonly]),
+.mobile-chat-input input:not([readonly]) {
+  background: #fff;
+  color: #111827;
+}
+
+.chat-input button,
+.mobile-chat-input button {
+  border: 0;
+  cursor: pointer;
+}
+
+/* ===== WebSocket 聊天输入状态 ===== */
+.chat-input button:disabled,
+.mobile-chat-input button:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.chat-input input::placeholder,
+.mobile-chat-input input::placeholder {
+  color: #9ca3af;
+}
+
+.chat-input input:not([readonly]),
+.mobile-chat-input input:not([readonly]) {
+  background: #fff;
+  color: #111827;
+}
+
+.chat-input button,
+.mobile-chat-input button {
+  border: 0;
+  cursor: pointer;
+}
+
+/* ===== 聊天室公告与发送按钮优化 ===== */
+.chat-notice,
+.mobile-chat-notice {
+  min-height: 38px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #111827;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  line-height: 1.5;
+}
+
+.chat-input {
+  grid-template-columns: 1fr 72px;
+  padding: 10px;
+  gap: 8px;
+  background: #fff;
+}
+
+.chat-input input {
+  height: 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #f9fafb;
+  outline: none;
+}
+
+.chat-input input:focus {
+  border-color: #f59e0b;
+  background: #fff;
+}
+
+.chat-input button {
+  height: 40px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #111827;
+  font-weight: 900;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, .25);
+}
+
+.chat-input button:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+.mobile-chat-input {
+  grid-template-columns: 1fr 64px;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.mobile-chat-input input {
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  background: #f9fafb;
+  outline: none;
+}
+
+.mobile-chat-input input:focus {
+  border-color: #f59e0b;
+  background: #fff;
+}
+
+.mobile-chat-input button {
+  height: 42px;
+  border-radius: 999px;
+  border: 0;
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  color: #111827;
+  font-weight: 900;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, .25);
+}
+
+.mobile-chat-input button:disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  box-shadow: none;
+}

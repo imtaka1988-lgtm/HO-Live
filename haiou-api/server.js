@@ -1,0 +1,46 @@
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const mysql = require("mysql2/promise");
+const http = require("http");
+const app = express();
+const PORT = 3001;
+const setupChatWs = require("./services/chatWs");
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("JWT_SECRET missing");
+  process.exit(1);
+}
+
+app.use(cors());
+app.use(express.json());
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: parseInt(process.env.DB_PORT || "3306"),
+  database: process.env.DB_NAME || "haiou_live",
+  user: process.env.DB_USER || "haiou_app",
+  password: process.env.DB_PASS || "",
+  waitForConnections: true,
+  connectionLimit: 10
+});
+
+// 挂载公开路由：/api/health, /api/public/rooms 等
+app.use("/api", require("./routes/public")(pool));
+
+// 挂载普通用户认证路由：/api/auth/register, /api/auth/login
+app.use("/api/auth", require("./routes/auth")(pool));
+
+// 挂载普通用户路由：/api/user/me
+app.use("/api/user", require("./routes/user")(pool));
+
+// 挂载管理员路由：/api/admin/login, /api/admin/me 等
+app.use("/api/admin", require("./routes/admin")(pool));
+
+const server = http.createServer(app);
+setupChatWs(server, pool);
+
+server.listen(PORT, "127.0.0.1", () => {
+  console.log("haiou-api running on http://127.0.0.1:" + PORT);
+});

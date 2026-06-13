@@ -1,0 +1,200 @@
+{
+  "brand": {
+    "name": "海鸥直播",
+    "domain": "s6.lol",
+    "logo": "assets/img/logo.svg",
+    "slogan": "高清免费 体育直播",
+    "appName": "海鸥直播",
+    "version": "V1.0"
+  },
+  "liveCloud": {
+    "provider": "tencent-intl",
+    "regionMode": "overseas",
+    "requiresIcp": false,
+    "pushDomain": "push.haioulive.com",
+    "pullDomain": "pull.haioulive.com",
+    "appName": "live",
+    "defaultAuthEnabled": false,
+    "httpsEnabled": true,
+    "cdnMode": "overseas"
+  },
+  "theme": {
+    "cssVars": {
+      "--brand-yellow": "#ffc21a",
+      "--brand-yellow-deep": "#f3ad00",
+      "--brand-dark": "#242745",
+      "--brand-black": "#1f2024",
+      "--page-bg": "#eef0f5",
+      "--card-bg": "#ffffff",
+      "--text-main": "#111827",
+      "--text-sub": "#6b7280",
+      "--border-color": "#e5e7eb",
+      "--danger": "#ff3045",
+      "--success": "#20c997",
+      "--header-bg-pc": "#ffffff",
+      "--header-bg-mobile": "#202124",
+      "--header-nav-active-bg": "#ffc21a",
+      "--header-nav-active-text": "#ffffff",
+      "--mobile-tab-bg": "#ffc21a",
+      "--mobile-bottom-bg": "#ffffff",
+      "--hero-bg": "#080617",
+      "--room-bg": "#242745",
+      "--live-badge-bg": "#ff3045",
+      "--quality-badge-bg": "#121212",
+      "--schedule-side-line": "#ffc21a",
+      "--radius-card": "8px",
+      "--shadow-card": "0 8px 24px rgba(15,23,42,.08)",
+      "--max-width": "1220px"
+    }
+  },
+  "links": {
+    "androidApk": "#",
+    "iosApp": "#",
+    "backupDomains": ["s6.lol"]
+  },
+  "banners": [
+    {"title":"激战世界杯", "subtitle":"06/13 09:00 美国 VS 巴拉圭", "image":"assets/img/banner-worldcup.svg", "href":"pages/room.html?id=1"},
+    {"title":"扬帆起航", "subtitle":"热门赛事直播", "image":"assets/img/thumb-2.svg", "href":"pages/live.html"},
+    {"title":"赛事分析", "subtitle":"精准预测", "image":"assets/img/thumb-1.svg", "href":"pages/live.html?tab=analysis"}
+  ],
+  "ads": {
+    "side": [
+      {"position":"home_side","enabled":true,"sort":1,"image":"assets/img/ad-side-1.svg","href":"#"},
+      {"position":"home_side","enabled":true,"sort":2,"image":"assets/img/ad-side-2.svg","href":"#"},
+      {"position":"home_side","enabled":true,"sort":3,"image":"assets/img/ad-side-3.svg","href":"#"},
+      {"position":"home_side","enabled":true,"sort":4,"image":"assets/img/thumb-4.svg","href":"#"},
+      {"position":"home_side","enabled":true,"sort":5,"image":"assets/img/thumb-8.svg","href":"#"}
+    ],
+    "bottomText": "下载APP：高清免费体育直播，赛事分析，精彩回放",
+    "roomPlayerAd": {
+      "enabled": true,
+      "image": "assets/img/thumb-1.svg",
+      "title": "高清赛事直播",
+      "desc": "下载 APP，观看更多精彩赛事",
+      "buttonText": "立即查看",
+      "link": "pages/app.html"
+    },
+    "mobileFloat": {
+      "position":"mobile_float",
+      "enabled":true,
+      "sort":1,
+      "text":"海鸥直播 高清无广告 体育直播"
+    }
+  },
+  "hosts": [
+    {"id":"h1","name":"车太勤","avatar":"assets/img/host-1.svg","level":"Lv.5"},
+    {"id":"h2","name":"巨威","avatar":"assets/img/host-2.svg","level":"Lv.6"},
+    {"id":"h3","name":"咖球皇帝","avatar":"assets/img/host-3.svg","level":"Lv.5"},
+    {"id":"h4","name":"卫星小哈","avatar":"assets/img/host-4.svg","level":"Lv.4"},
+    {"id":"h5","name":"卫星小雨","avatar":"assets/img/host-5.svg","level":"Lv.3"},
+    {"id":"h6","name":"卫星浪花","avatar":"assets/img/host-6.svg","level":"Lv.4"},
+    {"id":"h7","name":"卫星小牛","avatar":"assets/img/host-7.svg","level":"Lv.2"},
+    {"id":"h8","name":"卫星小伟","avatar":"assets/img/host-8.svg","level":"Lv.2"}
+  ],
+  "rooms": [
+    {
+      "id":1,"category":"football","title":"午后聊球","subTitle":"足球赛事精选","hostId":"h1",
+      "cover":"assets/img/thumb-1.svg","poster":"assets/img/thumb-1.svg",
+      "viewers":"6.22万","quality":"高清","isLive":true,"status":"live","sort":1,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清模式","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"tencent-intl","enabled":true,"default":true,"priority":1,"region":"overseas","appName":"live","streamName":"room001","authEnabled":false,"remark":"腾讯云国际站 HLS 播放地址"},
+        {"name":"标清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"tencent-intl","enabled":true,"default":false,"priority":2,"region":"overseas","appName":"live","streamName":"room001","authEnabled":false,"remark":"手机端备用 HLS 线路"},
+        {"name":"极速模式","type":"flv","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"tencent-intl","enabled":true,"default":false,"priority":3,"region":"overseas","appName":"live","streamName":"room001","authEnabled":false,"remark":"腾讯云国际站 FLV 播放地址，PC端备用"}
+      ]
+    },
+    {
+      "id":2,"category":"football","title":"午后聊球","subTitle":"世界杯焦点","hostId":"h2",
+      "cover":"assets/img/thumb-2.svg","poster":"assets/img/thumb-2.svg",
+      "viewers":"6.13万","quality":"高清","isLive":true,"status":"live","sort":2,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1},
+        {"name":"备用线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"backup","enabled":true,"default":false,"priority":2}
+      ]
+    },
+    {
+      "id":3,"category":"analysis","title":"赛事分析 精准预判","subTitle":"分析直播间","hostId":"h1",
+      "cover":"assets/img/thumb-6.svg","poster":"assets/img/thumb-6.svg",
+      "viewers":"6.09万","quality":"高清","isLive":true,"status":"live","sort":3,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1},
+        {"name":"备用线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"backup","enabled":true,"default":false,"priority":2}
+      ]
+    },
+    {
+      "id":4,"category":"football","title":"赛事回放 世界杯 韩国 VS 捷克","subTitle":"精彩回放","hostId":"h4",
+      "cover":"assets/img/thumb-3.svg","poster":"assets/img/thumb-3.svg",
+      "viewers":"4368","quality":"高清","isLive":true,"status":"live","sort":4,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1},
+        {"name":"备用线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"backup","enabled":true,"default":false,"priority":2}
+      ]
+    },
+    {
+      "id":5,"category":"basketball","title":"赛事回放 NBA总决赛G4 尼克斯 VS...","subTitle":"篮球回放","hostId":"h5",
+      "cover":"assets/img/thumb-5.svg","poster":"assets/img/thumb-5.svg",
+      "viewers":"1461","quality":"高清","isLive":true,"status":"live","sort":5,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1},
+        {"name":"备用线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"backup","enabled":true,"default":false,"priority":2}
+      ]
+    },
+    {
+      "id":6,"category":"football","title":"清源直播间","subTitle":"足球现场","hostId":"h6",
+      "cover":"assets/img/thumb-4.svg","poster":"assets/img/thumb-4.svg",
+      "viewers":"1203","quality":"高清","isLive":true,"status":"live","sort":6,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1}
+      ]
+    },
+    {
+      "id":7,"category":"football","title":"清源直播间","subTitle":"足球现场","hostId":"h7",
+      "cover":"assets/img/thumb-7.svg","poster":"assets/img/thumb-7.svg",
+      "viewers":"261","quality":"高清","isLive":true,"status":"live","sort":7,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1}
+      ]
+    },
+    {
+      "id":8,"category":"football","title":"清源直播间","subTitle":"足球现场","hostId":"h8",
+      "cover":"assets/img/thumb-8.svg","poster":"assets/img/thumb-8.svg",
+      "viewers":"44","quality":"高清","isLive":true,"status":"live","sort":8,
+      "streamUrl":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+      "streams":[
+        {"name":"高清线路","type":"hls","url":"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8","provider":"test","enabled":true,"default":true,"priority":1}
+      ]
+    }
+  ],
+  "matches": [
+    {"id":101,"league":"午后聊球","sport":"football","time":"14:00","day":"今天","home":"午后聊球","away":"午后聊球","homeLogo":"assets/img/team-1.svg","awayLogo":"assets/img/team-1.svg","status":"直播中","hosts":["h2","h1","h3"],"roomId":1,"boundRoomId":1},
+    {"id":102,"league":"澳威U20","sport":"football","time":"15:30","day":"今天","home":"曼立联队U20","away":"悉尼联盟U20","homeLogo":"assets/img/team-2.svg","awayLogo":"assets/img/team-1.svg","status":"未开始","hosts":["h4","h5","h6"],"roomId":2,"boundRoomId":2},
+    {"id":103,"league":"新西联","sport":"basketball","time":"15:30","day":"今天","home":"塔拉纳基空气","away":"怀伊","homeLogo":"assets/img/team-3.svg","awayLogo":"assets/img/team-4.svg","status":"未开始","hosts":["h7","h8","h1"],"roomId":3,"boundRoomId":3},
+    {"id":104,"league":"澳威U20","sport":"football","time":"16:00","day":"今天","home":"马可尼U20","away":"悉尼FCU20","homeLogo":"assets/img/team-5.svg","awayLogo":"assets/img/team-1.svg","status":"未开始","hosts":["h2","h3","h4"],"roomId":4,"boundRoomId":4},
+    {"id":105,"league":"菲MPBL","sport":"basketball","time":"16:00","day":"今天","home":"帕拉纳克爱国者队","away":"艾莫斯阿吉马特","homeLogo":"assets/img/team-6.svg","awayLogo":"assets/img/team-7.svg","status":"未开始","hosts":["h5","h6","h7"],"roomId":5,"boundRoomId":5},
+    {"id":106,"league":"一起聊球","sport":"football","time":"21:00","day":"明天","home":"一起聊球","away":"一起聊球","homeLogo":"assets/img/team-8.svg","awayLogo":"assets/img/team-8.svg","status":"预约","hosts":["h1","h2"],"roomId":6,"boundRoomId":6}
+  ],
+  "anchorProfile": {
+    "name": "午后聊球",
+    "intro": "专注足球、篮球赛事分析，擅长赛前方向判断。",
+    "footballAccuracy": "75%",
+    "basketballAccuracy": "56%",
+    "rank": "全站第65位",
+    "specialties": ["英超", "NBA", "世界杯", "亚洲杯"],
+    "contact": "请联系主播助理",
+    "wechatGroupQr": "assets/img/avatar-default.svg"
+  },
+  "chat": [
+    {"level":"Lv.5","name":"爱斯克罗尘","text":"这盘山切盘怎么看才稳一点。"},
+    {"level":"Lv.5","name":"牛牛牛牛","text":"我打红大，就是看墨西哥没球了。"},
+    {"level":"Lv.2","name":"热念的虾","text":"昨天2比0南非那个受让太高了。"},
+    {"level":"Lv.7","name":"H-BOAT","text":"两场比赛收的恶心人，墨西哥捷克单边全收。"},
+    {"level":"Lv.6","name":"lg11","text":"捷克那场韩国刚开始踢到让平半。"},
+    {"level":"Lv.5","name":"老范阿明","text":"老师，下午好。"}
+  ]
+}

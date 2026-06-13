@@ -1,0 +1,75 @@
+{
+  "title": "世界杯赛程表",
+  "subtitle": "赛程时间为北京时间，后续可每天手动维护",
+  "updatedAt": "2026-06-13 22:30",
+  "days": [
+    {
+      "date": "2026-06-14",
+      "label": "6月14日",
+      "matches": [
+        {
+          "time": "03:00",
+          "league": "世界杯 小组赛",
+          "home": "卡塔尔",
+          "away": "瑞士",
+          "status": "未开始",
+          "roomId": 1
+        },
+        {
+          "time": "06:00",
+          "league": "世界杯 小组赛",
+          "home": "巴西",
+          "away": "摩洛哥",
+          "status": "未开始",
+          "roomId": 2
+        },
+        {
+          "time": "09:00",
+          "league": "世界杯 小组赛",
+          "home": "海地",
+          "away": "苏格兰",
+          "status": "未开始",
+          "roomId": 3
+        },
+        {
+          "time": "12:00",
+          "league": "世界杯 小组赛",
+          "home": "澳大利亚",
+          "away": "土耳其",
+          "status": "未开始",
+          "roomId": 4
+        }
+      ]
+    },
+    {
+      "date": "2026-06-15",
+      "label": "6月15日",
+      "matches": [
+        {
+          "time": "01:00",
+          "league": "世界杯 小组赛",
+          "home": "德国",
+          "away": "库拉索",
+          "status": "未开始",
+          "roomId": 5
+        },
+        {
+          "time": "04:00",
+          "league": "世界杯 小组赛",
+          "home": "荷兰",
+          "away": "日本",
+          "status": "未开始",
+          "roomId": 6
+        },
+        {
+          "time": "07:00",
+          "league": "世界杯 小组赛",
+          "home": "科特迪瓦",
+          "away": "厄瓜多尔",
+          "status": "未开始",
+          "roomId": 7
+        }
+      ]
+    }
+  ]
+}
