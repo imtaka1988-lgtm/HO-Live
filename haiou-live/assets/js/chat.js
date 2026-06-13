@@ -3,6 +3,7 @@
  */
 
 import { state, asset, esc, href } from './config.js';
+import { startChatWarmup, stopChatWarmup, notifyChatActivity } from './chat-warmup.js';
 
 let chatWs = null;
 let currentRoomId = null;
@@ -24,11 +25,14 @@ function messageHtml(c) {
   const lv = parseInt(c.level) || 0;
   const name = c.nickname || c.name || '海鸥用户';
   const text = c.message || c.text || '';
-  const isAnchor = c.role === 'anchor' || name === (state.cfg.anchorProfile && state.cfg.anchorProfile.name);
-  const levelText = isAnchor ? '主播' : ('Lv.' + lv);
+  const isAssistant = c.role === 'assistant' || c.role === 'system';
+  const isAnchor = !isAssistant && (c.role === 'anchor' || name === (state.cfg.anchorProfile && state.cfg.anchorProfile.name));
+  const levelText = isAssistant ? '助手' : (isAnchor ? '主播' : ('Lv.' + lv));
+  const msgClass = 'chat-msg' + (isAnchor ? ' chat-msg-anchor' : '') + (isAssistant ? ' chat-msg-assistant' : '');
+  const lvClass = isAssistant ? 'lv-assistant' : (isAnchor ? 'lv-anchor' : levelClass(lv));
 
-  return `<div class="chat-msg${isAnchor ? ' chat-msg-anchor' : ''}">
-    <span class="lv ${isAnchor ? 'lv-anchor' : levelClass(lv)}">${esc(levelText)}</span>
+  return `<div class="${msgClass}">
+    <span class="lv ${lvClass}">${esc(levelText)}</span>
     <span class="chat-name">${esc(name)}：</span>
     <span class="chat-text">${esc(text)}</span>
   </div>`;
@@ -43,6 +47,9 @@ function setChatBodies(html) {
 }
 
 function appendChatMessage(msg) {
+  const isWarmup = msg && (msg.__warmup || msg.role === 'assistant' || msg.role === 'system');
+  if (!isWarmup) notifyChatActivity();
+
   const html = messageHtml(msg);
   const pc = document.querySelector('#chatBody');
   const mobile = document.querySelector('#mobileChatBody');
@@ -137,6 +144,8 @@ function sendChatMessage(sourceBtn) {
 
   if (!text) return;
 
+  notifyChatActivity();
+
   if (!chatWs || chatWs.readyState !== WebSocket.OPEN) {
     alert('聊天室未连接，请刷新页面重试');
     setInputState('login');
@@ -178,6 +187,7 @@ function bindChatSendEvents() {
 /** 初始化 WebSocket 聊天 */
 export function initChatSocket(roomId) {
   currentRoomId = roomId;
+  stopChatWarmup();
 
   if (chatWs) {
     try { chatWs.close(); } catch (e) {}
@@ -185,6 +195,7 @@ export function initChatSocket(roomId) {
   }
 
   bindChatSendEvents();
+  startChatWarmup(roomId, appendChatMessage);
 
   const token = getToken();
   if (!token) {
@@ -238,13 +249,9 @@ export function initChatSocket(roomId) {
 
   chatWs.onerror = () => {
     console.warn('[Chat] WebSocket error');
-    setInputState('login');
   };
 
   chatWs.onclose = () => {
-    console.log('[Chat] WebSocket closed');
-    if (getToken()) {
-      setInputState('login');
-    }
+    if (getToken()) setInputState('login');
   };
 }
