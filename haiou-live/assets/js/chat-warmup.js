@@ -14,9 +14,9 @@ let lastActivityAt = Date.now();
 let recentTexts = [];
 
 const AUTHOR = '海鸥小助手';
-const MIN_QUIET_MS = 60 * 1000;
-const FIRST_DELAY_MIN = 35 * 1000;
-const FIRST_DELAY_MAX = 75 * 1000;
+const MIN_QUIET_MS = 15 * 1000;
+const FIRST_DELAY_MIN = 15 * 1000;
+const FIRST_DELAY_MAX = 25 * 1000;
 const NEXT_DELAY_MIN = 90 * 1000;
 const NEXT_DELAY_MAX = 180 * 1000;
 const MAX_RECENT = 14;
