@@ -1,0 +1,14 @@
+/* 聊天室热场助手样式 */
+.chat-msg-assistant .lv-assistant {
+  background: linear-gradient(135deg, var(--brand-yellow), var(--brand-yellow-deep));
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(255, 106, 0, .18);
+}
+
+.chat-msg-assistant .chat-name {
+  color: var(--brand-yellow-deep);
+}
+
+.chat-msg-assistant .chat-text {
+  color: #555;
+}
