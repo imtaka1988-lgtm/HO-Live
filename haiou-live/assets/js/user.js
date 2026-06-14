@@ -46,9 +46,14 @@ function levelMeta(expValue) {
   return { level, exp, current, next, percent };
 }
 
+function levelClass(levelValue) {
+  const n = Math.max(1, Math.min(5, Number(levelValue || 1)));
+  return 'level-color-lv' + n;
+}
+
 function levelProgressHtml(meta) {
   const text = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`;
-  return `<section class="user-level-card">
+  return `<section class="user-level-card ${levelClass(meta.level)}" data-level-progress>
     <div><b>LV.${esc(meta.level)} 成长进度</b><span id="userExpText">${esc(text)}</span></div>
     <i><em id="userExpBar" style="width:${meta.percent}%"></em></i>
     <p>关注直播间可获得经验，后续会逐步加入发言、观看回放等成长任务。</p>
@@ -77,12 +82,20 @@ function renderFollowRooms(rooms) {
 function updateLevelDom(user) {
   if (!user) return;
   const meta = levelMeta(user.exp !== undefined ? user.exp : user.coins);
+  const theme = levelClass(meta.level);
   document.querySelectorAll('#userLevel').forEach(el => { el.textContent = 'LV.' + meta.level; });
   document.querySelectorAll('#userCoins').forEach(el => { el.textContent = String(meta.exp); });
-  const expText = document.querySelector('#userExpText');
-  const expBar = document.querySelector('#userExpBar');
-  if (expText) expText.textContent = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`;
-  if (expBar) expBar.style.width = meta.percent + '%';
+  document.querySelectorAll('[data-level-color]').forEach(el => {
+    el.classList.remove('level-color-lv1', 'level-color-lv2', 'level-color-lv3', 'level-color-lv4', 'level-color-lv5');
+    el.classList.add(theme);
+    if (el.classList.contains('user-level-badge')) el.textContent = 'LV.' + meta.level + ' 普通观众';
+  });
+  document.querySelectorAll('[data-level-progress]').forEach(el => {
+    el.classList.remove('level-color-lv1', 'level-color-lv2', 'level-color-lv3', 'level-color-lv4', 'level-color-lv5');
+    el.classList.add(theme);
+  });
+  document.querySelectorAll('#userExpText').forEach(el => { el.textContent = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`; });
+  document.querySelectorAll('#userExpBar').forEach(el => { el.style.width = meta.percent + '%'; });
 }
 
 export function renderFollow() {
@@ -162,6 +175,7 @@ export function renderUser() {
   const nickname = user.nickname || '海鸥用户';
   const phone = maskPhone(user.phone);
   const level = user.level || meta.level;
+  const theme = levelClass(level);
   const followCount = user.followCount || 0;
   const avatar = user.avatar || 'assets/img/avatar-default.svg';
 
@@ -175,7 +189,7 @@ export function renderUser() {
         </div>
       </div>
       <div class="user-center-badges">
-        <span>LV.${esc(level)} 普通观众</span>
+        <span class="user-level-badge ${theme}" data-level-color>LV.${esc(level)} 普通观众</span>
         <span>已登录</span>
         <span>可参与聊天室发言</span>
       </div>
@@ -224,7 +238,7 @@ export function renderUser() {
             </div>
           </div>
           <div class="user-center-pc-tags">
-            <span>LV.${esc(level)} 普通观众</span>
+            <span class="user-level-badge ${theme}" data-level-color>LV.${esc(level)} 普通观众</span>
             <span>已登录</span>
             <span>聊天室可发言</span>
           </div>
