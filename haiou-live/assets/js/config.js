@@ -47,7 +47,7 @@ export function href(path) {
   if (!path) return '#';
   if (path.startsWith('http')) return path;
   if (path.startsWith('#')) return path;
-  if (path.startsWith('javascript:')) return path;
+  if (path.startsWith('javascript:')) return '#';
   if (path.startsWith('/')) return path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
