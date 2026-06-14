@@ -13,6 +13,7 @@ import { bootPage } from './router.js';
 import { initMascot } from './mascot.js';
 import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 import { initAppIcons } from './app-icons.js';
+import { initAdminInlineEditors } from './admin-inline-editor.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -24,6 +25,7 @@ async function main() {
   renderFooter();
   initMascot();
   initAdminNeutralLabels();
+  initAdminInlineEditors();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));
