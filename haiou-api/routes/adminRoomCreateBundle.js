@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const authMiddleware = require("../middleware/auth");
 
 let anchorTablesReady = false;
@@ -22,13 +23,14 @@ function randomPassword(len) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
   let out = "";
   for (let i = 0; i < (len || 10); i += 1) {
-    out += chars[Math.floor(Math.random() * chars.length)];
+    out += chars[crypto.randomInt(chars.length)];
   }
   return out;
 }
 
 function cleanDomain(value) {
-  return String(value || "").trim().replace(/^https?:\/\//i, "").replace(/^rtmp:\/\//i, "").replace(/\/+$/, "");
+  const rtmpPrefix = new RegExp("^rtmp:\\\/\\\/", "i");
+  return String(value || "").trim().replace(/^https?:\/\//i, "").replace(rtmpPrefix, "").replace(/\/+$/, "");
 }
 
 function buildStreamProfile(roomId) {
@@ -132,29 +134,7 @@ module.exports = function (pool) {
 
       await conn.commit();
 
-      res.json({
-        ok: true,
-        room: {
-          id: roomId,
-          title,
-          category,
-          status,
-          cover,
-          anchorName,
-          announcement,
-          sortOrder
-        },
-        anchor: {
-          id: anchorResult.insertId,
-          roomId,
-          username,
-          password,
-          displayName,
-          status: "active"
-        },
-        streamProfile,
-        playbackStreams
-      });
+      res.json({ ok: true, room: { id: roomId, title, category, status, cover, anchorName, announcement, sortOrder }, anchor: { id: anchorResult.insertId, roomId, username, password, displayName, status: "active" }, streamProfile, playbackStreams });
     } catch (err) {
       if (conn) {
         try { await conn.rollback(); } catch (e) {}
