@@ -16,6 +16,7 @@ import { initAppIcons } from './app-icons.js';
 import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
+import { initPlayerCoverFit } from './player-cover-fit.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -25,6 +26,7 @@ async function main() {
   initPlayerLineSwitcher();
   renderGlobalChrome();
   bootPage();
+  initPlayerCoverFit();
   renderFooter();
   initMascot();
   initAdminNeutralLabels();
