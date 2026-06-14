@@ -22,12 +22,31 @@
   }
 
   body[data-page="room"].mobile-chat-focus .room-stage,
+  body[data-page="room"].mobile-chat-focus .player-panel,
   body[data-page="room"].mobile-chat-focus .mobile-chat-section {
     max-width: 100vw;
+    min-height: 0;
     overflow-x: hidden;
   }
 
+  body[data-page="room"].mobile-chat-focus .video-box {
+    display: none !important;
+  }
+
+  body[data-page="room"].mobile-chat-focus .mobile-chat-section {
+    flex: 1 1 auto;
+    height: 100%;
+  }
+
   body[data-page="room"].mobile-chat-focus .mobile-chat-body {
+    flex: 1 1 auto;
+    min-height: 0;
     overscroll-behavior: contain;
+  }
+
+  body[data-page="room"].mobile-chat-focus .mobile-chat-input {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
   }
 }
