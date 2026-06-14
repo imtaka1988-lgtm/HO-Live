@@ -3,15 +3,15 @@
  */
 
 function roomIdFromRow(row) {
-  const firstCell = row && row.children ? row.children[0] : null;
-  const n = firstCell ? parseInt(firstCell.textContent.trim(), 10) : 0;
+  const n = parseInt(row && row.dataset ? row.dataset.roomId : '', 10);
   return Number.isFinite(n) ? n : 0;
 }
 
 function sortRoomTableRows() {
   const tbody = document.querySelector('#roomTableBody');
   if (!tbody) return;
-  const rows = Array.from(tbody.querySelectorAll('tr')).filter(row => row.querySelector('td'));
+  if (tbody.querySelector('.admin-room-inline-editor-row')) return;
+  const rows = Array.from(tbody.querySelectorAll('tr[data-room-id]'));
   if (rows.length < 2) return;
 
   const sorted = rows.slice().sort(function (a, b) {
