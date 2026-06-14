@@ -11,6 +11,8 @@ const BURST_WINDOW_MS = 30000;
 const MAX_BURST_MESSAGES = 6;
 const REPEAT_WINDOW_MS = 60000;
 const FIRST_CHAT_EXP_REWARD = 2;
+const MAX_WS_CONNECTIONS_PER_IP = parseInt(process.env.CHAT_WS_MAX_CONNECTIONS_PER_IP || "20", 10) || 20;
+const MAX_WS_CONNECTIONS_TOTAL = parseInt(process.env.CHAT_WS_MAX_CONNECTIONS_TOTAL || "1000", 10) || 1000;
 
 let expLogTableReady = false;
 
@@ -130,6 +132,29 @@ function setupChatWs(server, pool) {
   const wss = new WebSocket.Server({ server, path: "/ws/chat" });
   const rooms = new Map();
   const userRateMap = new Map();
+  const ipConnectionMap = new Map();
+  let totalConnections = 0;
+
+  function getClientIp(req) {
+    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    return forwarded || req.socket.remoteAddress || "unknown";
+  }
+
+  function trackConnection(ip) {
+    const current = ipConnectionMap.get(ip) || 0;
+    if (totalConnections >= MAX_WS_CONNECTIONS_TOTAL) return false;
+    if (current >= MAX_WS_CONNECTIONS_PER_IP) return false;
+    ipConnectionMap.set(ip, current + 1);
+    totalConnections += 1;
+    return true;
+  }
+
+  function untrackConnection(ip) {
+    const current = ipConnectionMap.get(ip) || 0;
+    if (current <= 1) ipConnectionMap.delete(ip);
+    else ipConnectionMap.set(ip, current - 1);
+    totalConnections = Math.max(0, totalConnections - 1);
+  }
 
   function addClient(roomId, ws) {
     const key = String(roomId);
@@ -191,6 +216,23 @@ function setupChatWs(server, pool) {
   wss.on("connection", async (ws, req) => {
     let roomId = 0;
     let user = null;
+    const ip = getClientIp(req);
+    let tracked = false;
+
+    if (!trackConnection(ip)) {
+      send(ws, { type: "error", error: "聊天室连接过多，请稍后再试。" });
+      ws.close(1008, "too many connections");
+      return;
+    }
+    tracked = true;
+
+    ws.on("close", () => {
+      if (tracked) {
+        untrackConnection(ip);
+        tracked = false;
+      }
+      if (roomId) removeClient(roomId, ws);
+    });
 
     try {
       const url = new URL(req.url, "http://127.0.0.1");
@@ -316,10 +358,6 @@ function setupChatWs(server, pool) {
       } catch (err) {
         send(ws, makeNotice("消息发送失败，请稍后再试。"));
       }
-    });
-
-    ws.on("close", () => {
-      if (roomId) removeClient(roomId, ws);
     });
   });
 

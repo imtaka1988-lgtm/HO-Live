@@ -14,6 +14,22 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+function buildCorsOptions() {
+  const origins = String(process.env.CORS_ORIGIN || "")
+    .split(",")
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  if (!origins.length) return null;
+
+  return {
+    origin(origin, cb) {
+      if (!origin || origins.includes(origin)) return cb(null, true);
+      return cb(new Error("CORS not allowed"));
+    }
+  };
+}
+
 app.disable("x-powered-by");
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -22,7 +38,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(cors());
+const corsOptions = buildCorsOptions();
+app.use(corsOptions ? cors(corsOptions) : cors());
 app.use(express.json({ limit: "4mb" }));
 
 app.use((err, req, res, next) => {
