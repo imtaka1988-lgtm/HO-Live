@@ -7,6 +7,10 @@ import { startChatWarmup, stopChatWarmup, notifyChatActivity } from './chat-warm
 
 let chatWs = null;
 let currentRoomId = null;
+let reconnectTimer = null;
+let reconnectAttempts = 0;
+let authWatchTimer = null;
+let lastSeenToken = '';
 
 function getToken() {
   return localStorage.getItem('token') || '';
@@ -60,6 +64,15 @@ function appendChatMessage(msg) {
   scrollChatBottom();
 }
 
+function appendSystemNotice(text) {
+  appendChatMessage({
+    role: 'system',
+    nickname: '系统提醒',
+    level: 0,
+    message: text
+  });
+}
+
 function scrollChatBottom() {
   ['#chatBody', '#mobileChatBody'].forEach(sel => {
     const el = document.querySelector(sel);
@@ -97,6 +110,71 @@ function setInputState(mode) {
       btn.disabled = true;
     }
   });
+}
+
+function clearReconnectTimer() {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+}
+
+function closeChatSocketSilently() {
+  clearReconnectTimer();
+  if (chatWs) {
+    chatWs.__manualClose = true;
+    try { chatWs.close(); } catch (e) {}
+    chatWs = null;
+  }
+}
+
+function scheduleReconnect() {
+  clearReconnectTimer();
+
+  if (!currentRoomId || !getToken()) {
+    setInputState('login');
+    return;
+  }
+
+  reconnectAttempts += 1;
+  const delay = Math.min(15000, 1000 * Math.pow(2, Math.min(reconnectAttempts - 1, 4)));
+  setInputState('connecting');
+
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    if (!currentRoomId || !getToken()) {
+      setInputState('login');
+      return;
+    }
+    initChatSocket(currentRoomId, { reconnect: true });
+  }, delay);
+}
+
+function syncAuthState() {
+  const token = getToken();
+  if (token === lastSeenToken) return;
+
+  lastSeenToken = token;
+
+  if (!token) {
+    closeChatSocketSilently();
+    setInputState('login');
+    appendSystemNotice('你已退出登录，聊天室已切换为未登录状态。');
+    return;
+  }
+
+  if (currentRoomId) {
+    initChatSocket(currentRoomId);
+  }
+}
+
+function startAuthWatcher() {
+  if (authWatchTimer) return;
+  lastSeenToken = getToken();
+
+  authWatchTimer = setInterval(syncAuthState, 2000);
+  window.addEventListener('storage', syncAuthState);
+  window.addEventListener('focus', syncAuthState);
 }
 
 /** 渲染聊天消息列表 */
@@ -147,8 +225,9 @@ function sendChatMessage(sourceBtn) {
   notifyChatActivity();
 
   if (!chatWs || chatWs.readyState !== WebSocket.OPEN) {
-    alert('聊天室未连接，请刷新页面重试');
-    setInputState('login');
+    setInputState('connecting');
+    scheduleReconnect();
+    appendSystemNotice('聊天室正在重连，请稍后再发送。');
     return;
   }
 
@@ -185,19 +264,22 @@ function bindChatSendEvents() {
 }
 
 /** 初始化 WebSocket 聊天 */
-export function initChatSocket(roomId) {
+export function initChatSocket(roomId, options = {}) {
   currentRoomId = roomId;
-  stopChatWarmup();
+  startAuthWatcher();
 
-  if (chatWs) {
-    try { chatWs.close(); } catch (e) {}
-    chatWs = null;
+  if (!options.reconnect) {
+    stopChatWarmup();
+    startChatWarmup(roomId, appendChatMessage);
   }
 
+  closeChatSocketSilently();
+
   bindChatSendEvents();
-  startChatWarmup(roomId, appendChatMessage);
 
   const token = getToken();
+  lastSeenToken = token;
+
   if (!token) {
     setInputState('login');
     return;
@@ -208,13 +290,16 @@ export function initChatSocket(roomId) {
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   const url = `${protocol}//${location.host}/ws/chat?roomId=${encodeURIComponent(roomId)}&token=${encodeURIComponent(token)}`;
 
-  chatWs = new WebSocket(url);
+  const ws = new WebSocket(url);
+  chatWs = ws;
 
-  chatWs.onopen = () => {
+  ws.onopen = () => {
+    if (chatWs !== ws) return;
+    reconnectAttempts = 0;
     console.log('[Chat] WebSocket connected', currentRoomId);
   };
 
-  chatWs.onmessage = event => {
+  ws.onmessage = event => {
     let data = null;
 
     try {
@@ -243,15 +328,23 @@ export function initChatSocket(roomId) {
 
     if (data.type === 'error') {
       console.warn('[Chat] error:', data.error);
+      closeChatSocketSilently();
       setInputState('login');
     }
   };
 
-  chatWs.onerror = () => {
+  ws.onerror = () => {
     console.warn('[Chat] WebSocket error');
   };
 
-  chatWs.onclose = () => {
-    if (getToken()) setInputState('login');
+  ws.onclose = () => {
+    if (chatWs === ws) chatWs = null;
+    if (ws.__manualClose) return;
+
+    if (getToken()) {
+      scheduleReconnect();
+    } else {
+      setInputState('login');
+    }
   };
 }
