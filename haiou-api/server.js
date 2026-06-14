@@ -14,7 +14,7 @@ if (!JWT_SECRET) {
 }
 
 app.use(cors());
-app.use(express.json({ limit: "64kb" }));
+app.use(express.json({ limit: "4mb" }));
 
 // 处理非法 JSON 请求，避免 body-parser 堆栈刷满 PM2 error.log。
 app.use((err, req, res, next) => {
@@ -48,6 +48,9 @@ app.use("/api/auth", require("./routes/auth")(pool));
 
 // 挂载普通用户路由：/api/user/me
 app.use("/api/user", require("./routes/user")(pool));
+
+// 挂载普通用户头像上传：/api/user/avatar
+app.use("/api/user/avatar", require("./routes/userAvatar")(pool));
 
 // 挂载普通用户站内信：/api/user/messages
 app.use("/api/user/messages", require("./routes/userMessages")(pool));
