@@ -5,6 +5,11 @@
 
 let bound = false;
 let blurTimer = null;
+let savedRootStyle = null;
+let savedPageStyle = null;
+let savedAppStyle = null;
+let savedStageStyle = null;
+let savedPanelStyle = null;
 let savedVideoStyle = null;
 let savedSectionStyle = null;
 let savedBodyStyle = null;
@@ -13,19 +18,74 @@ function isRoomChatInput(target) {
   return !!(target && target.matches && target.matches('body[data-page="room"] .mobile-chat-input input'));
 }
 
+function viewportHeight() {
+  return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+}
+
 function updateRoomVh() {
-  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const h = viewportHeight();
   if (h) document.documentElement.style.setProperty('--room-vh', h + 'px');
+  return h || window.innerHeight || 0;
+}
+
+function saveStyleOnce(el, key) {
+  if (!el) return null;
+  if (key === 'root' && savedRootStyle === null) savedRootStyle = el.getAttribute('style') || '';
+  if (key === 'page' && savedPageStyle === null) savedPageStyle = el.getAttribute('style') || '';
+  if (key === 'app' && savedAppStyle === null) savedAppStyle = el.getAttribute('style') || '';
+  if (key === 'stage' && savedStageStyle === null) savedStageStyle = el.getAttribute('style') || '';
+  if (key === 'panel' && savedPanelStyle === null) savedPanelStyle = el.getAttribute('style') || '';
+  if (key === 'video' && savedVideoStyle === null) savedVideoStyle = el.getAttribute('style') || '';
+  if (key === 'section' && savedSectionStyle === null) savedSectionStyle = el.getAttribute('style') || '';
+  if (key === 'body' && savedBodyStyle === null) savedBodyStyle = el.getAttribute('style') || '';
+  return el;
+}
+
+function restoreStyle(el, value) {
+  if (!el || value === null) return;
+  if (value) el.setAttribute('style', value);
+  else el.removeAttribute('style');
 }
 
 function applyInlineFocusLayout() {
-  const video = document.querySelector('body[data-page="room"] .video-box');
-  const section = document.querySelector('body[data-page="room"] .mobile-chat-section');
-  const body = document.querySelector('body[data-page="room"] .mobile-chat-body:not(.hide)');
+  const h = updateRoomVh();
+  const root = saveStyleOnce(document.documentElement, 'root');
+  const page = saveStyleOnce(document.body, 'page');
+  const app = saveStyleOnce(document.querySelector('#app'), 'app');
+  const stage = saveStyleOnce(document.querySelector('body[data-page="room"] .room-stage'), 'stage');
+  const panel = saveStyleOnce(document.querySelector('body[data-page="room"] .player-panel'), 'panel');
+  const video = saveStyleOnce(document.querySelector('body[data-page="room"] .video-box'), 'video');
+  const section = saveStyleOnce(document.querySelector('body[data-page="room"] .mobile-chat-section'), 'section');
+  const body = saveStyleOnce(document.querySelector('body[data-page="room"] .mobile-chat-body:not(.hide)'), 'body');
 
-  if (video && savedVideoStyle === null) savedVideoStyle = video.getAttribute('style') || '';
-  if (section && savedSectionStyle === null) savedSectionStyle = section.getAttribute('style') || '';
-  if (body && savedBodyStyle === null) savedBodyStyle = body.getAttribute('style') || '';
+  if (root) {
+    root.style.setProperty('height', '100%', 'important');
+    root.style.setProperty('overflow', 'hidden', 'important');
+  }
+
+  if (page) {
+    page.style.setProperty('position', 'fixed', 'important');
+    page.style.setProperty('inset', '0', 'important');
+    page.style.setProperty('width', '100%', 'important');
+    page.style.setProperty('height', h + 'px', 'important');
+    page.style.setProperty('overflow', 'hidden', 'important');
+  }
+
+  if (app) {
+    app.style.setProperty('height', h + 'px', 'important');
+    app.style.setProperty('overflow', 'hidden', 'important');
+  }
+
+  if (stage) {
+    stage.style.setProperty('height', 'calc(' + h + 'px - 42px)', 'important');
+    stage.style.setProperty('overflow', 'hidden', 'important');
+  }
+
+  if (panel) {
+    panel.style.setProperty('height', '100%', 'important');
+    panel.style.setProperty('min-height', '0', 'important');
+    panel.style.setProperty('overflow', 'hidden', 'important');
+  }
 
   if (video) {
     video.style.setProperty('height', '0', 'important');
@@ -46,19 +106,28 @@ function applyInlineFocusLayout() {
   if (body) {
     body.style.setProperty('flex', '1 1 auto', 'important');
     body.style.setProperty('min-height', '0', 'important');
+    body.style.setProperty('overflow-x', 'hidden', 'important');
     body.style.setProperty('overflow-y', 'auto', 'important');
   }
+
+  window.scrollTo(0, 0);
 }
 
 function restoreInlineFocusLayout() {
-  const video = document.querySelector('body[data-page="room"] .video-box');
-  const section = document.querySelector('body[data-page="room"] .mobile-chat-section');
-  const body = document.querySelector('body[data-page="room"] .mobile-chat-body:not(.hide)');
+  restoreStyle(document.documentElement, savedRootStyle);
+  restoreStyle(document.body, savedPageStyle);
+  restoreStyle(document.querySelector('#app'), savedAppStyle);
+  restoreStyle(document.querySelector('body[data-page="room"] .room-stage'), savedStageStyle);
+  restoreStyle(document.querySelector('body[data-page="room"] .player-panel'), savedPanelStyle);
+  restoreStyle(document.querySelector('body[data-page="room"] .video-box'), savedVideoStyle);
+  restoreStyle(document.querySelector('body[data-page="room"] .mobile-chat-section'), savedSectionStyle);
+  restoreStyle(document.querySelector('body[data-page="room"] .mobile-chat-body:not(.hide)'), savedBodyStyle);
 
-  if (video && savedVideoStyle !== null) video.setAttribute('style', savedVideoStyle);
-  if (section && savedSectionStyle !== null) section.setAttribute('style', savedSectionStyle);
-  if (body && savedBodyStyle !== null) body.setAttribute('style', savedBodyStyle);
-
+  savedRootStyle = null;
+  savedPageStyle = null;
+  savedAppStyle = null;
+  savedStageStyle = null;
+  savedPanelStyle = null;
   savedVideoStyle = null;
   savedSectionStyle = null;
   savedBodyStyle = null;
@@ -66,11 +135,10 @@ function restoreInlineFocusLayout() {
 
 function openChatFocus() {
   clearTimeout(blurTimer);
-  updateRoomVh();
   document.body.classList.add('mobile-chat-focus');
   applyInlineFocusLayout();
-  setTimeout(function () { updateRoomVh(); applyInlineFocusLayout(); }, 80);
-  setTimeout(function () { updateRoomVh(); applyInlineFocusLayout(); }, 220);
+  setTimeout(applyInlineFocusLayout, 80);
+  setTimeout(applyInlineFocusLayout, 220);
 }
 
 function closeChatFocus() {
@@ -101,10 +169,7 @@ export function initMobileChatFocusFix() {
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function () {
-      if (document.body.classList.contains('mobile-chat-focus')) {
-        updateRoomVh();
-        applyInlineFocusLayout();
-      }
+      if (document.body.classList.contains('mobile-chat-focus')) applyInlineFocusLayout();
     }, { passive: true });
   }
 }
