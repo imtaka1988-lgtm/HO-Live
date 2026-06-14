@@ -5,6 +5,7 @@
 
 const STORAGE_PREFIX = 'admin_card_collapsed_';
 const DEFAULT_OPEN_TITLES = ['管理后台已登录', '房间列表'];
+const SKIP_CARD_SELECTORS = ['.admin-replay-import-card'];
 
 function injectStyle() {
   if (document.querySelector('#adminCardCollapseStyle')) return;
@@ -57,6 +58,10 @@ function shouldDefaultOpen(title) {
   return DEFAULT_OPEN_TITLES.some(t => title.includes(t));
 }
 
+function shouldSkipCard(card) {
+  return SKIP_CARD_SELECTORS.some(sel => card.matches(sel));
+}
+
 function ensureHeader(card, title) {
   let heading = card.querySelector('h1,h2,h3');
   if (!heading) return null;
@@ -85,6 +90,7 @@ function paint(card, btn, collapsed) {
 function setupCard(card) {
   if (!card || card.dataset.adminCollapseReady === '1') return;
   if (card.classList.contains('admin-login-status')) return;
+  if (shouldSkipCard(card)) return;
 
   const title = cardTitle(card);
   if (!title) return;
