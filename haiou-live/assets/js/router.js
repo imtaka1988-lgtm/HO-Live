@@ -7,7 +7,8 @@ import { renderHome, renderLive, bindHeroEvents } from './rooms.js';
 import { renderSchedule } from './schedule.js';
 import { renderLogin, bindLoginEvents } from './auth.js';
 import { renderFollow, renderUser, bindUserEvents } from './user.js';
-import { renderAppPage, renderAdmin, bindAdminEvents } from './app-page.js';
+import { renderAdmin, bindAdminEvents } from './app-page.js';
+import { renderCommunityPage } from './community-page.js';
 import { state, href, asset, esc, getHost, getRoom } from './config.js';
 import { renderChatList, renderAnchorProfile, initChatSocket } from './chat.js';
 import { startRoomInfoPolling, stopRoomInfoPolling } from './room-refresh.js';
@@ -112,7 +113,7 @@ function resizeOddsCards() {
 
 if (!window._oddsResizeBound) { window._oddsResizeBound = true; window.addEventListener('resize', resizeOddsCards); }
 
-const ROUTE_MAP = { home: renderHome, live: renderLive, schedule: renderSchedule, replays: renderReplaysPage, room: renderRoom, follow: renderFollow, user: renderUser, login: renderLogin, app: renderAppPage, admin: renderAdmin };
+const ROUTE_MAP = { home: renderHome, live: renderLive, schedule: renderSchedule, replays: renderReplaysPage, room: renderRoom, follow: renderFollow, user: renderUser, login: renderLogin, app: renderCommunityPage, admin: renderAdmin };
 export function bootPage() {
   const app = document.querySelector('#app');
   if (!app) return;
