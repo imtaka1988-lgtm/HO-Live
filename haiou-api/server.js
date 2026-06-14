@@ -6,6 +6,7 @@ const http = require("http");
 const app = express();
 const PORT = 3001;
 const setupChatWs = require("./services/chatWs");
+const { createLoginRateLimit } = require("./middleware/loginRateLimit");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -22,6 +23,34 @@ app.use((err, req, res, next) => {
   }
   return next(err);
 });
+
+const adminLoginRateLimit = createLoginRateLimit({
+  keyPrefix: "admin-login",
+  identityField: "username",
+  maxAttempts: 8,
+  windowMs: 10 * 60 * 1000,
+  blockMs: 10 * 60 * 1000
+});
+
+const anchorLoginRateLimit = createLoginRateLimit({
+  keyPrefix: "anchor-login",
+  identityField: "username",
+  maxAttempts: 10,
+  windowMs: 10 * 60 * 1000,
+  blockMs: 10 * 60 * 1000
+});
+
+const userLoginRateLimit = createLoginRateLimit({
+  keyPrefix: "user-login",
+  identityField: "phone",
+  maxAttempts: 12,
+  windowMs: 10 * 60 * 1000,
+  blockMs: 10 * 60 * 1000
+});
+
+app.post("/api/admin/login", adminLoginRateLimit);
+app.post("/api/anchor/login", anchorLoginRateLimit);
+app.post("/api/auth/login", userLoginRateLimit);
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
