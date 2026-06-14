@@ -101,6 +101,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
 }
 
 .replay-grid-page {
@@ -108,12 +109,15 @@
 }
 
 .replay-card {
+  height: 432px;
   overflow: hidden;
   border-radius: 14px;
   background: #fff;
   box-shadow: 0 10px 28px rgba(15, 23, 42, .08);
   cursor: pointer;
   transition: transform .16s ease, box-shadow .16s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .replay-card:hover {
@@ -124,6 +128,7 @@
 .replay-cover {
   position: relative;
   height: 138px;
+  flex: 0 0 138px;
   overflow: hidden;
   background: #111;
 }
@@ -166,7 +171,11 @@
 }
 
 .replay-info {
+  min-height: 0;
+  flex: 1;
   padding: 12px 13px 14px;
+  display: flex;
+  flex-direction: column;
 }
 
 .replay-title {
@@ -174,20 +183,28 @@
   color: var(--text-main);
   font-size: 15px;
   font-weight: 900;
-  white-space: nowrap;
+  line-height: 1.35;
+  min-height: 40px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .replay-desc {
-  min-height: 36px;
+  min-height: 54px;
+  max-height: 90px;
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .replay-btn {
-  margin-top: 11px;
+  margin-top: auto;
   height: 30px;
   padding: 0 14px;
   border-radius: 999px;
@@ -196,6 +213,7 @@
   color: #c2410c;
   font-size: 12px;
   font-weight: 900;
+  align-self: flex-start;
 }
 
 .replay-card:not(.is-placeholder) .replay-btn {
@@ -350,6 +368,7 @@
 
   .replay-card {
     flex: 0 0 238px;
+    height: 392px;
   }
 
   .replay-grid-page .replay-card {
@@ -358,10 +377,22 @@
 
   .replay-cover {
     height: 126px;
+    flex-basis: 126px;
   }
 
   .replay-grid-page .replay-cover {
     height: 112px;
+    flex-basis: 112px;
+  }
+
+  .replay-title {
+    min-height: 36px;
+    font-size: 13px;
+  }
+
+  .replay-desc {
+    max-height: 72px;
+    -webkit-line-clamp: 4;
   }
 
   .replay-modal-overlay {
