@@ -1,7 +1,27 @@
 @media (max-width: 780px) {
+  html,
   body[data-page="room"] {
-    overflow-x: hidden;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
+  }
+
+  body[data-page="room"] {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 100vw;
+    touch-action: manipulation;
+  }
+
+  body[data-page="room"] #app {
+    height: var(--room-vh, 100dvh);
+    overflow: hidden;
+  }
+
+  body[data-page="room"] .room-stage {
+    overflow: hidden;
   }
 
   body[data-page="room"] .mobile-chat-input input {
@@ -18,15 +38,16 @@
   }
 
   body[data-page="room"].mobile-chat-focus {
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
+  body[data-page="room"].mobile-chat-focus #app,
   body[data-page="room"].mobile-chat-focus .room-stage,
   body[data-page="room"].mobile-chat-focus .player-panel,
   body[data-page="room"].mobile-chat-focus .mobile-chat-section {
     max-width: 100vw;
     min-height: 0;
-    overflow-x: hidden;
+    overflow: hidden;
   }
 
   body[data-page="room"].mobile-chat-focus .video-box {
@@ -48,7 +69,9 @@
   body[data-page="room"].mobile-chat-focus .mobile-chat-body {
     flex: 1 1 auto;
     min-height: 0;
+    overflow-y: auto;
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   body[data-page="room"].mobile-chat-focus .mobile-chat-input {
