@@ -168,7 +168,9 @@ body[data-page="admin"] .btn-stream-add,
 body[data-page="admin"] .btn-stream-save,
 body[data-page="admin"] .btn-room-save,
 body[data-page="admin"] #btnAdminLogin,
-body[data-page="admin"] #saveTheme {
+body[data-page="admin"] #saveTheme,
+body[data-page="admin"] #btnFetchBiliReplay,
+body[data-page="admin"] #btnCopyReplayJson {
   background: linear-gradient(135deg, var(--brand-yellow), var(--brand-yellow-deep)) !important;
   color: #fff !important;
 }
@@ -231,6 +233,119 @@ body[data-page="admin"] #adminUsername {
   color: #6b7280 !important;
 }
 
+body[data-page="admin"] .admin-replay-import-card h2 {
+  margin: 0 0 4px;
+}
+
+body[data-page="admin"] .admin-replay-import-head p,
+body[data-page="admin"] .admin-replay-import-msg {
+  margin: 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+body[data-page="admin"] .admin-replay-import-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+body[data-page="admin"] .admin-replay-import-row input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+}
+
+body[data-page="admin"] .admin-replay-import-row button {
+  min-width: 116px;
+  border: 0;
+}
+
+body[data-page="admin"] .admin-replay-import-msg {
+  min-height: 20px;
+  margin-top: 10px;
+}
+
+body[data-page="admin"] .admin-replay-import-result {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed #eadfd6;
+}
+
+body[data-page="admin"] .admin-replay-result-inner {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+body[data-page="admin"] .admin-replay-cover-preview {
+  min-height: 136px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+}
+
+body[data-page="admin"] .admin-replay-cover-preview img {
+  width: 100%;
+  height: 150px;
+  display: block;
+  object-fit: cover;
+}
+
+body[data-page="admin"] .admin-replay-fields label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+body[data-page="admin"] .admin-replay-fields input,
+body[data-page="admin"] .admin-replay-fields select,
+body[data-page="admin"] #replayJsonOutput {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  margin-top: 5px;
+}
+
+body[data-page="admin"] .admin-replay-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+body[data-page="admin"] .admin-replay-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 10px;
+}
+
+body[data-page="admin"] #btnCopyReplayJson {
+  border: 0;
+  padding: 8px 16px;
+}
+
+body[data-page="admin"] #replayCopyMsg {
+  color: var(--success);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+body[data-page="admin"] #replayJsonOutput {
+  min-height: 150px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  font-family: Consolas, Monaco, monospace;
+  resize: vertical;
+}
+
 @media (max-width: 768px) {
   body[data-page="admin"] .page-shell {
     padding: 14px 0 90px;
@@ -248,5 +363,24 @@ body[data-page="admin"] #adminUsername {
   body[data-page="admin"] .admin-card {
     padding: 16px !important;
     border-radius: 16px !important;
+  }
+
+  body[data-page="admin"] .admin-replay-import-row,
+  body[data-page="admin"] .admin-replay-result-inner {
+    display: block;
+  }
+
+  body[data-page="admin"] .admin-replay-import-row button {
+    width: 100%;
+    margin-top: 10px;
+    height: 38px;
+  }
+
+  body[data-page="admin"] .admin-replay-cover-preview {
+    margin-bottom: 12px;
+  }
+
+  body[data-page="admin"] .admin-replay-two {
+    grid-template-columns: 1fr 1fr;
   }
 }
