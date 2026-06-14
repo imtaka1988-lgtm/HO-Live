@@ -1,0 +1,145 @@
+/* 播放器稳定版线路切换器：右上角固定，不遮挡底部 controls */
+
+.player-line-switcher {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 7;
+  font-size: 12px;
+  user-select: none;
+}
+
+.player-line-switcher .line-current-btn {
+  height: 34px;
+  min-width: 92px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .24);
+  background: rgba(15, 23, 42, .62);
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+}
+
+.player-line-switcher .line-icon {
+  opacity: .9;
+  font-weight: 900;
+}
+
+.player-line-switcher .line-current-name {
+  max-width: 82px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 800;
+}
+
+.player-line-switcher .line-current-type {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(255, 106, 0, .92);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.player-line-switcher.is-open .line-current-btn,
+.player-line-switcher .line-current-btn:hover {
+  background: rgba(15, 23, 42, .78);
+  border-color: rgba(255, 106, 0, .5);
+}
+
+.player-line-switcher .line-menu {
+  display: none;
+  position: absolute;
+  top: 42px;
+  right: 0;
+  min-width: 168px;
+  max-width: 240px;
+  padding: 7px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  background: rgba(15, 23, 42, .94);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .32);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.player-line-switcher.is-open .line-menu {
+  display: block;
+}
+
+.player-line-switcher .line-menu-item {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.player-line-switcher .line-menu-item:hover,
+.player-line-switcher .line-menu-item.is-active {
+  background: rgba(255, 106, 0, .24);
+}
+
+.player-line-switcher .line-menu-name {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 800;
+}
+
+.player-line-switcher .line-type-badge {
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .14);
+  color: rgba(255, 255, 255, .92);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+@media (max-width: 780px) {
+  .player-line-switcher {
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+  }
+
+  .player-line-switcher .line-current-btn {
+    height: 30px;
+    min-width: 70px;
+    padding: 0 9px;
+    gap: 4px;
+  }
+
+  .player-line-switcher .line-current-name {
+    max-width: 58px;
+  }
+
+  .player-line-switcher .line-current-type {
+    display: none;
+  }
+
+  .player-line-switcher .line-menu {
+    top: 36px;
+    min-width: 140px;
+    max-width: calc(100vw - 28px);
+  }
+}
