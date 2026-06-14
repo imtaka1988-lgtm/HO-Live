@@ -52,20 +52,20 @@ function extractTitle(html) {
   return "";
 }
 
-function fetchText(url) {
+function fetchText(url, options = {}) {
   return new Promise((resolve, reject) => {
     const req = https.get(url, {
       timeout: 9000,
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept": options.accept || "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Encoding": "identity",
         "Referer": "https://www.bilibili.com/"
       }
     }, res => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
-        return resolve(fetchText(new URL(res.headers.location, url).toString()));
+        return resolve(fetchText(new URL(res.headers.location, url).toString(), options));
       }
       if (res.statusCode < 200 || res.statusCode >= 300) {
         res.resume();
@@ -84,6 +84,33 @@ function fetchText(url) {
   });
 }
 
+async function fetchBilibiliApi(bvid) {
+  const apiUrl = "https://api.bilibili.com/x/web-interface/view?bvid=" + encodeURIComponent(bvid);
+  const raw = await fetchText(apiUrl, { accept: "application/json,text/plain,*/*" });
+  const json = JSON.parse(raw);
+  if (!json || json.code !== 0 || !json.data) {
+    throw new Error((json && json.message) ? json.message : "B站接口未返回视频信息");
+  }
+  return json.data;
+}
+
+async function fetchBilibiliPageMeta(bvid) {
+  const pageUrl = "https://www.bilibili.com/video/" + bvid + "/";
+  const html = await fetchText(pageUrl);
+  return {
+    title: extractTitle(html),
+    cover: normalizeUrl(extractMeta(html, "og:image")),
+    desc: extractMeta(html, "og:description") || extractMeta(html, "description"),
+    cid: ""
+  };
+}
+
+function buildEmbedUrl(bvid, cid) {
+  let url = "https://player.bilibili.com/player.html?isOutside=true&bvid=" + encodeURIComponent(bvid);
+  if (cid) url += "&cid=" + encodeURIComponent(String(cid));
+  return url + "&p=1&autoplay=0&danmaku=0";
+}
+
 router.post("/bilibili", authMiddleware, async (req, res) => {
   try {
     const url = String(req.body && req.body.url || "").trim();
@@ -91,20 +118,32 @@ router.post("/bilibili", authMiddleware, async (req, res) => {
     if (!bvid) return res.status(400).json({ ok: false, error: "未识别到 B站 BV 号" });
 
     const pageUrl = "https://www.bilibili.com/video/" + bvid + "/";
-    const html = await fetchText(pageUrl);
-    const title = extractTitle(html);
-    const cover = normalizeUrl(extractMeta(html, "og:image"));
-    const desc = extractMeta(html, "og:description") || extractMeta(html, "description");
+    let meta;
+
+    try {
+      const data = await fetchBilibiliApi(bvid);
+      meta = {
+        title: data.title || "",
+        cover: normalizeUrl(data.pic || ""),
+        desc: data.desc || "",
+        cid: data.cid || "",
+        owner: data.owner && data.owner.name ? data.owner.name : ""
+      };
+    } catch (apiErr) {
+      meta = await fetchBilibiliPageMeta(bvid);
+      meta.apiFallbackError = apiErr.message || "B站接口失败";
+    }
 
     res.json({
       ok: true,
       platform: "bilibili",
       bvid,
       pageUrl,
-      title,
-      cover,
-      desc,
-      embedUrl: "https://player.bilibili.com/player.html?isOutside=true&bvid=" + encodeURIComponent(bvid) + "&p=1&autoplay=0&danmaku=0"
+      title: meta.title,
+      cover: meta.cover,
+      desc: meta.desc,
+      owner: meta.owner || "",
+      embedUrl: buildEmbedUrl(bvid, meta.cid)
     });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message || "抓取失败" });
