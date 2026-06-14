@@ -2,6 +2,8 @@ const express = require("express");
 const { fetchOddsRecommendations } = require("../services/odds");
 const authMiddleware = require("../middleware/auth");
 
+let anchorAvatarColumnReady = false;
+
 function pickSmallestMissingRoomId(rows) {
   let nextId = 1;
   for (const row of rows) {
@@ -10,6 +12,16 @@ function pickSmallestMissingRoomId(rows) {
     else if (id > nextId) break;
   }
   return nextId;
+}
+
+async function ensureAnchorAvatarColumn(pool) {
+  if (anchorAvatarColumnReady) return;
+  try {
+    await pool.query("ALTER TABLE rooms ADD COLUMN anchor_avatar VARCHAR(500) NOT NULL DEFAULT ''");
+  } catch (err) {
+    if (!/Duplicate column/i.test(err.message || '')) throw err;
+  }
+  anchorAvatarColumnReady = true;
 }
 
 module.exports = function (pool) {
@@ -74,8 +86,9 @@ module.exports = function (pool) {
 
   router.get("/public/rooms", async (req, res) => {
     try {
+      await ensureAnchorAvatarColumn(pool);
       const [rooms] = await pool.query(
-        "SELECT id, title, category, status, cover, anchor_name AS anchorName, sort_order AS sortOrder, COALESCE(announcement, '') AS announcement FROM rooms ORDER BY sort_order, id"
+        "SELECT id, title, category, status, cover, anchor_avatar AS anchorAvatar, anchor_name AS anchorName, sort_order AS sortOrder, COALESCE(announcement, '') AS announcement FROM rooms ORDER BY sort_order, id"
       );
       for (const r of rooms) {
         const [streams] = await pool.query(
