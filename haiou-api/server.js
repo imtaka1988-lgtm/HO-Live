@@ -14,7 +14,15 @@ if (!JWT_SECRET) {
 }
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "64kb" }));
+
+// 处理非法 JSON 请求，避免 body-parser 堆栈刷满 PM2 error.log。
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({ ok: false, error: "JSON 格式错误" });
+  }
+  return next(err);
+});
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
