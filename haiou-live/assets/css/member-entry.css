@@ -1,0 +1,31 @@
+.pc-login a[href="/pages/user.html"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: #fff !important;
+  background: linear-gradient(135deg, #111827, #3b260b 58%, #111827);
+  box-shadow: 0 8px 22px rgba(249, 115, 22, .22), inset 0 0 0 1px rgba(250, 204, 21, .28);
+  font-weight: 900;
+}
+
+.pc-login a[href="/pages/user.html"]::before {
+  content: "★";
+  color: #facc15;
+  font-size: 12px;
+}
+
+.pc-login a[href="/pages/user.html"]::after {
+  content: "VIP";
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  font-size: 11px;
+  font-weight: 900;
+}
