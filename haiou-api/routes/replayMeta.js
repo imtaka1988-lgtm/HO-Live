@@ -26,16 +26,20 @@ function extractBvid(url) {
   return m ? m[0] : "";
 }
 
+function getAttr(tag, attrName) {
+  const re = new RegExp(attrName + "\\s*=\\s*([\\\"'])((?:\\\\.|(?!\\1)[\\s\\S])*)\\1", "i");
+  const m = String(tag || "").match(re);
+  return m && m[2] ? decodeHtml(m[2]) : "";
+}
+
 function extractMeta(html, key) {
-  const patterns = [
-    new RegExp('<meta[^>]+property=["\\']' + key + '["\\'][^>]+content=["\\']([^"\\']+)["\\'][^>]*>', 'i'),
-    new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+property=["\\']' + key + '["\\'][^>]*>', 'i'),
-    new RegExp('<meta[^>]+name=["\\']' + key + '["\\'][^>]+content=["\\']([^"\\']+)["\\'][^>]*>', 'i'),
-    new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+name=["\\']' + key + '["\\'][^>]*>', 'i')
-  ];
-  for (const p of patterns) {
-    const m = html.match(p);
-    if (m && m[1]) return decodeHtml(m[1]);
+  const tags = String(html || "").match(/<meta\b[^>]*>/gi) || [];
+  const want = String(key || "").toLowerCase();
+  for (const tag of tags) {
+    const prop = (getAttr(tag, "property") || getAttr(tag, "name")).toLowerCase();
+    if (prop !== want) continue;
+    const content = getAttr(tag, "content");
+    if (content) return content;
   }
   return "";
 }
@@ -43,7 +47,7 @@ function extractMeta(html, key) {
 function extractTitle(html) {
   const og = extractMeta(html, "og:title");
   if (og) return og.replace(/_哔哩哔哩_bilibili$/i, "").trim();
-  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const m = String(html || "").match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   if (m && m[1]) return decodeHtml(m[1]).replace(/_哔哩哔哩_bilibili$/i, "").trim();
   return "";
 }
