@@ -21,8 +21,18 @@ function normalizeUrl(raw) {
   return raw;
 }
 
+function targetFromRequest(req) {
+  const path = String(req.query.path || "").trim();
+  if (path) {
+    if (!path.startsWith("/bfs/")) return "";
+    if (path.includes("..")) return "";
+    return "https://i2.hdslb.com" + path;
+  }
+  return normalizeUrl(String(req.query.url || ""));
+}
+
 router.get("/", (req, res) => {
-  const target = normalizeUrl(String(req.query.url || ""));
+  const target = targetFromRequest(req);
   if (!isAllowedCoverUrl(target)) {
     return res.status(400).json({ ok: false, error: "封面地址不允许" });
   }
