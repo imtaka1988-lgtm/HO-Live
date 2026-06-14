@@ -109,7 +109,7 @@
 }
 
 .replay-card {
-  height: 432px;
+  height: 320px;
   overflow: hidden;
   border-radius: 14px;
   background: #fff;
@@ -192,13 +192,13 @@
 }
 
 .replay-desc {
-  min-height: 54px;
-  max-height: 90px;
+  min-height: 36px;
+  max-height: 36px;
   color: var(--text-sub);
   font-size: 12px;
   line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 5;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -368,7 +368,7 @@
 
   .replay-card {
     flex: 0 0 238px;
-    height: 392px;
+    height: 300px;
   }
 
   .replay-grid-page .replay-card {
@@ -391,8 +391,9 @@
   }
 
   .replay-desc {
-    max-height: 72px;
-    -webkit-line-clamp: 4;
+    min-height: 36px;
+    max-height: 36px;
+    -webkit-line-clamp: 2;
   }
 
   .replay-modal-overlay {
