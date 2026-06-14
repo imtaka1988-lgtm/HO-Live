@@ -28,6 +28,7 @@ function upsertMeta(name, content) {
 }
 
 export function initAppIcons() {
+  upsertLink('stylesheet', '/assets/css/nav-logo.css');
   upsertLink('icon', '/assets/icons/app-icon.svg', { type: 'image/svg+xml' });
   upsertLink('apple-touch-icon', '/assets/icons/app-icon.svg');
   upsertLink('manifest', '/manifest.webmanifest');
