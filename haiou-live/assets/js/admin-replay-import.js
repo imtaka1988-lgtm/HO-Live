@@ -170,6 +170,14 @@ async function loadSavedReplayList(token) {
   }
 }
 
+async function showSavedReplayList(token) {
+  const wrap = document.querySelector('#savedReplayListWrap');
+  const toggle = document.querySelector('#btnToggleSavedReplays');
+  if (wrap) wrap.style.display = 'block';
+  if (toggle) toggle.textContent = '收起已保存回放 ▾';
+  await loadSavedReplayList(token);
+}
+
 function bindResultActions(meta, token) {
   const copyBtn = document.querySelector('#btnCopyReplayJson');
   const saveBtn = document.querySelector('#btnSaveReplayJson');
@@ -217,7 +225,7 @@ function bindResultActions(meta, token) {
           msg.textContent = result.action === 'updated' ? '已更新到回放列表' : '已保存到回放列表';
           msg.style.color = 'var(--success)';
         }
-        await loadSavedReplayList(token);
+        await showSavedReplayList(token);
       } catch (e) {
         if (msg) {
           msg.textContent = '保存失败：' + (e.message || '未知错误');
@@ -265,15 +273,28 @@ export function initAdminReplayImport() {
   <p id="replayImportMsg" class="admin-replay-import-msg"></p>
   <div id="replayImportResult" class="admin-replay-import-result" style="display:none;"></div>
   <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #eadfd6;">
-    <h3 style="margin:0 0 8px;font-size:16px;">已保存回放</h3>
-    <div id="savedReplayList"></div>
+    <button id="btnToggleSavedReplays" type="button" style="padding:7px 14px;border:0;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:800;">展开已保存回放 ▸</button>
+    <div id="savedReplayListWrap" style="display:none;margin-top:10px;">
+      <div id="savedReplayList"></div>
+    </div>
   </div>`;
 
   const cards = adminBox.querySelectorAll('.admin-card');
   if (cards[1]) cards[1].insertAdjacentElement('afterend', card);
   else adminBox.appendChild(card);
 
-  loadSavedReplayList(token);
+  const toggleSavedBtn = card.querySelector('#btnToggleSavedReplays');
+  const savedWrap = card.querySelector('#savedReplayListWrap');
+  if (toggleSavedBtn && savedWrap) {
+    toggleSavedBtn.addEventListener('click', async function () {
+      if (savedWrap.style.display === 'none' || !savedWrap.style.display) {
+        await showSavedReplayList(token);
+      } else {
+        savedWrap.style.display = 'none';
+        toggleSavedBtn.textContent = '展开已保存回放 ▸';
+      }
+    });
+  }
 
   const btn = card.querySelector('#btnFetchBiliReplay');
   const input = card.querySelector('#biliReplayUrl');
