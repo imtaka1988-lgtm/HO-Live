@@ -24,7 +24,16 @@ function isRealRoomRow(row) {
 function cleanupFloatingAnchorButtons() {
   document.querySelectorAll('#roomTableBody .btn-anchor-bundle').forEach(function (btn) {
     const row = btn.closest('tr');
-    if (!isRealRoomRow(row)) btn.remove();
+    if (isRealRoomRow(row)) return;
+    if (row && (row.classList.contains('admin-room-inline-editor-row') || row.classList.contains('admin-anchor-bundle-row'))) {
+      row.remove();
+      return;
+    }
+    btn.remove();
+  });
+
+  document.querySelectorAll('#roomTableBody .admin-anchor-bundle-row').forEach(function (row) {
+    if (!row.querySelector('.admin-anchor-panel-card')) row.remove();
   });
 }
 
@@ -33,7 +42,7 @@ export function initAdminAnchorPanelToggle() {
   bound = true;
 
   cleanupFloatingAnchorButtons();
-  setInterval(cleanupFloatingAnchorButtons, 1200);
+  setInterval(cleanupFloatingAnchorButtons, 800);
 
   document.addEventListener('click', function (e) {
     const btn = e.target.closest && e.target.closest('.btn-anchor-bundle');
