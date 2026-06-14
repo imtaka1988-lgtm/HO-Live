@@ -80,7 +80,7 @@ function replayCard(item) {
 
   return `<article class="replay-card ${isReady ? '' : 'is-placeholder'}" data-url="${esc(item.url || '#')}" data-embed-url="${esc(embedUrl)}" data-source-type="${esc(item.sourceType || '')}" data-title="${esc(item.title || '经典战役')}">
     <div class="replay-cover">
-      <img src="${asset(item.cover || 'assets/img/thumb-1.svg')}" alt="${esc(item.title || '')}">
+      <img referrerpolicy="no-referrer" src="${asset(item.cover || 'assets/img/thumb-1.svg')}" alt="${esc(item.title || '')}">
       <span class="replay-badge">${esc(badge)}</span>
       <span class="replay-year">${esc(item.year || '经典')}</span>
     </div>
