@@ -78,6 +78,90 @@ function levelProgressHtml(meta) {
   </section>`;
 }
 
+function formatMessageTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${mm}-${dd} ${hh}:${mi}`;
+}
+
+function renderUserMessageList(messages) {
+  if (!messages || !messages.length) {
+    return `<div class="follow-empty-box">
+      <b>暂无系统站内信</b>
+      <span>后续系统通知、活动提醒会在这里显示。</span>
+    </div>`;
+  }
+
+  return `<div style="display:grid;gap:10px;">
+    ${messages.slice(0, 6).map(m => `<article style="padding:12px;border-radius:14px;background:#f8fafc;border:1px solid #eef2f7;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;">
+        <b style="color:#111827;font-size:14px;font-weight:900;">${esc(m.title || '系统通知')}</b>
+        <span style="color:#f97316;font-size:11px;font-weight:900;white-space:nowrap;">${esc(formatMessageTime(m.createdAt))}</span>
+      </div>
+      <p style="margin:0;color:#4b5563;font-size:13px;line-height:1.65;">${esc(m.content || '')}</p>
+    </article>`).join('')}
+  </div>`;
+}
+
+function openLatestMessageModal(message) {
+  if (!message || !message.id) return;
+  const key = 'site_message_seen_' + message.id;
+  if (localStorage.getItem(key) === '1') return;
+  localStorage.setItem(key, '1');
+
+  const existing = document.querySelector('#siteMessageModal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'siteMessageModal';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:18px;';
+  overlay.innerHTML = `<div style="width:min(420px,100%);border-radius:20px;background:#fff;box-shadow:0 22px 60px rgba(15,23,42,.28);overflow:hidden;">
+    <div style="padding:16px 18px;background:linear-gradient(135deg,#111827,#1f2937);color:#fff;">
+      <div style="font-size:12px;font-weight:900;opacity:.8;margin-bottom:5px;">系统站内信</div>
+      <h2 style="margin:0;font-size:18px;font-weight:900;line-height:1.35;">${esc(message.title || '系统通知')}</h2>
+    </div>
+    <div style="padding:18px;color:#374151;font-size:14px;line-height:1.75;white-space:pre-wrap;">${esc(message.content || '')}</div>
+    <div style="display:flex;gap:10px;padding:0 18px 18px;">
+      <button id="siteMessageClose" type="button" style="flex:1;height:40px;border:0;border-radius:999px;background:#ff8a00;color:#fff;font-weight:900;">我知道了</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  overlay.querySelector('#siteMessageClose')?.addEventListener('click', close);
+}
+
+async function loadUserMessages(token) {
+  const list = document.querySelector('#userMessageList');
+  const count = document.querySelector('#userMessageCount');
+  const hint = document.querySelector('#userMessageHint');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/api/user/messages', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (!data || !data.ok) throw new Error('message load failed');
+    const messages = data.messages || [];
+    if (list) list.innerHTML = renderUserMessageList(messages);
+    const text = messages.length ? `${messages.length} 条系统通知` : '暂无系统通知';
+    if (count) count.textContent = messages.length ? `有 ${messages.length} 条` : '暂无';
+    if (hint) hint.textContent = text;
+    if (messages.length) openLatestMessageModal(messages[0]);
+  } catch (e) {
+    if (list) list.innerHTML = '<div class="follow-empty-box"><b>站内信加载失败</b><span>请稍后刷新重试。</span></div>';
+    if (count) count.textContent = '加载失败';
+    if (hint) hint.textContent = '站内信加载失败';
+  }
+}
+
 function followRoomCard(room) {
   return `<a class="follow-room-card" href="${href('pages/room.html?id=' + room.id)}">
     <img src="${asset(room.cover || 'assets/img/thumb-1.svg')}" alt="${esc(room.title || '')}">
@@ -224,9 +308,15 @@ export function renderUser() {
 
     ${levelProgressHtml(meta)}
 
+    <section class="user-center-section" id="userMessageSection">
+      <h3 style="display:flex;align-items:center;justify-content:space-between;gap:10px;">系统站内信 <span id="userMessageCount" style="color:#f97316;font-size:12px;font-weight:900;">加载中</span></h3>
+      <div id="userMessageList"><div class="follow-loading">站内信加载中...</div></div>
+    </section>
+
     <section class="user-center-section">
       <h3>常用入口</h3>
       <div class="user-center-actions">
+        <a class="user-center-action" href="#userMessageSection">我的消息<span id="userMessageHint">正在检查系统通知</span></a>
         <a class="user-center-action" href="${href('pages/follow.html')}">我的关注<span>关注直播间与主播</span></a>
         <a class="user-center-action" href="${href('pages/replays.html')}">赛事回放<span>查看经典比赛集锦</span></a>
         <a class="user-center-action" href="${href('pages/app.html')}">交流群<span>加入球迷交流入口</span></a>
@@ -242,7 +332,7 @@ export function renderUser() {
       </div>
     </section>
 
-    <section class="user-center-note">当前账号已开通聊天室发言身份。关注直播间后，会获得少量经验并显示在“我的关注”中。</section>
+    <section class="user-center-note">当前账号已开通聊天室发言身份。系统站内信会在进入“我的”时自动弹窗提醒。</section>
 
     <section style="margin:14px 12px 0;"><button id="btnUserLogoutMobile" class="user-center-logout" type="button">退出登录</button></section>
   </main>
@@ -273,12 +363,17 @@ export function renderUser() {
         <div class="user-center-pc-panel">
           <h2 style="margin:0 0 14px;font-size:20px;font-weight:900;color:#111827;">会员快捷入口</h2>
           <div class="user-center-pc-links">
+            <a href="#userMessageSection">我的消息</a>
             <a href="${href('pages/follow.html')}">我的关注</a>
             <a href="${href('pages/replays.html')}">赛事回放</a>
             <a href="${href('pages/app.html')}">交流群</a>
             <button type="button" data-user-soon>修改资料</button>
             <button id="btnUserLogoutPc" class="user-center-logout" type="button">退出登录</button>
           </div>
+        </div>
+        <div class="user-center-pc-panel" id="pcUserMessageSection" style="grid-column:1 / -1;">
+          <h2 style="margin:0 0 14px;font-size:20px;font-weight:900;color:#111827;">系统站内信 <span id="pcUserMessageCount" style="color:#f97316;font-size:12px;font-weight:900;">加载中</span></h2>
+          <div id="pcUserMessageList"><div class="follow-loading">站内信加载中...</div></div>
         </div>
       </div>
     </div>
@@ -317,6 +412,8 @@ export function bindUserEvents() {
       document.querySelectorAll('#userFollowCount,#pcUserFollowCount').forEach(el => el.textContent = String(res.user.followCount || 0));
     }
   }).catch(function () {});
+
+  loadUserMessages(token);
 
   const followBox = document.querySelector('#followList');
   const pcFollowBox = document.querySelector('#pcFollowList');
