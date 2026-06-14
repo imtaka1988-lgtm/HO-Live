@@ -81,6 +81,7 @@ const pool = mysql.createPool({
 });
 
 app.use("/api/admin", require("./routes/adminRoomCreatePack")(pool));
+app.use("/api", require("./routes/publicRoomsById")(pool));
 app.use("/api", require("./routes/public")(pool));
 app.use("/api", require("./routes/communityConfig")(pool));
 app.use("/api/replay-cover", require("./routes/replayCover"));
@@ -91,6 +92,7 @@ app.use("/api/user/messages", require("./routes/userMessages")(pool));
 app.use("/api/admin", require("./routes/adminObsTemplate")(pool));
 app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
+app.use("/api/admin", require("./routes/adminRoomListById")(pool));
 app.use("/api/admin", require("./routes/adminRoomDeleteCleanup")(pool));
 app.use("/api/admin", require("./routes/admin")(pool));
 app.use("/api/anchor", require("./routes/anchor")(pool));
