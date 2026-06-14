@@ -15,12 +15,14 @@ import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 import { initAppIcons } from './app-icons.js';
 import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
+import { initPlayerLineSwitcher } from './player-line-switcher.js';
 
 async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
   initAppIcons();
   applyTheme(cfg);
+  initPlayerLineSwitcher();
   renderGlobalChrome();
   bootPage();
   renderFooter();
