@@ -58,6 +58,9 @@ app.use("/api/user/messages", require("./routes/userMessages")(pool));
 // 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
 
+// 挂载主播后台路由：/api/anchor/login, /api/anchor/room, /api/anchor/stream-info
+app.use("/api/anchor", require("./routes/anchor")(pool));
+
 // 挂载管理员站内信：/api/admin/site-messages
 app.use("/api/admin/site-messages", require("./routes/adminSiteMessages")(pool));
 
