@@ -88,7 +88,8 @@ function renderResult(meta) {
       <label>简介<input id="replayMetaDesc" value="${escapeHtml(desc)}"></label>
       <label>播放地址<input readonly value="${escapeHtml(meta.embedUrl || '')}"></label>
       <div class="admin-replay-actions">
-        <button id="btnCopyReplayJson" type="button">复制回放配置</button>
+        <button id="btnSaveReplayJson" type="button">保存到回放列表</button>
+        <button id="btnCopyReplayJson" type="button">复制配置</button>
         <span id="replayCopyMsg"></span>
       </div>
       <textarea id="replayJsonOutput" readonly></textarea>
@@ -96,11 +97,24 @@ function renderResult(meta) {
   </div>`;
 }
 
-function bindResultCopy(meta) {
-  const btn = document.querySelector('#btnCopyReplayJson');
+async function saveReplayToServer(replay, token) {
+  const res = await fetch('/api/admin/replays', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify(replay)
+  });
+  return await res.json();
+}
+
+function bindResultActions(meta, token) {
+  const copyBtn = document.querySelector('#btnCopyReplayJson');
+  const saveBtn = document.querySelector('#btnSaveReplayJson');
   const out = document.querySelector('#replayJsonOutput');
   const msg = document.querySelector('#replayCopyMsg');
-  if (!btn || !out) return;
+  if (!out) return;
 
   const refreshJson = function () {
     out.value = JSON.stringify(buildReplayObject(meta), null, 2);
@@ -111,18 +125,48 @@ function bindResultCopy(meta) {
 
   refreshJson();
 
-  btn.addEventListener('click', async function () {
-    refreshJson();
-    try {
-      await navigator.clipboard.writeText(out.value);
-      if (msg) msg.textContent = '已复制';
-    } catch (e) {
-      out.select();
-      document.execCommand('copy');
-      if (msg) msg.textContent = '已复制';
-    }
-    setTimeout(function () { if (msg) msg.textContent = ''; }, 2200);
-  });
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async function () {
+      refreshJson();
+      try {
+        await navigator.clipboard.writeText(out.value);
+        if (msg) msg.textContent = '已复制';
+      } catch (e) {
+        out.select();
+        document.execCommand('copy');
+        if (msg) msg.textContent = '已复制';
+      }
+      setTimeout(function () { if (msg) msg.textContent = ''; }, 2200);
+    });
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function () {
+      refreshJson();
+      saveBtn.disabled = true;
+      saveBtn.textContent = '保存中...';
+      if (msg) {
+        msg.textContent = '正在保存...';
+        msg.style.color = '#6b7280';
+      }
+      try {
+        const result = await saveReplayToServer(buildReplayObject(meta), token);
+        if (!result || !result.ok) throw new Error((result && result.error) ? result.error : '保存失败');
+        if (msg) {
+          msg.textContent = result.action === 'updated' ? '已更新到回放列表' : '已保存到回放列表';
+          msg.style.color = 'var(--success)';
+        }
+      } catch (e) {
+        if (msg) {
+          msg.textContent = '保存失败：' + (e.message || '未知错误');
+          msg.style.color = 'var(--danger)';
+        }
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '保存到回放列表';
+      }
+    });
+  }
 }
 
 async function fetchBilibiliMeta(url, token) {
@@ -190,7 +234,7 @@ export function initAdminReplayImport() {
       msg.style.color = 'var(--success)';
       resultBox.style.display = 'block';
       resultBox.innerHTML = renderResult(data);
-      bindResultCopy(data);
+      bindResultActions(data, token);
     } catch (e) {
       msg.textContent = '识别失败：' + (e.message || '未知错误');
       msg.style.color = 'var(--danger)';
