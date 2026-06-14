@@ -141,6 +141,29 @@ module.exports = function (pool) {
     }
   });
 
+  router.put("/rooms/:roomId/anchor-bundle/stream-profile", authMiddleware, async (req, res) => {
+    try {
+      await ensureTables(pool);
+      const roomId = parseInt(req.params.roomId, 10);
+      if (!roomId) return res.status(400).json({ ok: false, error: "无效的房间 ID" });
+      const room = await getRoom(pool, roomId);
+      if (!room) return res.status(404).json({ ok: false, error: "房间不存在" });
+      await ensureProfile(pool, roomId);
+
+      const obsServer = String((req.body && req.body.obsServer !== undefined ? req.body.obsServer : req.body.obs_server) || "").trim();
+      const obsStreamKey = String((req.body && req.body.obsStreamKey !== undefined ? req.body.obsStreamKey : req.body.obs_stream_key) || "").trim();
+      await pool.query(
+        "UPDATE room_stream_profiles SET obs_server = ?, obs_stream_key = ? WHERE room_id = ?",
+        [obsServer, obsStreamKey, roomId]
+      );
+
+      const bundle = await buildBundle(pool, roomId);
+      res.json({ ok: true, ...bundle, saved: true });
+    } catch (err) {
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   router.post("/rooms/:roomId/anchor-bundle/reset-password", authMiddleware, async (req, res) => {
     try {
       await ensureTables(pool);
