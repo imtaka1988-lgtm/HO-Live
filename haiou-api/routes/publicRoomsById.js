@@ -23,7 +23,8 @@ module.exports = function (pool) {
 
       res.json({ ok: true, rooms });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[public rooms]", err);
+      res.status(500).json({ ok: false, error: "服务暂时不可用" });
     }
   });
 
