@@ -3,8 +3,72 @@ const jwt = require("jsonwebtoken");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// ===================== 聊天安全基础配置 =====================
+
+const MAX_MESSAGE_LENGTH = 200;
+const MIN_SEND_INTERVAL_MS = 3000;
+const BURST_WINDOW_MS = 30000;
+const MAX_BURST_MESSAGES = 6;
+const REPEAT_WINDOW_MS = 60000;
+
+// 只做基础过滤：广告、引流、博彩/下注类风险词、外链。
+// 不放队名/球员/赛事名，避免正常体育聊天被误伤。
+const BLOCKED_PATTERNS = [
+  /https?:\/\//i,
+  /www\./i,
+  /\.com\b/i,
+  /\.net\b/i,
+  /\.top\b/i,
+  /\.xyz\b/i,
+  /加\s*微/i,
+  /微信/i,
+  /v\s*x/i,
+  /v信/i,
+  /qq\s*群/i,
+  /telegram/i,
+  /飞机群/i,
+  /下注/i,
+  /投注/i,
+  /赌球/i,
+  /博彩/i,
+  /外围/i,
+  /现金网/i,
+  /娱乐城/i,
+  /代充/i,
+  /送彩金/i,
+  /稳赚/i,
+  /包赢/i
+];
+
+function normalizeText(v) {
+  return String(v || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function safeText(v) {
-  return String(v || "").trim().slice(0, 500);
+  return normalizeText(v).slice(0, MAX_MESSAGE_LENGTH);
+}
+
+function hasBlockedContent(text) {
+  return BLOCKED_PATTERNS.some(re => re.test(text));
+}
+
+function makeNotice(message) {
+  return {
+    type: "message",
+    message: {
+      id: 0,
+      roomId: 0,
+      userId: 0,
+      nickname: "系统提醒",
+      level: 0,
+      role: "system",
+      message,
+      createdAt: new Date().toISOString()
+    }
+  };
 }
 
 function publicMessage(row) {
@@ -22,6 +86,7 @@ function publicMessage(row) {
 function setupChatWs(server, pool) {
   const wss = new WebSocket.Server({ server, path: "/ws/chat" });
   const rooms = new Map();
+  const userRateMap = new Map();
 
   function addClient(roomId, ws) {
     const key = String(roomId);
@@ -47,6 +112,37 @@ function setupChatWs(server, pool) {
     const set = rooms.get(String(roomId));
     if (!set) return;
     set.forEach(ws => send(ws, data));
+  }
+
+  function checkRateLimit(userId, text) {
+    const now = Date.now();
+    const key = String(userId);
+    const state = userRateMap.get(key) || {
+      lastAt: 0,
+      lastText: "",
+      lastTextAt: 0,
+      times: []
+    };
+
+    if (state.lastAt && now - state.lastAt < MIN_SEND_INTERVAL_MS) {
+      return "发言太快了，请稍等几秒再发送。";
+    }
+
+    state.times = state.times.filter(t => now - t < BURST_WINDOW_MS);
+    if (state.times.length >= MAX_BURST_MESSAGES) {
+      return "短时间发言过多，请休息一下再聊。";
+    }
+
+    if (state.lastText === text && now - state.lastTextAt < REPEAT_WINDOW_MS) {
+      return "请不要重复发送相同内容。";
+    }
+
+    state.lastAt = now;
+    state.lastText = text;
+    state.lastTextAt = now;
+    state.times.push(now);
+    userRateMap.set(key, state);
+    return "";
   }
 
   wss.on("connection", async (ws, req) => {
@@ -129,8 +225,26 @@ function setupChatWs(server, pool) {
         const data = JSON.parse(raw.toString());
         if (data.type !== "message") return;
 
-        const text = safeText(data.message);
-        if (!text) return;
+        const originalText = normalizeText(data.message);
+        if (!originalText) return;
+
+        if (originalText.length > MAX_MESSAGE_LENGTH) {
+          send(ws, makeNotice("消息太长了，请控制在 200 字以内。"));
+          return;
+        }
+
+        const text = safeText(originalText);
+
+        if (hasBlockedContent(text)) {
+          send(ws, makeNotice("消息包含不适合发布的内容，已被拦截。"));
+          return;
+        }
+
+        const rateError = checkRateLimit(user.id, text);
+        if (rateError) {
+          send(ws, makeNotice(rateError));
+          return;
+        }
 
         const [r] = await pool.query(
           "INSERT INTO chat_messages (room_id, user_id, nickname, level, message) VALUES (?, ?, ?, ?, ?)",
@@ -152,7 +266,7 @@ function setupChatWs(server, pool) {
 
         broadcast(roomId, msg);
       } catch (err) {
-        send(ws, { type: "error", error: "消息发送失败" });
+        send(ws, makeNotice("消息发送失败，请稍后再试。"));
       }
     });
 
