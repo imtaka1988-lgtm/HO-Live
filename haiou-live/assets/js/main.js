@@ -19,6 +19,7 @@ import { initPlayerLineSwitcher } from './player-line-switcher.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
 import { initAdminSiteMessages } from './admin-site-messages.js';
+import { initAdminCommunityConfig } from './admin-community-config.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 
@@ -32,6 +33,7 @@ async function main() {
   bootPage();
   initAdminReplayImport();
   initAdminSiteMessages();
+  initAdminCommunityConfig();
   initAdminCardCollapse();
   initAdminRoomSort();
   initPlayerCoverFit();
