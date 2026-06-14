@@ -1,0 +1,33 @@
+@media (max-width: 780px) {
+  body[data-page="room"] {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body[data-page="room"] .mobile-chat-input input {
+    font-size: 16px !important;
+    line-height: 42px;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
+  }
+
+  body[data-page="room"] .mobile-chat-input button {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  body[data-page="room"].mobile-chat-focus {
+    overflow-x: hidden;
+  }
+
+  body[data-page="room"].mobile-chat-focus .room-stage,
+  body[data-page="room"].mobile-chat-focus .mobile-chat-section {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  body[data-page="room"].mobile-chat-focus .mobile-chat-body {
+    overscroll-behavior: contain;
+  }
+}
