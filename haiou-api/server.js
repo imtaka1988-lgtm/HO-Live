@@ -58,6 +58,9 @@ app.use("/api/user/messages", require("./routes/userMessages")(pool));
 // 挂载管理员新增房间套件：新房间自动生成主播账号和推流配置
 app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
 
+// 挂载管理员主播套件：查看主播账号、生成账号、重置密码
+app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
+
 // 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
 
