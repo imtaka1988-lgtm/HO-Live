@@ -22,6 +22,7 @@ import { initAdminSiteMessages } from './admin-site-messages.js';
 import { initAdminCommunityConfig } from './admin-community-config.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
+import { initUserMessageStatusFix } from './user-message-status-fix.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -31,6 +32,7 @@ async function main() {
   initPlayerLineSwitcher();
   renderGlobalChrome();
   bootPage();
+  initUserMessageStatusFix();
   initAdminReplayImport();
   initAdminSiteMessages();
   initAdminCommunityConfig();
