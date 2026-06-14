@@ -28,6 +28,16 @@ function randomPassword(len) {
   return out;
 }
 
+function pickSmallestMissingRoomId(rows) {
+  let nextId = 1;
+  for (const row of rows) {
+    const id = Number(row.id);
+    if (id === nextId) nextId += 1;
+    else if (id > nextId) break;
+  }
+  return nextId;
+}
+
 function cleanDomain(value) {
   const rtmpPrefix = new RegExp("^rtmp:\\\/\\\/", "i");
   return String(value || "").trim().replace(/^https?:\/\//i, "").replace(rtmpPrefix, "").replace(/\/+$/, "");
@@ -108,12 +118,13 @@ module.exports = function (pool) {
       conn = await pool.getConnection();
       await conn.beginTransaction();
 
-      const [roomResult] = await conn.query(
-        "INSERT INTO rooms (title, category, status, cover, anchor_name, announcement, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [title, category, status, cover, anchorName, announcement, sortOrder]
+      const [ids] = await conn.query("SELECT id FROM rooms ORDER BY id ASC FOR UPDATE");
+      const roomId = pickSmallestMissingRoomId(ids);
+      await conn.query(
+        "INSERT INTO rooms (id, title, category, status, cover, anchor_name, announcement, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [roomId, title, category, status, cover, anchorName, announcement, sortOrder]
       );
 
-      const roomId = roomResult.insertId;
       const username = "anchor_room_" + roomId;
       const password = randomPassword(10);
       const passwordHash = await bcrypt.hash(password, 10);
