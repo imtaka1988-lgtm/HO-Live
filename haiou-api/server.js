@@ -46,8 +46,14 @@ app.use("/api/auth", require("./routes/auth")(pool));
 // 挂载普通用户路由：/api/user/me
 app.use("/api/user", require("./routes/user")(pool));
 
+// 挂载普通用户站内信：/api/user/messages
+app.use("/api/user/messages", require("./routes/userMessages")(pool));
+
 // 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
+
+// 挂载管理员站内信：/api/admin/site-messages
+app.use("/api/admin/site-messages", require("./routes/adminSiteMessages")(pool));
 
 // 挂载回放保存路由：/api/admin/replays
 app.use("/api/admin/replays", require("./routes/adminReplays"));
