@@ -218,53 +218,48 @@ body {
   background: linear-gradient(180deg, #242745, #17192a);
 }
 
-.global-modal-box {
-  border-radius: 14px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+/* 直播间播放器状态提示：覆盖在背景图/播放器上，不再被挤到右侧 */
+.video-box {
+  position: relative;
 }
 
-@media (max-width: 768px) {
-  body {
-    background: var(--page-bg);
-  }
+.video-box video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
 
-  .mobile-header {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
-  }
+.video-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .52));
+  text-shadow: 0 2px 8px rgba(0, 0, 0, .45);
+}
 
-  .mobile-tabbar {
-    box-shadow: 0 6px 18px rgba(255, 106, 0, .22);
-  }
+.video-placeholder b {
+  display: block;
+  font-size: 32px;
+  line-height: 1.2;
+  color: var(--brand-yellow);
+}
 
-  .m-hero-card,
-  .live-card,
-  .odds-card {
-    border-radius: 12px;
-  }
+.video-placeholder span {
+  display: block;
+  max-width: 220px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.5;
+}
 
-  .m-hero-card img {
-    border-radius: 12px;
-  }
-
-  .m-float-ad {
-    border: 1px solid rgba(255, 106, 0, .16);
-    background: rgba(255, 255, 255, .94);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, .16);
-    backdrop-filter: blur(10px);
-  }
-
-  .m-float-ad .download {
-    background: linear-gradient(135deg, var(--brand-yellow), var(--brand-yellow-deep));
-    color: #fff;
-    box-shadow: 0 8px 18px rgba(255, 106, 0, .22);
-  }
-
-  .m-bottom-nav {
-    box-shadow: 0 -8px 26px rgba(15, 23, 42, .10);
-    border-top: 1px solid rgba(255, 106, 0, .10);
-  }
-
-  .m-bottom-nav a.is-active {
-    color: var(--brand-yellow-deep);
-  }
+.video-placeholder.hide {
+  display: none !important;
 }
