@@ -247,3 +247,105 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+
+.follow-loading {
+  padding: 16px 0;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.follow-empty-box {
+  padding: 22px 16px;
+  border-radius: 16px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.follow-empty-box b {
+  display: block;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.follow-empty-box span {
+  display: block;
+  margin: 8px 0 14px;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.follow-empty-box a {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--brand-yellow, #ff8a00);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.follow-room-list {
+  display: grid;
+  gap: 10px;
+}
+
+.follow-room-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 15px;
+  background: #f8fafc;
+  color: #111827;
+  text-decoration: none;
+}
+
+.follow-room-card img {
+  width: 74px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.follow-room-card div {
+  flex: 1;
+  min-width: 0;
+}
+
+.follow-room-card b {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.follow-room-card span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.follow-room-card em {
+  flex: 0 0 auto;
+  font-style: normal;
+  color: #f97316;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.follow-btn.is-followed {
+  background: #111827 !important;
+  color: #fff !important;
+}
