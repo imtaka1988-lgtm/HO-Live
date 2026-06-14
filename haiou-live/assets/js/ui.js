@@ -42,6 +42,29 @@ export function mobileTabs() {
   return { tabs, active };
 }
 
+function renderBrandLogo(cfg, className) {
+  const name = cfg.brand.name || '海鸥直播';
+  const domain = String(cfg.brand.domain || 'S6.LOL').toUpperCase();
+  return `<a class="logo-brand ${className || ''}" href="${href('index.html')}" aria-label="${esc(name)}">
+    <span class="logo-mark"><img src="${asset('assets/icons/app-icon.svg')}" alt=""></span>
+    <span class="logo-copy"><span class="logo-name">${esc(name)}</span><span class="logo-domain">${esc(domain)}</span></span>
+  </a>`;
+}
+
+function bindHeaderScrollState(header) {
+  if (!header) return;
+
+  const update = () => {
+    const useHeroHeader = page === 'home' && window.scrollY < 56;
+    header.classList.toggle('is-hero', useHeroHeader);
+  };
+
+  update();
+  if (header.dataset.scrollBound === '1') return;
+  header.dataset.scrollBound = '1';
+  window.addEventListener('scroll', update, { passive: true });
+}
+
 // ===================== 通用弹窗 =====================
 
 function showModal(title, bodyHtml, btnText) {
@@ -100,16 +123,17 @@ export function renderGlobalChrome() {
       ? `<div class="pc-login"><span class="icon-dot"></span><a href="${href('pages/user.html')}">${esc(userName || '我的')}</a></div>`
       : `<div class="pc-login"><span class="icon-dot"></span><a href="${href('pages/login.html')}">登录</a><span>|</span><a href="${href('pages/login.html?register=1')}">注册</a></div>`;
     header.innerHTML = `<div class="container">
-      <a class="logo-link" href="${href('index.html')}"><img src="${asset(cfg.brand.logo)}" alt="${esc(cfg.brand.name)}"></a>
+      ${renderBrandLogo(cfg, 'logo-link pc-logo-brand')}
       <nav class="pc-nav">${navItems().map(n => `<a class="${activeKey === n.key ? 'is-active' : ''} ${n.hot ? 'hot' : ''}" href="${href(n.url)}">${n.text}</a>`).join('')}</nav>
       ${loginHtml}
     </div>`;
+    bindHeaderScrollState(header);
   }
 
   // 手机顶部 — 只保留 logo + 添加到主屏幕
   const mHeader = document.querySelector('#mobileHeader');
   if (mHeader) {
-    mHeader.innerHTML = `<a href="${href('index.html')}"><img src="${asset(cfg.brand.logo)}" alt="${esc(cfg.brand.name)}"></a><span class="spacer"></span><a class="mini-btn" href="javascript:void(0)" id="btnAddToHome">添加到主屏幕</a>`;
+    mHeader.innerHTML = `${renderBrandLogo(cfg, 'mobile-logo-brand')}<span class="spacer"></span><a class="mini-btn" href="javascript:void(0)" id="btnAddToHome">添加到主屏幕</a>`;
     // 绑定事件
     setTimeout(function () {
       var addBtn = document.querySelector('#btnAddToHome');
