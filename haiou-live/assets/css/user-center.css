@@ -1,0 +1,249 @@
+.user-center-page {
+  padding-bottom: 86px;
+}
+
+.user-center-hero {
+  margin: 12px 12px 14px;
+  padding: 18px;
+  border-radius: 22px;
+  color: #fff;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 138, 0, .42), transparent 30%),
+    linear-gradient(135deg, #121827, #242b4c 58%, #111827);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .18);
+}
+
+.user-center-profile {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.user-center-profile img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, .68);
+  background: #fff;
+}
+
+.user-center-profile h2 {
+  margin: 0 0 5px;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.user-center-profile p {
+  margin: 0;
+  color: rgba(255, 255, 255, .72);
+  font-size: 13px;
+}
+
+.user-center-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.user-center-badges span {
+  display: inline-flex;
+  height: 26px;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.user-center-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 12px 14px;
+}
+
+.user-center-stats div {
+  padding: 13px 8px;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+}
+
+.user-center-stats b {
+  display: block;
+  color: #111827;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.user-center-stats span {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.user-center-section {
+  margin: 0 12px 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+}
+
+.user-center-section h3 {
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.user-center-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.user-center-action {
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid #f1f5f9;
+  border-radius: 15px;
+  background: #f8fafc;
+  color: #111827;
+  text-decoration: none;
+  font-weight: 900;
+}
+
+.user-center-action span {
+  display: block;
+  margin-top: 7px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.user-center-note {
+  margin: 0 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.user-center-pc {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 18px;
+}
+
+.user-center-pc-card,
+.user-center-pc-panel {
+  padding: 24px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+}
+
+.user-center-pc-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-center-pc-head img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #f3f4f6;
+}
+
+.user-center-pc-head h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 900;
+  color: #111827;
+}
+
+.user-center-pc-head p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.user-center-pc-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.user-center-pc-tags span {
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.user-center-pc-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.user-center-pc-grid div {
+  padding: 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.user-center-pc-grid b {
+  display: block;
+  font-size: 20px;
+  color: #111827;
+}
+
+.user-center-pc-grid span {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.user-center-pc-links {
+  display: grid;
+  gap: 10px;
+}
+
+.user-center-pc-links a,
+.user-center-pc-links button,
+.user-center-logout {
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #111827;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.user-center-logout {
+  background: #fee2e2;
+  color: #b91c1c;
+}
