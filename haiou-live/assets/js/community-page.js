@@ -11,7 +11,7 @@ function qrBox(label) {
 
 export function renderCommunityPage() {
   const brand = state.cfg.brand || {};
-  const logo = brand.logo || 'assets/img/logo.svg';
+  const logo = 'assets/icons/app-icon.svg';
 
   return `<main class="community-page">
     <div class="container">
@@ -21,7 +21,7 @@ export function renderCommunityPage() {
           <h1>加入赛事交流群</h1>
           <p>下载私域聊天软件、添加客服或关注公众号，获取直播提醒、赛事分析、经典回放更新和群内交流。</p>
         </div>
-        <img src="${asset(logo)}" alt="${esc(brand.name || '海鸥直播')}">
+        <img class="community-hero-logo" src="${asset(logo)}" alt="${esc(brand.name || '海鸥直播')}">
       </section>
 
       <section class="community-grid">
