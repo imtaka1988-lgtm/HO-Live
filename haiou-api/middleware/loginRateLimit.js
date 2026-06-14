@@ -18,7 +18,8 @@ function createLoginRateLimit(options) {
       windowMs: 10 * 60 * 1000,
       maxAttempts: 10,
       blockMs: 10 * 60 * 1000,
-      identityField: "username"
+      identityField: "username",
+      message: "登录尝试过多，请稍后再试"
     },
     options || {}
   );
@@ -40,7 +41,7 @@ function createLoginRateLimit(options) {
     if (bucket.blockedUntil && now < bucket.blockedUntil) {
       const retryAfter = Math.ceil((bucket.blockedUntil - now) / 1000);
       res.setHeader("Retry-After", String(retryAfter));
-      return res.status(429).json({ ok: false, error: "登录尝试过多，请稍后再试" });
+      return res.status(429).json({ ok: false, error: cfg.message });
     }
 
     bucket.count += 1;
@@ -49,7 +50,7 @@ function createLoginRateLimit(options) {
       bucket.resetAt = bucket.blockedUntil + cfg.windowMs;
       const retryAfter = Math.ceil(cfg.blockMs / 1000);
       res.setHeader("Retry-After", String(retryAfter));
-      return res.status(429).json({ ok: false, error: "登录尝试过多，请稍后再试" });
+      return res.status(429).json({ ok: false, error: cfg.message });
     }
 
     if (buckets.size > 2000) {
