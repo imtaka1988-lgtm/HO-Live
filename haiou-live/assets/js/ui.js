@@ -104,6 +104,15 @@ function showDownloadAppModal() {
   }, 50);
 }
 
+function showPrivateGroupModal() {
+  showModal('加入海鸥私域社群',
+    '<p style="color:#444;line-height:1.7;margin:0 0 12px;">添加客服或下载私域软件，获取直播提醒、赛事分析、经典回放更新和群内交流。</p>' +
+    '<div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px;margin-bottom:10px;color:#9a3412;font-weight:800;">① 下载私域软件：入口待配置</div>' +
+    '<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-bottom:10px;color:#111827;font-weight:800;">② 添加客服联系方式：待配置</div>' +
+    '<p style="color:#777;font-size:12px;line-height:1.6;margin:8px 0 0;">添加后备注“海鸥直播”，管理员会邀请进入赛事交流群。</p>',
+    '我知道了');
+}
+
 // ===================== 全局外壳渲染 =====================
 
 export function renderGlobalChrome() {
@@ -131,17 +140,16 @@ export function renderGlobalChrome() {
     bindHeaderScrollState(header);
   }
 
-  // 手机顶部 — 只保留 logo + 添加到主屏幕
+  // 手机顶部 — logo + 私域入口
   const mHeader = document.querySelector('#mobileHeader');
   if (mHeader) {
-    mHeader.innerHTML = `${renderBrandLogo(cfg, 'mobile-logo-brand')}<span class="spacer"></span><a class="mini-btn" href="javascript:void(0)" id="btnAddToHome">添加到主屏幕</a>`;
-    // 绑定事件
+    mHeader.innerHTML = `${renderBrandLogo(cfg, 'mobile-logo-brand')}<span class="spacer"></span><a class="mini-btn" href="javascript:void(0)" id="btnPrivateGroup">进群</a>`;
     setTimeout(function () {
-      var addBtn = document.querySelector('#btnAddToHome');
-      if (addBtn) {
-        addBtn.addEventListener('click', function (e) {
+      var groupBtn = document.querySelector('#btnPrivateGroup');
+      if (groupBtn) {
+        groupBtn.addEventListener('click', function (e) {
           e.preventDefault();
-          showAddToHomeModal();
+          showPrivateGroupModal();
         });
       }
     }, 0);
