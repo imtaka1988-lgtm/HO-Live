@@ -1,0 +1,39 @@
+/* 后台：编辑面板紧贴对应房间行展开 */
+
+body[data-page="admin"] .admin-inline-editor-row td {
+  padding: 0 12px 18px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+body[data-page="admin"] .admin-inline-editor-shell {
+  margin: 0 0 6px;
+  padding: 0;
+}
+
+body[data-page="admin"] .admin-inline-editor-panel {
+  display: block !important;
+  margin-top: 0 !important;
+  border-top: 0 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #fffaf5, #fff) !important;
+  border: 1px solid rgba(255, 106, 0, .16) !important;
+  box-shadow: 0 14px 34px rgba(255, 106, 0, .10), 0 8px 22px rgba(15, 23, 42, .06);
+  animation: adminInlineEditorIn .16s ease-out;
+}
+
+body[data-page="admin"] .admin-inline-editor-row + tr td {
+  border-top-color: transparent;
+}
+
+@keyframes adminInlineEditorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
