@@ -1,7 +1,7 @@
-/* 播放器封面背景自适应：背景 cover，视频不变形 */
+/* 播放器封面背景自适应：提示状态展示封面，真实视频不露背景缝隙 */
 
 .video-box.has-cover-bg {
-  background-color: #111;
+  background-color: #000;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -12,15 +12,22 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-image: linear-gradient(90deg, rgba(0, 0, 0, .16), rgba(0, 0, 0, .5)), var(--player-cover-bg);
+  background-image: linear-gradient(90deg, rgba(0, 0, 0, .18), rgba(0, 0, 0, .56)), var(--player-cover-bg);
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  transform: scale(1.01);
 }
 
+/* 真实 video 保持黑底承接比例缝隙，避免上下/左右露出封面壁纸 */
 .video-box.has-cover-bg video {
-  background: transparent !important;
+  background: #000 !important;
+}
+
+/* 未开播/维护中不展示 video 控制条，只展示封面提示层 */
+.video-box[data-room-status="pending"] video,
+.video-box[data-room-status="offline"] video,
+.video-box[data-room-status="maintenance"] video {
+  display: none !important;
 }
 
 .video-box.has-cover-bg .video-placeholder {
