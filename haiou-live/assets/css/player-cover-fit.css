@@ -1,0 +1,28 @@
+/* 播放器封面背景自适应：背景 cover，视频不变形 */
+
+.video-box.has-cover-bg {
+  background-color: #111;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.video-box.has-cover-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: linear-gradient(90deg, rgba(0, 0, 0, .16), rgba(0, 0, 0, .5)), var(--player-cover-bg);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  transform: scale(1.01);
+}
+
+.video-box.has-cover-bg video {
+  background: transparent !important;
+}
+
+.video-box.has-cover-bg .video-placeholder {
+  background: linear-gradient(90deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .58));
+}
