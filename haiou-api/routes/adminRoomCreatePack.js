@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const authMiddleware = require("../middleware/auth");
 
 let ready = false;
@@ -16,7 +17,7 @@ async function ensureTables(pool) {
 function randomPassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
   let out = "";
-  for (let i = 0; i < 10; i += 1) out += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 10; i += 1) out += chars[crypto.randomInt(chars.length)];
   return out;
 }
 
