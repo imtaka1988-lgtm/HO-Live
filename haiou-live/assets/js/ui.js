@@ -12,14 +12,15 @@ export function navItems() {
   return [
     { key: 'home', text: '首页', url: 'index.html' },
     { key: 'live', text: '全部直播', url: 'pages/live.html' },
-    { key: 'schedule', text: '赛事', url: 'pages/schedule.html' },
+    { key: 'replays', text: '赛事回放', url: 'pages/replays.html' },
     { key: 'app', text: '下载APP', url: 'pages/app.html', hot: true }
   ];
 }
 
 export function mobileTabs() {
   const isLivePage = ['home', 'live'].includes(page);
-  const active = page === 'schedule' ? 'schedule'
+  const active = page === 'replays' ? 'replays'
+    : page === 'schedule' ? 'schedule'
     : currentTab === 'football' ? 'football'
     : currentTab === 'basketball' ? 'basketball'
     : currentTab === 'analysis' ? 'analysis'
@@ -148,7 +149,7 @@ export function renderGlobalChrome() {
 
   // 手机标签栏
   const mTabs = document.querySelector('#mobileTabs');
-  if (mTabs && !['user', 'room'].includes(page)) {
+  if (mTabs && !['user', 'room', 'replays'].includes(page)) {
     const { tabs, active } = mobileTabs();
     mTabs.innerHTML = tabs.map(t => `<a class="${active === t.key ? 'is-active' : ''}" href="${href(t.url)}">${t.text}</a>`).join('');
   } else if (mTabs) mTabs.remove();
@@ -176,14 +177,14 @@ export function renderGlobalChrome() {
 export function renderBottomNav() {
   const existing = document.querySelector('#mBottomNav');
   if (existing) existing.remove();
-  const active = page === 'home' ? 'home' : page === 'schedule' ? 'schedule' : page === 'user' ? 'user' : 'live';
+  const active = page === 'home' ? 'home' : page === 'replays' ? 'replays' : page === 'user' ? 'user' : 'live';
   const nav = document.createElement('nav');
   nav.id = 'mBottomNav';
   nav.className = 'm-bottom-nav';
   nav.innerHTML = [
     ['home', '首页', 'index.html'],
     ['live', '直播', 'pages/live.html'],
-    ['schedule', '赛事', 'pages/schedule.html'],
+    ['replays', '回放', 'pages/replays.html'],
     ['user', '我的', 'pages/user.html']
   ].map(([k, t, u]) => `<a class="${active === k ? 'is-active' : ''}" href="${href(u)}"><span class="nav-ico"></span><span>${t}</span></a>`).join('');
   document.body.appendChild(nav);
