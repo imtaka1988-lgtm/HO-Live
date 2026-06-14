@@ -14,7 +14,7 @@ import { startRoomInfoPolling, stopRoomInfoPolling } from './room-refresh.js';
 import { horizontalMatchCard } from './ui.js';
 import { LivePlayer } from './player.js';
 import { leagueName, matchName } from './odds-i18n.js';
-import { renderRoomReplaySection, initRoomReplays } from './replays.js';
+import { renderRoomReplaySection, renderReplaysPage, initRoomReplays } from './replays.js';
 
 function roomStatusMeta(room) {
   const status = String(room && room.status ? room.status : 'live').toLowerCase();
@@ -112,7 +112,7 @@ function resizeOddsCards() {
 
 if (!window._oddsResizeBound) { window._oddsResizeBound = true; window.addEventListener('resize', resizeOddsCards); }
 
-const ROUTE_MAP = { home: renderHome, live: renderLive, schedule: renderSchedule, room: renderRoom, follow: renderFollow, user: renderUser, login: renderLogin, app: renderAppPage, admin: renderAdmin };
+const ROUTE_MAP = { home: renderHome, live: renderLive, schedule: renderSchedule, replays: renderReplaysPage, room: renderRoom, follow: renderFollow, user: renderUser, login: renderLogin, app: renderAppPage, admin: renderAdmin };
 export function bootPage() {
   const app = document.querySelector('#app');
   if (!app) return;
@@ -124,6 +124,7 @@ export function bootPage() {
   if (html) app.innerHTML = html;
 
   if (page === 'home') bindHeroEvents();
+  if (page === 'replays') initRoomReplays();
   if (page === 'admin') bindAdminEvents();
   if (page === 'login') bindLoginEvents();
   if (page === 'user') bindUserEvents();
