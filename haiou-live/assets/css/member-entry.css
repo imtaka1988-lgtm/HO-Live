@@ -18,16 +18,8 @@
 }
 
 .pc-login a[href="/pages/user.html"]::after {
-  content: "VIP";
-  display: inline-flex;
-  align-items: center;
-  height: 18px;
-  padding: 0 7px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #facc15, #f97316);
-  color: #111827;
-  font-size: 11px;
-  font-weight: 900;
+  content: none;
+  display: none;
 }
 
 .pc-member-lv {
@@ -41,4 +33,16 @@
   font-size: 11px;
   font-weight: 900;
   box-shadow: inset 0 0 0 1px rgba(250, 204, 21, .30);
+}
+
+.pc-member-title {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #facc15, #f97316);
+  color: #111827;
+  font-size: 11px;
+  font-weight: 900;
 }
