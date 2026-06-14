@@ -16,7 +16,6 @@ if (!JWT_SECRET) {
 app.use(cors());
 app.use(express.json({ limit: "4mb" }));
 
-// 处理非法 JSON 请求，避免 body-parser 堆栈刷满 PM2 error.log。
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     return res.status(400).json({ ok: false, error: "JSON 格式错误" });
@@ -34,46 +33,23 @@ const pool = mysql.createPool({
   connectionLimit: 10
 });
 
-// 挂载公开路由：/api/health, /api/public/rooms 等
+app.use("/api/admin", require("./routes/adminRoomCreatePack")(pool));
 app.use("/api", require("./routes/public")(pool));
-
-// 挂载交流群配置：/api/public/community-config, /api/admin/community-config
 app.use("/api", require("./routes/communityConfig")(pool));
-
-// 挂载回放封面代理路由：/api/replay-cover
 app.use("/api/replay-cover", require("./routes/replayCover"));
-
-// 挂载普通用户认证路由：/api/auth/register, /api/auth/login
 app.use("/api/auth", require("./routes/auth")(pool));
-
-// 挂载普通用户路由：/api/user/me
 app.use("/api/user", require("./routes/user")(pool));
-
-// 挂载普通用户头像上传：/api/user/avatar
 app.use("/api/user/avatar", require("./routes/userAvatar")(pool));
-
-// 挂载普通用户站内信：/api/user/messages
 app.use("/api/user/messages", require("./routes/userMessages")(pool));
-
-// 挂载管理员新增房间套件：新房间自动生成主播账号和推流配置
+app.use("/api/admin", require("./routes/adminObsTemplate")(pool));
 app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
-
-// 挂载管理员主播套件：查看主播账号、生成账号、重置密码
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
-
-// 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
-
-// 挂载主播后台路由：/api/anchor/login, /api/anchor/room, /api/anchor/stream-info
 app.use("/api/anchor", require("./routes/anchor")(pool));
-
-// 挂载管理员站内信：/api/admin/site-messages
+app.use("/api/anchor/upload", require("./routes/anchorUpload")(pool));
+app.use("/api/live/callback", require("./routes/liveCallback")(pool));
 app.use("/api/admin/site-messages", require("./routes/adminSiteMessages")(pool));
-
-// 挂载回放保存路由：/api/admin/replays
 app.use("/api/admin/replays", require("./routes/adminReplays"));
-
-// 挂载回放元数据抓取路由：/api/admin/replay-meta/bilibili
 app.use("/api/admin/replay-meta", require("./routes/replayMeta"));
 
 const server = http.createServer(app);
