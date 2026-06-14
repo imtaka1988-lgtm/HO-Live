@@ -83,9 +83,56 @@ function injectStyle() {
     .user-weekly-bonus-item.is-current b {
       color: #111827;
     }
+    .user-weekly-bonus-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 11px 12px;
+      border-radius: 14px;
+      background: rgba(250, 204, 21, .12);
+      box-shadow: inset 0 0 0 1px rgba(250, 204, 21, .24);
+    }
+    .user-weekly-bonus-cta strong {
+      display: block;
+      color: #fde68a;
+      font-size: 13px;
+      font-weight: 1000;
+      margin-bottom: 3px;
+    }
+    .user-weekly-bonus-cta small {
+      display: block;
+      color: rgba(255, 255, 255, .74);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .user-weekly-bonus-cta a {
+      flex: 0 0 auto;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 13px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #facc15, #f97316);
+      color: #111827 !important;
+      font-size: 12px;
+      font-weight: 1000;
+      text-decoration: none;
+      box-shadow: 0 8px 18px rgba(249, 115, 22, .28);
+      white-space: nowrap;
+    }
     @media (max-width: 767px) {
       .user-weekly-bonus-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .user-weekly-bonus-cta {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .user-weekly-bonus-cta a {
+        width: 100%;
       }
     }
   `;
@@ -114,8 +161,12 @@ function bonusCardHtml(level) {
   }).join('');
   return `<section class="user-weekly-bonus-card" data-user-weekly-bonus>
     <div class="user-weekly-bonus-head"><b>每周彩金权益</b><span>LV.${level} ${title} · ${bonus} 彩金</span></div>
-    <p>等级越高，每周可领取的彩金越高。领取入口和领取记录下一步开放。</p>
+    <p>本周专属彩金已开放，等级越高可领取越多。添加客服或进入交流群，报账号即可咨询领取方式。</p>
     <div class="user-weekly-bonus-grid">${items}</div>
+    <div class="user-weekly-bonus-cta">
+      <div><strong>你的本周专属：${bonus} 彩金</strong><small>限本周咨询领取，联系客服报账号，错过本周名额需等下周刷新。</small></div>
+      <a href="/pages/app.html">联系客服领取</a>
+    </div>
   </section>`;
 }
 
