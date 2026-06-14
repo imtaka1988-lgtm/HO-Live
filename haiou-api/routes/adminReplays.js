@@ -74,6 +74,11 @@ function normalizeReplay(body, list) {
   };
 }
 
+router.get("/", authMiddleware, (req, res) => {
+  const list = readList();
+  res.json({ ok: true, replays: list, count: list.length });
+});
+
 router.post("/", authMiddleware, (req, res) => {
   try {
     const list = readList();
@@ -95,6 +100,20 @@ router.post("/", authMiddleware, (req, res) => {
   } catch (err) {
     res.status(400).json({ ok: false, error: err.message || "保存失败" });
   }
+});
+
+router.delete("/:id", authMiddleware, (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (!id) return res.status(400).json({ ok: false, error: "回放 ID 不正确" });
+
+  const list = readList();
+  const next = list.filter(item => parseInt(item.id, 10) !== id);
+  if (next.length === list.length) {
+    return res.status(404).json({ ok: false, error: "没有找到该回放" });
+  }
+
+  writeList(next);
+  res.json({ ok: true, deletedId: id, count: next.length });
 });
 
 module.exports = router;
