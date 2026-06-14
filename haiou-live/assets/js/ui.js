@@ -52,48 +52,6 @@ function renderBrandLogo(cfg, className) {
   </a>`;
 }
 
-function userLevelFromProfile(profile) {
-  if (profile && profile.level) return Math.max(1, Math.min(5, Number(profile.level) || 1));
-  const exp = Number((profile && (profile.exp !== undefined ? profile.exp : profile.coins)) || 0);
-  if (exp >= 600) return 5;
-  if (exp >= 300) return 4;
-  if (exp >= 150) return 3;
-  if (exp >= 50) return 2;
-  return 1;
-}
-
-function userTitleByLevel(level) {
-  if (level >= 5) return '荣耀会员';
-  if (level >= 4) return '尊享会员';
-  if (level >= 3) return '进阶会员';
-  if (level >= 2) return '活跃会员';
-  return '普通会员';
-}
-
-function renderPcLoginEntry(userToken) {
-  if (!userToken) {
-    return `<div class="pc-login"><span class="icon-dot"></span><a href="${href('pages/login.html')}">登录</a><span>|</span><a href="${href('pages/login.html?register=1')}">注册</a></div>`;
-  }
-
-  let profile = {};
-  try { profile = JSON.parse(localStorage.getItem('user_profile') || '{}'); } catch (e) {}
-  const userName = profile.nickname || '海鸥会员';
-  const avatar = profile.avatar || 'assets/img/avatar-default.svg';
-  const level = userLevelFromProfile(profile);
-  const title = userTitleByLevel(level);
-
-  return `<div class="pc-login" style="flex:0 0 250px;">
-    <a href="${href('pages/user.html')}" title="会员资料" style="display:flex;align-items:center;gap:9px;min-width:0;padding:7px 10px 7px 8px;border-radius:999px;background:linear-gradient(135deg,#111827,#3b260b 55%,#111827);color:#fff;box-shadow:0 8px 24px rgba(249,115,22,.22),inset 0 0 0 1px rgba(250,204,21,.26);">
-      <span style="width:34px;height:34px;border-radius:50%;padding:2px;background:linear-gradient(135deg,#facc15,#f97316);box-shadow:0 0 0 2px rgba(255,255,255,.18);flex:0 0 auto;"><img src="${asset(avatar)}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;background:#fff;"></span>
-      <span style="display:flex;flex-direction:column;min-width:0;line-height:1.1;text-align:left;">
-        <b style="max-width:98px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:900;color:#fff;">${esc(userName)}</b>
-        <small style="margin-top:4px;display:flex;align-items:center;gap:5px;color:#fde68a;font-size:11px;font-weight:900;"><em style="font-style:normal;background:linear-gradient(135deg,#facc15,#f97316);color:#111827;border-radius:999px;padding:2px 6px;">LV.${esc(level)}</em>${esc(title)}</small>
-      </span>
-      <i style="margin-left:auto;color:#fde68a;font-style:normal;font-size:18px;line-height:1;">›</i>
-    </a>
-  </div>`;
-}
-
 function bindHeaderScrollState(header) {
   if (!header) return;
 
@@ -166,7 +124,14 @@ export function renderGlobalChrome() {
   if (header) {
     const activeKey = page === 'home' ? 'home' : page === 'room' ? 'live' : page;
     const userToken = localStorage.getItem('token');
-    const loginHtml = renderPcLoginEntry(userToken);
+    let userName = '我的';
+    try {
+      const profile = JSON.parse(localStorage.getItem('user_profile') || '{}');
+      if (profile && profile.nickname) userName = profile.nickname;
+    } catch (e) {}
+    const loginHtml = userToken
+      ? `<div class="pc-login"><span class="icon-dot"></span><a href="${href('pages/user.html')}">${esc(userName || '我的')}</a></div>`
+      : `<div class="pc-login"><span class="icon-dot"></span><a href="${href('pages/login.html')}">登录</a><span>|</span><a href="${href('pages/login.html?register=1')}">注册</a></div>`;
     header.innerHTML = `<div class="container">
       ${renderBrandLogo(cfg, 'logo-link pc-logo-brand')}
       <nav class="pc-nav">${navItems().map(n => `<a class="${activeKey === n.key ? 'is-active' : ''} ${n.hot ? 'hot' : ''}" href="${href(n.url)}">${n.text}</a>`).join('')}</nav>
