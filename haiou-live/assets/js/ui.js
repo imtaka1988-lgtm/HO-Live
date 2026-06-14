@@ -107,7 +107,7 @@ function showDownloadAppModal() {
 // ===================== 全局外壳渲染 =====================
 
 export function renderGlobalChrome() {
-  if (['app', 'login'].includes(page)) return;
+  if (['login'].includes(page)) return;
   const cfg = state.cfg;
 
   // PC 顶部导航
@@ -149,12 +149,12 @@ export function renderGlobalChrome() {
 
   // 手机标签栏
   const mTabs = document.querySelector('#mobileTabs');
-  if (mTabs && !['user', 'room', 'replays'].includes(page)) {
+  if (mTabs && !['user', 'room', 'replays', 'app'].includes(page)) {
     const { tabs, active } = mobileTabs();
     mTabs.innerHTML = tabs.map(t => `<a class="${active === t.key ? 'is-active' : ''}" href="${href(t.url)}">${t.text}</a>`).join('');
   } else if (mTabs) mTabs.remove();
 
-  if (!['login', 'app', 'admin'].includes(page)) renderBottomNav();
+  if (!['login', 'admin'].includes(page)) renderBottomNav();
 
   // 右侧悬浮工具栏（PC 端固定显示）
   if (!['login', 'app', 'admin'].includes(page)) {
@@ -177,7 +177,7 @@ export function renderGlobalChrome() {
 export function renderBottomNav() {
   const existing = document.querySelector('#mBottomNav');
   if (existing) existing.remove();
-  const active = page === 'home' ? 'home' : page === 'replays' ? 'replays' : page === 'user' ? 'user' : 'live';
+  const active = page === 'home' ? 'home' : page === 'replays' ? 'replays' : page === 'user' ? 'user' : page === 'app' ? '' : 'live';
   const nav = document.createElement('nav');
   nav.id = 'mBottomNav';
   nav.className = 'm-bottom-nav';
