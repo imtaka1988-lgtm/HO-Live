@@ -71,6 +71,13 @@ function itemMatchesFilter(item, filter) {
   return item.sport === filter;
 }
 
+function isIosSafari() {
+  const ua = navigator.userAgent || '';
+  const isAppleMobile = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
+  return isAppleMobile && isSafari;
+}
+
 function replayCard(item) {
   const embedUrl = item.embedUrl || '';
   const isIframe = ['iframe', 'bilibili', 'xigua'].includes(String(item.sourceType || '').toLowerCase());
@@ -86,7 +93,7 @@ function replayCard(item) {
     </div>
     <div class="replay-info">
       <div class="replay-title">${esc(item.title || '经典战役')}</div>
-      <div class="replay-desc">${esc(item.desc || '精彩比赛回顾，片源后续接入。')}</div>
+      <div class="replay-desc">${esc(item.desc || '精彩比赛回顾。')}</div>
       <button type="button" class="replay-btn">${esc(btnText)}</button>
     </div>
   </article>`;
@@ -120,14 +127,17 @@ function closeReplayModal() {
   document.body.classList.remove('replay-modal-open');
 }
 
-function openReplayModal(title, embedUrl) {
+function openReplayModal(title, embedUrl, sourceUrl) {
   closeReplayModal();
   document.body.classList.add('replay-modal-open');
   const modal = document.createElement('div');
   modal.id = 'replayModal';
   modal.className = 'replay-modal-overlay';
+  const sourceBtn = sourceUrl && sourceUrl !== '#'
+    ? `<a href="${esc(sourceUrl)}" target="_blank" rel="noopener" style="height:30px;display:inline-flex;align-items:center;padding:0 10px;border-radius:999px;background:rgba(255,106,0,.95);color:#fff;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">原站打开</a>`
+    : '';
   modal.innerHTML = `<div class="replay-modal-box">
-    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><button type="button" id="replayModalClose">×</button></div>
+    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><div style="display:flex;align-items:center;gap:8px;">${sourceBtn}<button type="button" id="replayModalClose">×</button></div></div>
     <div class="replay-iframe-wrap"><iframe src="${esc(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" scrolling="no" frameborder="0" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
   </div>`;
   document.body.appendChild(modal);
@@ -154,7 +164,11 @@ function bindReplayCards(root) {
       const isIframe = ['iframe', 'bilibili', 'xigua'].includes(sourceType);
 
       if (isIframe && embedUrl) {
-        openReplayModal(title, embedUrl);
+        if (sourceType === 'bilibili' && isIosSafari() && url && url !== '#') {
+          window.open(url, '_blank', 'noopener');
+          return;
+        }
+        openReplayModal(title, embedUrl, url);
         return;
       }
 
