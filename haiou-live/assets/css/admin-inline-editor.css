@@ -1,5 +1,23 @@
 /* 后台：编辑面板紧贴对应房间行展开 */
 
+body[data-page="admin"] .admin-room-row-active td {
+  background: #fff7ed !important;
+  border-top-color: rgba(255, 106, 0, .22) !important;
+  border-bottom-color: rgba(255, 106, 0, .22) !important;
+}
+
+body[data-page="admin"] .admin-room-row-active td:first-child {
+  border-left-color: rgba(255, 106, 0, .42) !important;
+  box-shadow: inset 4px 0 0 var(--brand-yellow);
+}
+
+body[data-page="admin"] .btn-room-edit.is-open,
+body[data-page="admin"] .btn-stream-mgr.is-open {
+  background: linear-gradient(135deg, var(--brand-yellow), var(--brand-yellow-deep)) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 20px rgba(255, 106, 0, .24);
+}
+
 body[data-page="admin"] .admin-inline-editor-row td {
   padding: 0 12px 18px !important;
   background: transparent !important;
