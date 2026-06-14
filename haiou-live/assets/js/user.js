@@ -6,6 +6,15 @@ import { state, href, asset, esc } from './config.js';
 import { liveCard } from './ui.js';
 import { getUserInfo } from './api.js';
 
+function ensureUserCenterStyles() {
+  if (document.querySelector('link[data-user-center-style]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/assets/css/user-center.css';
+  link.dataset.userCenterStyle = '1';
+  document.head.appendChild(link);
+}
+
 function getToken() {
   return localStorage.getItem('token') || '';
 }
@@ -45,23 +54,24 @@ export function renderFollow() {
 }
 
 export function renderUser() {
+  ensureUserCenterStyles();
   const token = getToken();
   const user = getProfile();
 
   if (!token) {
-    return `<main class="mobile-page user-page">
+    return `<main class="mobile-page user-page user-center-page">
       <section class="user-empty-card">
         <img src="${asset('assets/img/avatar-default.svg')}" alt="">
-        <h2>登录后查看我的资料</h2>
-        <p>登录后可使用关注、聊天、个人资料等功能</p>
+        <h2>登录后进入我的海鸥</h2>
+        <p>登录后可参与聊天室发言，后续可使用关注、回放记录和交流群入口。</p>
         <a class="user-main-btn" href="${href('pages/login.html')}">立即登录</a>
       </section>
     </main>
     <main class="page-shell pc-only">
       <div class="container">
         <div class="user-pc-card">
-          <h2>我的</h2>
-          <p>登录后可查看账号资料、等级、金币和消息。</p>
+          <h2>会员信息</h2>
+          <p>登录后可查看账号身份、发言状态和常用入口。</p>
           <a class="user-main-btn" href="${href('pages/login.html')}">登录 / 注册</a>
         </div>
       </div>
@@ -70,51 +80,86 @@ export function renderUser() {
 
   const nickname = user.nickname || '海鸥用户';
   const phone = maskPhone(user.phone);
-  const level = user.level || 0;
+  const level = user.level || 1;
   const coins = user.coins || 0;
   const avatar = user.avatar || 'assets/img/avatar-default.svg';
 
-  return `<main class="mobile-page user-page">
-    <section class="user-head user-head-v2">
-      <div class="user-profile-v2">
+  return `<main class="mobile-page user-page user-center-page">
+    <section class="user-center-hero">
+      <div class="user-center-profile">
         <img src="${asset(avatar)}" alt="">
         <div>
           <h2 id="userNickname">${esc(nickname)}</h2>
           <p id="userPhone">${esc(phone)}</p>
         </div>
       </div>
-      <button id="btnUserLogoutMobile" class="user-logout-mini">退出</button>
+      <div class="user-center-badges">
+        <span>LV.${esc(level)} 普通观众</span>
+        <span>已登录</span>
+        <span>可参与聊天室发言</span>
+      </div>
     </section>
 
-    <section class="user-stats user-stats-v2">
-      <div><b id="userLevel">Lv.${esc(level)}</b><span>等级</span></div>
-      <div><b id="userCoins">${esc(coins)}</b><span>金币</span></div>
+    <section class="user-center-stats">
+      <div><b id="userLevel">LV.${esc(level)}</b><span>等级</span></div>
       <div><b>0</b><span>关注</span></div>
+      <div><b id="userCoins">${esc(coins)}</b><span>金币</span></div>
     </section>
 
-    <section class="user-menu user-menu-v2">
-      <a href="#"><span class="menu-left"><span class="menu-icon">✉</span>我的私信</span><span>›</span></a>
-      <a href="#"><span class="menu-left"><span class="menu-icon">★</span>我的关注</span><span>›</span></a>
-      <a href="#"><span class="menu-left"><span class="menu-icon">🔒</span>账号与绑定</span><span>›</span></a>
-      <a href="#"><span class="menu-left"><span class="menu-icon">i</span>关于海鸥直播</span><span>›</span></a>
+    <section class="user-center-section">
+      <h3>常用入口</h3>
+      <div class="user-center-actions">
+        <a class="user-center-action" href="${href('pages/follow.html')}">我的关注<span>关注直播间与主播</span></a>
+        <a class="user-center-action" href="${href('pages/replays.html')}">赛事回放<span>查看经典比赛集锦</span></a>
+        <a class="user-center-action" href="${href('pages/app.html')}">交流群<span>加入球迷交流入口</span></a>
+        <a class="user-center-action" href="#" data-user-soon>修改资料<span>头像昵称后续开放</span></a>
+      </div>
     </section>
+
+    <section class="user-center-section">
+      <h3>账号状态</h3>
+      <div class="user-center-actions">
+        <a class="user-center-action" href="#" data-user-soon>账号与绑定<span>${esc(phone)}</span></a>
+        <a class="user-center-action" href="#" data-user-soon>观看记录<span>后续记录回放浏览</span></a>
+      </div>
+    </section>
+
+    <section class="user-center-note">当前账号已开通聊天室发言身份。后续可逐步接入关注提醒、观看记录、专属徽章等功能。</section>
+
+    <section style="margin:14px 12px 0;"><button id="btnUserLogoutMobile" class="user-center-logout" type="button">退出登录</button></section>
   </main>
 
   <main class="page-shell pc-only">
     <div class="container">
-      <div class="user-pc-card">
-        <div class="user-pc-head">
-          <img src="${asset(avatar)}" alt="">
-          <div>
-            <h2 id="pcUserNickname">${esc(nickname)}</h2>
-            <p id="pcUserPhone">${esc(phone)}</p>
+      <div class="user-center-pc">
+        <div class="user-center-pc-card">
+          <div class="user-center-pc-head">
+            <img src="${asset(avatar)}" alt="">
+            <div>
+              <h2 id="pcUserNickname">${esc(nickname)}</h2>
+              <p id="pcUserPhone">${esc(phone)}</p>
+            </div>
           </div>
-          <button id="btnUserLogoutPc" class="user-logout-btn">退出登录</button>
+          <div class="user-center-pc-tags">
+            <span>LV.${esc(level)} 普通观众</span>
+            <span>已登录</span>
+            <span>聊天室可发言</span>
+          </div>
+          <div class="user-center-pc-grid">
+            <div><b>LV.${esc(level)}</b><span>等级</span></div>
+            <div><b>0</b><span>关注</span></div>
+            <div><b>${esc(coins)}</b><span>金币</span></div>
+          </div>
         </div>
-        <div class="user-pc-stats">
-          <div><b>Lv.${esc(level)}</b><span>等级</span></div>
-          <div><b>${esc(coins)}</b><span>金币</span></div>
-          <div><b>0</b><span>关注</span></div>
+        <div class="user-center-pc-panel">
+          <h2 style="margin:0 0 14px;font-size:20px;font-weight:900;color:#111827;">会员快捷入口</h2>
+          <div class="user-center-pc-links">
+            <a href="${href('pages/follow.html')}">我的关注</a>
+            <a href="${href('pages/replays.html')}">赛事回放</a>
+            <a href="${href('pages/app.html')}">交流群</a>
+            <button type="button" data-user-soon>修改资料</button>
+            <button id="btnUserLogoutPc" class="user-center-logout" type="button">退出登录</button>
+          </div>
         </div>
       </div>
     </div>
@@ -135,6 +180,13 @@ export function bindUserEvents() {
 
   if (mLogout) mLogout.addEventListener('click', logout);
   if (pcLogout) pcLogout.addEventListener('click', logout);
+
+  document.querySelectorAll('[data-user-soon]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      alert('这个功能后续开放，当前账号已可用于聊天室发言。');
+    });
+  });
 
   if (!token) return;
 
