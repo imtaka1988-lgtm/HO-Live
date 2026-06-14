@@ -109,6 +109,67 @@ async function saveReplayToServer(replay, token) {
   return await res.json();
 }
 
+async function fetchSavedReplays(token) {
+  const res = await fetch('/api/admin/replays', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  return await res.json();
+}
+
+async function deleteSavedReplay(id, token) {
+  const res = await fetch('/api/admin/replays/' + encodeURIComponent(id), {
+    method: 'DELETE',
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  return await res.json();
+}
+
+function renderSavedReplayList(items) {
+  if (!items || !items.length) {
+    return '<div style="color:#999;font-size:13px;padding:10px 0;">暂无后台保存的回放</div>';
+  }
+
+  return items.map(function (item) {
+    return `<div class="admin-saved-replay-item" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid #f1f1f1;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.title || '未命名回放')}</div>
+        <div style="font-size:12px;color:#888;margin-top:3px;">${escapeHtml(item.tag || '')} / ${escapeHtml(item.year || '')}</div>
+      </div>
+      <a href="${escapeHtml(item.url || '#')}" target="_blank" rel="noopener" style="font-size:12px;color:#2563eb;white-space:nowrap;">打开</a>
+      <button class="btn-delete-saved-replay" data-replay-id="${escapeHtml(item.id)}" type="button" style="padding:6px 12px;background:#fee2e2;color:#b91c1c;border:0;border-radius:999px;font-weight:800;">删除</button>
+    </div>`;
+  }).join('');
+}
+
+async function loadSavedReplayList(token) {
+  const box = document.querySelector('#savedReplayList');
+  if (!box) return;
+  box.innerHTML = '<div style="color:#999;font-size:13px;padding:10px 0;">加载已保存回放...</div>';
+  try {
+    const data = await fetchSavedReplays(token);
+    if (!data || !data.ok) throw new Error('加载失败');
+    box.innerHTML = renderSavedReplayList(data.replays || []);
+    box.querySelectorAll('.btn-delete-saved-replay').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        const id = this.dataset.replayId;
+        if (!confirm('确定删除这个回放卡片吗？删除后前台将不再显示。')) return;
+        this.disabled = true;
+        this.textContent = '删除中...';
+        const result = await deleteSavedReplay(id, token);
+        if (!result || !result.ok) {
+          alert('删除失败：' + ((result && result.error) ? result.error : '未知错误'));
+          this.disabled = false;
+          this.textContent = '删除';
+          return;
+        }
+        await loadSavedReplayList(token);
+      });
+    });
+  } catch (e) {
+    box.innerHTML = '<div style="color:var(--danger);font-size:13px;padding:10px 0;">已保存回放加载失败</div>';
+  }
+}
+
 function bindResultActions(meta, token) {
   const copyBtn = document.querySelector('#btnCopyReplayJson');
   const saveBtn = document.querySelector('#btnSaveReplayJson');
@@ -156,6 +217,7 @@ function bindResultActions(meta, token) {
           msg.textContent = result.action === 'updated' ? '已更新到回放列表' : '已保存到回放列表';
           msg.style.color = 'var(--success)';
         }
+        await loadSavedReplayList(token);
       } catch (e) {
         if (msg) {
           msg.textContent = '保存失败：' + (e.message || '未知错误');
@@ -201,11 +263,17 @@ export function initAdminReplayImport() {
     <button id="btnFetchBiliReplay" type="button">自动识别</button>
   </div>
   <p id="replayImportMsg" class="admin-replay-import-msg"></p>
-  <div id="replayImportResult" class="admin-replay-import-result" style="display:none;"></div>`;
+  <div id="replayImportResult" class="admin-replay-import-result" style="display:none;"></div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px dashed #eadfd6;">
+    <h3 style="margin:0 0 8px;font-size:16px;">已保存回放</h3>
+    <div id="savedReplayList"></div>
+  </div>`;
 
   const cards = adminBox.querySelectorAll('.admin-card');
   if (cards[1]) cards[1].insertAdjacentElement('afterend', card);
   else adminBox.appendChild(card);
+
+  loadSavedReplayList(token);
 
   const btn = card.querySelector('#btnFetchBiliReplay');
   const input = card.querySelector('#biliReplayUrl');
