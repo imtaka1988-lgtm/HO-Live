@@ -11,6 +11,7 @@ import { loadConfig, applyTheme, state } from './config.js';
 import { renderGlobalChrome, renderFooter } from './ui.js';
 import { bootPage } from './router.js';
 import { initMascot } from './mascot.js';
+import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -20,6 +21,7 @@ async function main() {
   bootPage();
   renderFooter();
   initMascot();
+  initAdminNeutralLabels();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));
