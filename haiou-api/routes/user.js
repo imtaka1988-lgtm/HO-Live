@@ -2,6 +2,7 @@ const express = require("express");
 const userAuthMiddleware = require("../middleware/userAuth");
 
 let followsTableReady = false;
+let expLogTableReady = false;
 const FOLLOW_EXP_REWARD = 3;
 
 async function ensureFollowsTable(pool) {
@@ -10,6 +11,14 @@ async function ensureFollowsTable(pool) {
     "CREATE TABLE IF NOT EXISTS user_follows (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, room_id INT UNSIGNED NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_room (user_id, room_id), KEY idx_user_id (user_id), KEY idx_room_id (room_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
   );
   followsTableReady = true;
+}
+
+async function ensureExpLogTable(pool) {
+  if (expLogTableReady) return;
+  await pool.query(
+    "CREATE TABLE IF NOT EXISTS user_exp_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, action VARCHAR(64) NOT NULL, ref_id VARCHAR(64) NOT NULL DEFAULT '', exp INT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_action_ref (user_id, action, ref_id), KEY idx_user_id (user_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  );
+  expLogTableReady = true;
 }
 
 function levelFromExp(exp) {
@@ -28,6 +37,16 @@ async function addUserExp(pool, userId, amount) {
   const level = Math.max(Number(rows[0].level || 1), levelFromExp(exp));
   await pool.query("UPDATE users SET coins = ?, level = ? WHERE id = ?", [exp, level, userId]);
   return { exp, level, added: amount };
+}
+
+async function awardUserExpOnce(pool, userId, action, refId, amount) {
+  await ensureExpLogTable(pool);
+  const [log] = await pool.query(
+    "INSERT IGNORE INTO user_exp_logs (user_id, action, ref_id, exp) VALUES (?, ?, ?, ?)",
+    [userId, action, String(refId || ''), amount]
+  );
+  if (log.affectedRows === 0) return null;
+  return addUserExp(pool, userId, amount);
 }
 
 module.exports = function (pool) {
@@ -112,7 +131,7 @@ module.exports = function (pool) {
       const [rooms] = await pool.query("SELECT id FROM rooms WHERE id = ?", [roomId]);
       if (!rooms.length) return res.status(404).json({ ok: false, error: "房间不存在" });
       const [result] = await pool.query("INSERT IGNORE INTO user_follows (user_id, room_id) VALUES (?, ?)", [req.user.id, roomId]);
-      const reward = result.affectedRows > 0 ? await addUserExp(pool, req.user.id, FOLLOW_EXP_REWARD) : null;
+      const reward = result.affectedRows > 0 ? await awardUserExpOnce(pool, req.user.id, "follow_room", roomId, FOLLOW_EXP_REWARD) : null;
       res.json({ ok: true, followed: true, reward });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
