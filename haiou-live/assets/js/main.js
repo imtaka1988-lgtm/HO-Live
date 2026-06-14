@@ -23,6 +23,7 @@ import { initAdminCommunityConfig } from './admin-community-config.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
+import { initUserAvatarPreview } from './user-avatar-preview.js';
 
 function loadMemberEntryCss() {
   if (document.querySelector('link[data-member-entry-style]')) return;
@@ -77,6 +78,7 @@ async function main() {
   renderGlobalChrome();
   applyPcMemberLevel();
   bootPage();
+  initUserAvatarPreview();
   initUserMessageStatusFix();
   initAdminReplayImport();
   initAdminSiteMessages();
