@@ -33,6 +33,28 @@ function loadMemberEntryCss() {
   document.head.appendChild(link);
 }
 
+function memberLevelFromProfile(profile) {
+  if (profile && profile.level) return Math.max(1, Math.min(5, Number(profile.level) || 1));
+  const exp = Number((profile && (profile.exp !== undefined ? profile.exp : profile.coins)) || 0);
+  if (exp >= 600) return 5;
+  if (exp >= 300) return 4;
+  if (exp >= 150) return 3;
+  if (exp >= 50) return 2;
+  return 1;
+}
+
+function applyPcMemberLevel() {
+  const link = document.querySelector('.pc-login a[href="/pages/user.html"]');
+  if (!link || link.querySelector('.pc-member-lv')) return;
+  let profile = {};
+  try { profile = JSON.parse(localStorage.getItem('user_profile') || '{}'); } catch (e) {}
+  const level = memberLevelFromProfile(profile);
+  const badge = document.createElement('span');
+  badge.className = 'pc-member-lv';
+  badge.textContent = 'LV.' + level;
+  link.appendChild(badge);
+}
+
 async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
@@ -41,6 +63,7 @@ async function main() {
   applyTheme(cfg);
   initPlayerLineSwitcher();
   renderGlobalChrome();
+  applyPcMemberLevel();
   bootPage();
   initUserMessageStatusFix();
   initAdminReplayImport();
