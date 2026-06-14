@@ -10,6 +10,7 @@ import { renderFollow, renderUser, bindUserEvents } from './user.js';
 import { renderAppPage, renderAdmin, bindAdminEvents } from './app-page.js';
 import { state, href, asset, esc, getHost, getRoom } from './config.js';
 import { renderChatList, renderAnchorProfile, initChatSocket } from './chat.js';
+import { startRoomInfoPolling, stopRoomInfoPolling } from './room-refresh.js';
 import { horizontalMatchCard } from './ui.js';
 import { LivePlayer } from './player.js';
 import { leagueName, matchName } from './odds-i18n.js';
@@ -69,6 +70,7 @@ export function renderRoom() {
   const mobileProfileBody = document.querySelector('#mobileProfileBody');
   if (mobileTabs.length && mobileChatBody && mobileProfileBody) { mobileTabs.forEach(t => { t.addEventListener('click', function () { mobileTabs.forEach(x => x.classList.remove('is-active')); this.classList.add('is-active'); if (this.dataset.tab === 'chat') { mobileChatBody.classList.remove('hide'); mobileProfileBody.classList.add('hide'); } else { mobileProfileBody.classList.remove('hide'); mobileChatBody.classList.add('hide'); } }); }); }
   setTimeout(() => initChatSocket(room.id), 120);
+  startRoomInfoPolling(room.id);
 
   const mobileInput = document.querySelector('.mobile-chat-input input');
   if (mobileInput) { mobileInput.addEventListener('focus', () => document.body.classList.add('mobile-chat-focus')); mobileInput.addEventListener('blur', () => document.body.classList.remove('mobile-chat-focus')); }
@@ -91,7 +93,7 @@ async function loadOddsForRoom(roomId) { var area = document.querySelector('#roo
 function formatTime(iso) { if (!iso) return ''; var m = iso.match(/T(\d{2}:\d{2})/); return m ? m[1] : ''; }
 function renderOddsCards(games, container) { var html = ''; for (var i = 0; i < games.length; i++) { var g = games[i]; html += '<div class="odds-card">'; html += '<div class="odds-card-header"><span class="odds-sport">' + esc(leagueName(g.sport_title, g.sport_key)) + '</span><span class="odds-time">' + formatTime(g.commence_time) + '</span></div>'; html += '<div class="odds-teams">' + esc(matchName(g.home_team, g.away_team)) + '</div>'; if (g.h2h && g.h2h.length === 2) { html += '<div class="odds-row"><span class="odds-label">胜负</span><span class="odds-item">主 <b>' + g.h2h[0].price + '</b></span><span class="odds-item">客 <b>' + g.h2h[1].price + '</b></span></div>'; } if (g.spreads && g.spreads.length === 2) { html += '<div class="odds-row"><span class="odds-label">让分</span><span class="odds-item">主' + (g.spreads[0].point > 0 ? '+' : '') + g.spreads[0].point + '&nbsp;<b>' + g.spreads[0].price + '</b></span><span class="odds-item">客' + (g.spreads[1].point > 0 ? '+' : '') + g.spreads[1].point + '&nbsp;<b>' + g.spreads[1].price + '</b></span></div>'; } if (g.totals && g.totals.length === 2) { html += '<div class="odds-row"><span class="odds-label">大小</span><span class="odds-item">大 ' + g.totals[0].point + '&nbsp;<b>' + g.totals[0].price + '</b></span><span class="odds-item">小 ' + g.totals[1].point + '&nbsp;<b>' + g.totals[1].price + '</b></span></div>'; } html += '<div class="odds-footer">数据来源：' + esc(g.bookmaker || '') + '</div>'; html += '</div>'; } container.innerHTML = html; }
 
-// ===================== 自适应卡片宽度（全局共用的 resize） =====================
+// ===================== 自适应卡片宽度（全局共用的 resize） ———
 
 function resizeOddsCards() {
   if (window.innerWidth <= 768) return;
@@ -113,6 +115,8 @@ const ROUTE_MAP = { home: renderHome, live: renderLive, schedule: renderSchedule
 export function bootPage() {
   const app = document.querySelector('#app');
   if (!app) return;
+
+  if (page !== 'room') stopRoomInfoPolling();
 
   const fn = ROUTE_MAP[page] || renderHome;
   const html = fn();
