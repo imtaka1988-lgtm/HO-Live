@@ -37,6 +37,9 @@ const pool = mysql.createPool({
 // 挂载公开路由：/api/health, /api/public/rooms 等
 app.use("/api", require("./routes/public")(pool));
 
+// 挂载回放封面代理路由：/api/replay-cover
+app.use("/api/replay-cover", require("./routes/replayCover"));
+
 // 挂载普通用户认证路由：/api/auth/register, /api/auth/login
 app.use("/api/auth", require("./routes/auth")(pool));
 
