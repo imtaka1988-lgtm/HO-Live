@@ -4,6 +4,9 @@
 # Node 依赖
 node_modules/
 
+# 本地后台生成数据
+haiou-live/assets/data/replays.local.json
+
 # 备份文件
 *.bak_*
 
