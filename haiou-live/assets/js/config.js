@@ -44,10 +44,12 @@ export var currentTab = qs.get('tab') || '';
 // ===================== URL 工具 =====================
 
 export function href(path) {
+  path = String(path == null ? '' : path).trim();
   if (!path) return '#';
-  if (path.startsWith('http')) return path;
+  if (/^javascript:/i.test(path)) return '#';
+  if (/^data:/i.test(path)) return '#';
+  if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith('#')) return path;
-  if (path.startsWith('javascript:')) return '#';
   if (path.startsWith('/')) return path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
@@ -55,10 +57,11 @@ export function href(path) {
 }
 
 export function asset(path) {
+  path = String(path == null ? '' : path).trim();
   if (!path) return '';
-  if (/^(https?:)?\/\//.test(path)) return path;
+  if (/^(https?:)?\/\//i.test(path)) return path;
   if (/^data:image\/(?:gif|png|jpe?g|webp|svg\+xml);/i.test(path)) return path;
-  if (path.startsWith('data:')) return '';
+  if (/^data:/i.test(path)) return '';
   if (path.startsWith('/')) return path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
