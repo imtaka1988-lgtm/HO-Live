@@ -43,6 +43,14 @@ function memberLevelFromProfile(profile) {
   return 1;
 }
 
+function memberTitleByLevel(level) {
+  if (level >= 5) return '荣耀会员';
+  if (level >= 4) return '尊享会员';
+  if (level >= 3) return '进阶会员';
+  if (level >= 2) return '活跃会员';
+  return '普通会员';
+}
+
 function applyPcMemberLevel() {
   const link = document.querySelector('.pc-login a[href="/pages/user.html"]');
   if (!link || link.querySelector('.pc-member-lv')) return;
@@ -52,7 +60,11 @@ function applyPcMemberLevel() {
   const badge = document.createElement('span');
   badge.className = 'pc-member-lv';
   badge.textContent = 'LV.' + level;
+  const title = document.createElement('span');
+  title.className = 'pc-member-title';
+  title.textContent = memberTitleByLevel(level);
   link.appendChild(badge);
+  link.appendChild(title);
 }
 
 async function main() {
