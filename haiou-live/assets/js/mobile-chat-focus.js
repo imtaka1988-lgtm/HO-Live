@@ -1,10 +1,12 @@
 /**
  * 手机直播间输入法聚焦布局保护
- * 使用事件委托 + inline style，避免 CSS 优先级或输入框替换导致失效。
+ * 使用事件委托 + inline style，锁定首屏，只允许聊天消息区滚动。
  */
 
 let bound = false;
 let blurTimer = null;
+let layoutFrame = 0;
+let layoutApplied = false;
 let savedRootStyle = null;
 let savedPageStyle = null;
 let savedAppStyle = null;
@@ -47,7 +49,8 @@ function restoreStyle(el, value) {
   else el.removeAttribute('style');
 }
 
-function applyInlineFocusLayout() {
+function writeLockedLayout() {
+  layoutFrame = 0;
   const h = updateRoomVh();
   const root = saveStyleOnce(document.documentElement, 'root');
   const page = saveStyleOnce(document.body, 'page');
@@ -110,10 +113,18 @@ function applyInlineFocusLayout() {
     body.style.setProperty('overflow-y', 'auto', 'important');
   }
 
-  window.scrollTo(0, 0);
+  layoutApplied = true;
+}
+
+function scheduleLockedLayout() {
+  if (layoutFrame) cancelAnimationFrame(layoutFrame);
+  layoutFrame = requestAnimationFrame(writeLockedLayout);
 }
 
 function restoreInlineFocusLayout() {
+  if (layoutFrame) cancelAnimationFrame(layoutFrame);
+  layoutFrame = 0;
+
   restoreStyle(document.documentElement, savedRootStyle);
   restoreStyle(document.body, savedPageStyle);
   restoreStyle(document.querySelector('#app'), savedAppStyle);
@@ -123,6 +134,7 @@ function restoreInlineFocusLayout() {
   restoreStyle(document.querySelector('body[data-page="room"] .mobile-chat-section'), savedSectionStyle);
   restoreStyle(document.querySelector('body[data-page="room"] .mobile-chat-body:not(.hide)'), savedBodyStyle);
 
+  layoutApplied = false;
   savedRootStyle = null;
   savedPageStyle = null;
   savedAppStyle = null;
@@ -136,9 +148,8 @@ function restoreInlineFocusLayout() {
 function openChatFocus() {
   clearTimeout(blurTimer);
   document.body.classList.add('mobile-chat-focus');
-  applyInlineFocusLayout();
-  setTimeout(applyInlineFocusLayout, 80);
-  setTimeout(applyInlineFocusLayout, 220);
+  scheduleLockedLayout();
+  setTimeout(scheduleLockedLayout, 140);
 }
 
 function closeChatFocus() {
@@ -169,7 +180,7 @@ export function initMobileChatFocusFix() {
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function () {
-      if (document.body.classList.contains('mobile-chat-focus')) applyInlineFocusLayout();
+      if (document.body.classList.contains('mobile-chat-focus') || layoutApplied) scheduleLockedLayout();
     }, { passive: true });
   }
 }
