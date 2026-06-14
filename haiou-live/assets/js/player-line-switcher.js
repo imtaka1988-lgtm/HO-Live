@@ -3,6 +3,7 @@
  * - 只在可用线路超过 1 条时显示
  * - 固定在播放器右上角，避开底部原生 controls
  * - 不做自动闪现/自动隐藏，避免按钮抽搐
+ * - 展示短文案：主线路 / 极速线路 / 备用线路
  */
 
 import { LivePlayer } from './player.js';
@@ -11,14 +12,26 @@ function isMobile() {
   return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent || '') || window.innerWidth <= 780;
 }
 
-function streamLabel(stream) {
-  if (!stream) return '线路';
-  return stream.name || (stream.type === 'flv' ? 'FLV' : 'HLS');
+function cleanName(name) {
+  return String(name || '')
+    .replace(/[（(].*?[）)]/g, '')
+    .replace(/HLS|M3U8|FLV|低延迟|网页通用|后续启用/gi, '')
+    .replace(/[-_｜|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
-function streamTypeLabel(stream) {
-  if (!stream) return '';
-  return String(stream.type || '').toUpperCase();
+function streamLabel(stream) {
+  if (!stream) return '线路';
+
+  var type = String(stream.type || '').toLowerCase();
+  var name = cleanName(stream.name);
+
+  if (type === 'flv' || /极速|快直播|低延迟/.test(stream.name || '')) return '极速线路';
+  if (/备用|备线|副线/.test(stream.name || '')) return '备用线路';
+  if (stream.default === true || /主线|主线路|高清|HLS|m3u8/i.test(stream.name || '') || type === 'hls') return '主线路';
+
+  return name || '备用线路';
 }
 
 function displayStreamsFor(player) {
@@ -43,10 +56,8 @@ function updateSwitcher(player, activeIdx) {
 
   var activeStream = player.streams && player.streams[activeIdx];
   var nameEl = wrapper.querySelector('.line-current-name');
-  var typeEl = wrapper.querySelector('.line-current-type');
 
   if (nameEl) nameEl.textContent = streamLabel(activeStream);
-  if (typeEl) typeEl.textContent = streamTypeLabel(activeStream);
 
   wrapper.querySelectorAll('.line-menu-item').forEach(function (item) {
     item.classList.toggle('is-active', parseInt(item.dataset.streamIdx, 10) === activeIdx);
@@ -76,7 +87,7 @@ export function initPlayerLineSwitcher() {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'line-current-btn';
-    btn.innerHTML = '<span class="line-icon">⇄</span><span class="line-current-name">线路</span><span class="line-current-type"></span>';
+    btn.innerHTML = '<span class="line-current-name">线路</span>';
     wrapper.appendChild(btn);
 
     var menu = document.createElement('div');
@@ -88,9 +99,8 @@ export function initPlayerLineSwitcher() {
       item.type = 'button';
       item.className = 'line-menu-item';
       item.dataset.streamIdx = idx;
-      item.innerHTML = '<span class="line-menu-name"></span><span class="line-type-badge"></span>';
+      item.innerHTML = '<span class="line-menu-name"></span>';
       item.querySelector('.line-menu-name').textContent = streamLabel(stream);
-      item.querySelector('.line-type-badge').textContent = streamTypeLabel(stream);
       item.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
