@@ -51,11 +51,29 @@ function levelClass(levelValue) {
   return 'level-color-lv' + n;
 }
 
+function levelPalette(levelValue) {
+  const n = Math.max(1, Math.min(5, Number(levelValue || 1)));
+  const map = {
+    1: { bg: '#f1f5f9', text: '#334155', main: '#64748b', grad: 'linear-gradient(90deg,#94a3b8,#64748b)' },
+    2: { bg: '#ecfdf5', text: '#047857', main: '#10b981', grad: 'linear-gradient(90deg,#34d399,#059669)' },
+    3: { bg: '#eff6ff', text: '#1d4ed8', main: '#3b82f6', grad: 'linear-gradient(90deg,#60a5fa,#2563eb)' },
+    4: { bg: '#f5f3ff', text: '#7c3aed', main: '#8b5cf6', grad: 'linear-gradient(90deg,#a78bfa,#7c3aed)' },
+    5: { bg: '#fff7ed', text: '#c2410c', main: '#f97316', grad: 'linear-gradient(90deg,#facc15,#f97316,#ef4444)' }
+  };
+  return map[n];
+}
+
+function levelBadgeStyle(levelValue) {
+  const p = levelPalette(levelValue);
+  return `background:${p.bg};color:${p.text};box-shadow:inset 0 0 0 1px ${p.main}22;`;
+}
+
 function levelProgressHtml(meta) {
   const text = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`;
-  return `<section class="user-level-card ${levelClass(meta.level)}" data-level-progress>
-    <div><b>LV.${esc(meta.level)} 成长进度</b><span id="userExpText">${esc(text)}</span></div>
-    <i><em id="userExpBar" style="width:${meta.percent}%"></em></i>
+  const p = levelPalette(meta.level);
+  return `<section class="user-level-card ${levelClass(meta.level)}" data-level-progress style="border:1px solid ${p.main}22;">
+    <div><b>LV.${esc(meta.level)} 成长进度</b><span id="userExpText" style="color:${p.main};">${esc(text)}</span></div>
+    <i><em id="userExpBar" style="width:${meta.percent}%;background:${p.grad};"></em></i>
     <p>关注直播间可获得经验，后续会逐步加入发言、观看回放等成长任务。</p>
   </section>`;
 }
@@ -83,19 +101,22 @@ function updateLevelDom(user) {
   if (!user) return;
   const meta = levelMeta(user.exp !== undefined ? user.exp : user.coins);
   const theme = levelClass(meta.level);
+  const p = levelPalette(meta.level);
   document.querySelectorAll('#userLevel').forEach(el => { el.textContent = 'LV.' + meta.level; });
   document.querySelectorAll('#userCoins').forEach(el => { el.textContent = String(meta.exp); });
   document.querySelectorAll('[data-level-color]').forEach(el => {
     el.classList.remove('level-color-lv1', 'level-color-lv2', 'level-color-lv3', 'level-color-lv4', 'level-color-lv5');
     el.classList.add(theme);
+    el.setAttribute('style', levelBadgeStyle(meta.level));
     if (el.classList.contains('user-level-badge')) el.textContent = 'LV.' + meta.level + ' 普通观众';
   });
   document.querySelectorAll('[data-level-progress]').forEach(el => {
     el.classList.remove('level-color-lv1', 'level-color-lv2', 'level-color-lv3', 'level-color-lv4', 'level-color-lv5');
     el.classList.add(theme);
+    el.style.borderColor = p.main + '22';
   });
-  document.querySelectorAll('#userExpText').forEach(el => { el.textContent = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`; });
-  document.querySelectorAll('#userExpBar').forEach(el => { el.style.width = meta.percent + '%'; });
+  document.querySelectorAll('#userExpText').forEach(el => { el.textContent = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`; el.style.color = p.main; });
+  document.querySelectorAll('#userExpBar').forEach(el => { el.style.width = meta.percent + '%'; el.style.background = p.grad; });
 }
 
 export function renderFollow() {
@@ -189,7 +210,7 @@ export function renderUser() {
         </div>
       </div>
       <div class="user-center-badges">
-        <span class="user-level-badge ${theme}" data-level-color>LV.${esc(level)} 普通观众</span>
+        <span class="user-level-badge ${theme}" data-level-color style="${levelBadgeStyle(level)}">LV.${esc(level)} 普通观众</span>
         <span>已登录</span>
         <span>可参与聊天室发言</span>
       </div>
@@ -238,7 +259,7 @@ export function renderUser() {
             </div>
           </div>
           <div class="user-center-pc-tags">
-            <span class="user-level-badge ${theme}" data-level-color>LV.${esc(level)} 普通观众</span>
+            <span class="user-level-badge ${theme}" data-level-color style="${levelBadgeStyle(level)}">LV.${esc(level)} 普通观众</span>
             <span>已登录</span>
             <span>聊天室可发言</span>
           </div>
