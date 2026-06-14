@@ -22,6 +22,7 @@ import { initAdminSiteMessages } from './admin-site-messages.js';
 import { initAdminCommunityConfig } from './admin-community-config.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminRoomInlineEditors } from './admin-room-inline-editors.js';
+import { initAdminAnchorBundleNotice } from './admin-anchor-bundle-notice.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
@@ -110,6 +111,7 @@ async function main() {
   initAdminCardCollapse();
   initAdminRoomSort();
   initAdminRoomInlineEditors();
+  initAdminAnchorBundleNotice();
   initPlayerCoverFit();
   renderFooter();
   initMascot();
