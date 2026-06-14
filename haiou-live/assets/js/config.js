@@ -57,7 +57,8 @@ export function href(path) {
 export function asset(path) {
   if (!path) return '';
   if (/^(https?:)?\/\//.test(path)) return path;
-  if (path.startsWith('data:')) return path;
+  if (/^data:image\/(?:gif|png|jpe?g|webp|svg\+xml);/i.test(path)) return path;
+  if (path.startsWith('data:')) return '';
   if (path.startsWith('/')) return path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
