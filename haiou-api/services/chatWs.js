@@ -10,6 +10,9 @@ const MIN_SEND_INTERVAL_MS = 3000;
 const BURST_WINDOW_MS = 30000;
 const MAX_BURST_MESSAGES = 6;
 const REPEAT_WINDOW_MS = 60000;
+const FIRST_CHAT_EXP_REWARD = 2;
+
+let expLogTableReady = false;
 
 // 只做基础过滤：广告、引流、博彩/下注类风险词、外链。
 // 不放队名/球员/赛事名，避免正常体育聊天被误伤。
@@ -39,6 +42,46 @@ const BLOCKED_PATTERNS = [
   /稳赚/i,
   /包赢/i
 ];
+
+async function ensureExpLogTable(pool) {
+  if (expLogTableReady) return;
+  await pool.query(
+    "CREATE TABLE IF NOT EXISTS user_exp_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, action VARCHAR(64) NOT NULL, ref_id VARCHAR(64) NOT NULL DEFAULT '', exp INT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_action_ref (user_id, action, ref_id), KEY idx_user_id (user_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  );
+  expLogTableReady = true;
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function levelFromExp(exp) {
+  const n = Number(exp || 0);
+  if (n >= 600) return 5;
+  if (n >= 300) return 4;
+  if (n >= 150) return 3;
+  if (n >= 50) return 2;
+  return 1;
+}
+
+async function addUserExp(pool, userId, amount) {
+  const [rows] = await pool.query("SELECT coins, level FROM users WHERE id = ?", [userId]);
+  if (!rows.length) return null;
+  const exp = Number(rows[0].coins || 0) + amount;
+  const level = Math.max(Number(rows[0].level || 1), levelFromExp(exp));
+  await pool.query("UPDATE users SET coins = ?, level = ? WHERE id = ?", [exp, level, userId]);
+  return { exp, level, added: amount };
+}
+
+async function awardUserExpOnce(pool, userId, action, refId, amount) {
+  await ensureExpLogTable(pool);
+  const [log] = await pool.query(
+    "INSERT IGNORE INTO user_exp_logs (user_id, action, ref_id, exp) VALUES (?, ?, ?, ?)",
+    [userId, action, String(refId || ''), amount]
+  );
+  if (log.affectedRows === 0) return null;
+  return addUserExp(pool, userId, amount);
+}
 
 function normalizeText(v) {
   return String(v || "")
@@ -245,6 +288,11 @@ function setupChatWs(server, pool) {
           send(ws, makeNotice(rateError));
           return;
         }
+
+        try {
+          const reward = await awardUserExpOnce(pool, user.id, "daily_first_chat", todayKey(), FIRST_CHAT_EXP_REWARD);
+          if (reward && reward.level) user.level = reward.level;
+        } catch (e) {}
 
         const [r] = await pool.query(
           "INSERT INTO chat_messages (room_id, user_id, nickname, level, message) VALUES (?, ?, ?, ?, ?)",
