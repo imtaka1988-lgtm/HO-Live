@@ -82,6 +82,52 @@ export async function getUserInfo(token) {
   }
 }
 
+export async function getUserFollows(token) {
+  try {
+    const res = await fetch('/api/user/follows', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getRoomFollowStatus(roomId, token) {
+  try {
+    const res = await fetch(`/api/user/follows/rooms/${roomId}`, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function followRoom(roomId, token) {
+  try {
+    const res = await fetch(`/api/user/follows/rooms/${roomId}`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function unfollowRoom(roomId, token) {
+  try {
+    const res = await fetch(`/api/user/follows/rooms/${roomId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
 // ===================== Admin API =====================
 
 export async function adminLogin(username, password) {
@@ -223,4 +269,3 @@ export async function adminDeleteRoom(roomId, token) {
     return null;
   }
 }
-
