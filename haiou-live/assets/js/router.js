@@ -14,6 +14,35 @@ import { horizontalMatchCard } from './ui.js';
 import { LivePlayer } from './player.js';
 import { leagueName, matchName } from './odds-i18n.js';
 
+function roomStatusMeta(room) {
+  const status = String(room && room.status ? room.status : 'live').toLowerCase();
+
+  if (status === 'pending') {
+    return {
+      playable: false,
+      className: 'is-pending',
+      title: '直播未开始',
+      desc: '主播正在准备中，请稍后刷新。'
+    };
+  }
+
+  if (status === 'offline' || status === 'maintenance') {
+    return {
+      playable: false,
+      className: 'is-offline',
+      title: '房间维护中',
+      desc: '当前房间暂未开放，请稍后再进入。'
+    };
+  }
+
+  return {
+    playable: true,
+    className: 'is-live',
+    title: (room && room.quality ? room.quality : '高清') + '直播',
+    desc: '正在连接直播源，请稍候。'
+  };
+}
+
 export function renderRoom() {
   document.body.classList.add('mobile-room');
   const id = qs.get('id') || '1';
@@ -21,14 +50,15 @@ export function renderRoom() {
   const host = getHost(room.hostId);
   const anchorName = room.anchorName || host.name || '主播';
   const announcement = room.announcement || '欢迎进入直播间，请文明发言';
+  const statusMeta = roomStatusMeta(room);
   if (room.anchorName && state.cfg.anchorProfile) {
     state.cfg.anchorProfile.name = room.anchorName;
   }
   const app = document.querySelector('#app');
   if (!app) return;
-const ad = state.cfg.ads && state.cfg.ads.roomPlayerAd;
-const adHtml = (ad && ad.enabled) ? `<a class="player-ad-bar" href="${href(ad.link || '#')}" target="_blank"><img src="${asset(ad.image)}" alt=""><div class="ad-body"><div class="ad-title">${esc(ad.title || '')}</div><div class="ad-desc">${esc(ad.desc || '')}</div></div><span class="ad-btn">${esc(ad.buttonText || '查看')}</span></a>` : '<div class="player-ad-bar player-ad-placeholder">广告位</div>';
-app.innerHTML = `<section class="room-stage"><div class="container room-grid"><div class="player-panel"><div class="player-head"><div class="player-host"><img src="${asset(host.avatar)}"><div><h1>${esc(room.title || '直播间')}</h1></div></div><button class="follow-btn">关注</button></div><div class="video-box" id="videoBox"><video id="liveVideo" controls playsinline poster="${asset(room.cover || '')}"></video><div class="video-placeholder" id="videoPlaceholder"><b>${esc(room.quality || '高清')}直播</b><span>请替换为你的真实 m3u8 播放地址</span></div></div><div class="player-bottom">${adHtml}</div><div class="mobile-chat-section mobile-only"><div class="mobile-chat-notice">📢 公告：${esc(announcement)}</div><div class="mobile-chat-tabs"><span data-tab="chat" class="is-active">聊天</span><span data-tab="profile">主播资料</span></div><div class="mobile-chat-body" id="mobileChatBody">${renderChatList()}</div><div class="mobile-chat-body hide" id="mobileProfileBody">${renderAnchorProfile()}</div><div class="mobile-chat-input"><input placeholder="聊天室连接中..." readonly><button disabled>连接中</button></div></div></div><aside class="chat-panel"><div class="chat-notice">📢 公告：${esc(announcement)}</div><div class="chat-tabs"><span data-tab="chat" class="is-active">聊天室</span><span data-tab="profile">主播资料</span></div><div class="chat-body" id="chatBody">${renderChatList()}</div><div class="chat-body hide" id="profileBody">${renderAnchorProfile()}</div><div class="chat-input"><input placeholder="聊天室连接中..." readonly><button disabled>连接中</button></div></aside></div></section><main class="room-below pc-only" id="roomOddsArea"><div class="container"><h2>实时指数</h2><div class="odds-scroll" data-odds-scroll id="oddsScroll"><div class="odds-loading">加载中...</div></div><p class="odds-disclaimer" style="color:#999;font-size:11px;margin-top:4px;">数据仅供赛事参考</p></div></main>`;
+ const ad = state.cfg.ads && state.cfg.ads.roomPlayerAd;
+ const adHtml = (ad && ad.enabled) ? `<a class="player-ad-bar" href="${href(ad.link || '#')}" target="_blank"><img src="${asset(ad.image)}" alt=""><div class="ad-body"><div class="ad-title">${esc(ad.title || '')}</div><div class="ad-desc">${esc(ad.desc || '')}</div></div><span class="ad-btn">${esc(ad.buttonText || '查看')}</span></a>` : '<div class="player-ad-bar player-ad-placeholder">广告位</div>';
+ app.innerHTML = `<section class="room-stage"><div class="container room-grid"><div class="player-panel"><div class="player-head"><div class="player-host"><img src="${asset(host.avatar)}"><div><h1>${esc(room.title || '直播间')}</h1></div></div><button class="follow-btn">关注</button></div><div class="video-box" id="videoBox" data-room-status="${esc(room.status || 'live')}"><video id="liveVideo" controls playsinline poster="${asset(room.cover || '')}"></video><div class="video-placeholder room-status-placeholder ${esc(statusMeta.className)}" id="videoPlaceholder"><b>${esc(statusMeta.title)}</b><span>${esc(statusMeta.desc)}</span></div></div><div class="player-bottom">${adHtml}</div><div class="mobile-chat-section mobile-only"><div class="mobile-chat-notice">📢 公告：${esc(announcement)}</div><div class="mobile-chat-tabs"><span data-tab="chat" class="is-active">聊天</span><span data-tab="profile">主播资料</span></div><div class="mobile-chat-body" id="mobileChatBody">${renderChatList()}</div><div class="mobile-chat-body hide" id="mobileProfileBody">${renderAnchorProfile()}</div><div class="mobile-chat-input"><input placeholder="聊天室连接中..." readonly><button disabled>连接中</button></div></div></div><aside class="chat-panel"><div class="chat-notice">📢 公告：${esc(announcement)}</div><div class="chat-tabs"><span data-tab="chat" class="is-active">聊天室</span><span data-tab="profile">主播资料</span></div><div class="chat-body" id="chatBody">${renderChatList()}</div><div class="chat-body hide" id="profileBody">${renderAnchorProfile()}</div><div class="chat-input"><input placeholder="聊天室连接中..." readonly><button disabled>连接中</button></div></aside></div></section><main class="room-below pc-only" id="roomOddsArea"><div class="container"><h2>实时指数</h2><div class="odds-scroll" data-odds-scroll id="oddsScroll"><div class="odds-loading">加载中...</div></div><p class="odds-disclaimer" style="color:#999;font-size:11px;margin-top:4px;">数据仅供赛事参考</p></div></main>`;
 
   const pcTabs = document.querySelectorAll('.chat-tabs span');
   const chatBody = document.querySelector('#chatBody');
@@ -43,7 +73,9 @@ app.innerHTML = `<section class="room-stage"><div class="container room-grid"><d
   const mobileInput = document.querySelector('.mobile-chat-input input');
   if (mobileInput) { mobileInput.addEventListener('focus', () => document.body.classList.add('mobile-chat-focus')); mobileInput.addEventListener('blur', () => document.body.classList.remove('mobile-chat-focus')); }
 
-  initPlayer(room);
+  if (statusMeta.playable) {
+    initPlayer(room);
+  }
   loadOddsForRoom(id);
   updateRoomViewportHeight();
   window.addEventListener('resize', updateRoomViewportHeight);
