@@ -3,6 +3,8 @@
  * 不改保存、删除、测试播放等业务逻辑，只移动编辑面板显示位置。
  */
 
+let currentOpen = null;
+
 function tableCard() {
   const tableBox = document.querySelector('#roomTableContainer');
   return tableBox ? tableBox.closest('.admin-card') : null;
@@ -27,8 +29,24 @@ function ensureEditors() {
   ensureEditor('#streamEditor');
 }
 
+function clearActiveState() {
+  document.querySelectorAll('.admin-room-row-active').forEach(row => row.classList.remove('admin-room-row-active'));
+  document.querySelectorAll('.btn-room-edit.is-open, .btn-stream-mgr.is-open').forEach(btn => btn.classList.remove('is-open'));
+}
+
 function removeInlineRows() {
   document.querySelectorAll('.admin-inline-editor-row').forEach(row => row.remove());
+  clearActiveState();
+  currentOpen = null;
+}
+
+function markActive(row, editorSelector) {
+  clearActiveState();
+  row.classList.add('admin-room-row-active');
+
+  const btnSelector = editorSelector === '#streamEditor' ? '.btn-stream-mgr' : '.btn-room-edit';
+  const btn = row.querySelector(btnSelector);
+  if (btn) btn.classList.add('is-open');
 }
 
 function moveEditorBelowRoom(roomId, editorSelector) {
@@ -59,6 +77,9 @@ function moveEditorBelowRoom(roomId, editorSelector) {
   editor.style.display = 'block';
   shell.appendChild(editor);
 
+  markActive(row, editorSelector);
+  currentOpen = { roomId: String(roomId), editorSelector: editorSelector };
+
   inlineRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   return true;
 }
@@ -75,6 +96,13 @@ function scheduleMove(roomId, editorSelector) {
   setTimeout(tick, 80);
 }
 
+function isSameOpen(roomId, editorSelector) {
+  return currentOpen
+    && currentOpen.roomId === String(roomId)
+    && currentOpen.editorSelector === editorSelector
+    && !!document.querySelector('.admin-inline-editor-row');
+}
+
 export function initAdminInlineEditors() {
   if (document.body.dataset.page !== 'admin') return;
   if (window.__adminInlineEditorsBound) return;
@@ -89,12 +117,20 @@ export function initAdminInlineEditors() {
       return;
     }
 
-    ensureEditors();
-
     const roomId = btn.dataset.roomId;
     if (!roomId) return;
 
     const editorSelector = btn.classList.contains('btn-stream-mgr') ? '#streamEditor' : '#roomEditor';
+
+    if (isSameOpen(roomId, editorSelector)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      removeInlineRows();
+      return;
+    }
+
+    ensureEditors();
     scheduleMove(roomId, editorSelector);
   }, true);
 }
