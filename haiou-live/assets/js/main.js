@@ -24,9 +24,19 @@ import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 
+function loadMemberEntryCss() {
+  if (document.querySelector('link[data-member-entry-style]')) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = '/assets/css/member-entry.css';
+  link.dataset.memberEntryStyle = '1';
+  document.head.appendChild(link);
+}
+
 async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
+  loadMemberEntryCss();
   initAppIcons();
   applyTheme(cfg);
   initPlayerLineSwitcher();
