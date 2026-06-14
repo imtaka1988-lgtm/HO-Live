@@ -90,7 +90,6 @@ app.use("/api/user", require("./routes/user")(pool));
 app.use("/api/user/avatar", require("./routes/userAvatar")(pool));
 app.use("/api/user/messages", require("./routes/userMessages")(pool));
 app.use("/api/admin", require("./routes/adminObsTemplate")(pool));
-app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
 app.use("/api/admin", require("./routes/adminAnchorResetPasswordSecure")(pool));
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
 app.use("/api/admin", require("./routes/adminRoomListById")(pool));
