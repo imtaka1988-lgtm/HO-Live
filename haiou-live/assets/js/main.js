@@ -24,6 +24,7 @@ import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminRoomInlineEditors } from './admin-room-inline-editors.js';
 import { initAdminAnchorBundleNotice } from './admin-anchor-bundle-notice.js';
 import { initAdminAnchorRoomPanel } from './admin-anchor-room-panel.js';
+import { initAdminAnchorPanelToggle } from './admin-anchor-panel-toggle.js';
 import { initAdminAnchorCopyLogin } from './admin-anchor-copy-login.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
@@ -114,6 +115,7 @@ async function main() {
   initAdminRoomSort();
   initAdminRoomInlineEditors();
   initAdminAnchorBundleNotice();
+  initAdminAnchorPanelToggle();
   initAdminAnchorRoomPanel();
   initAdminAnchorCopyLogin();
   initPlayerCoverFit();
