@@ -1,6 +1,6 @@
 /**
  * 经典战役回顾板块
- * 第一版只展示卡片，不接真实播放源。
+ * 支持占位、外链和 iframe/B站站内弹窗播放。
  */
 
 import { href, asset, esc } from './config.js';
@@ -72,11 +72,13 @@ function itemMatchesFilter(item, filter) {
 }
 
 function replayCard(item) {
-  const isReady = item.url && item.url !== '#';
-  const btnText = isReady ? '观看回顾' : (item.status || '等待片源');
+  const embedUrl = item.embedUrl || '';
+  const isIframe = ['iframe', 'bilibili', 'xigua'].includes(String(item.sourceType || '').toLowerCase());
+  const isReady = (item.url && item.url !== '#') || (isIframe && embedUrl);
+  const btnText = isReady ? (item.status || '观看回顾') : (item.status || '等待片源');
   const badge = item.tag || (item.sport === 'basketball' ? '篮球' : '足球');
 
-  return `<article class="replay-card ${isReady ? '' : 'is-placeholder'}" data-url="${esc(item.url || '#')}">
+  return `<article class="replay-card ${isReady ? '' : 'is-placeholder'}" data-url="${esc(item.url || '#')}" data-embed-url="${esc(embedUrl)}" data-source-type="${esc(item.sourceType || '')}" data-title="${esc(item.title || '经典战役')}">
     <div class="replay-cover">
       <img src="${asset(item.cover || 'assets/img/thumb-1.svg')}" alt="${esc(item.title || '')}">
       <span class="replay-badge">${esc(badge)}</span>
@@ -102,10 +104,50 @@ async function loadReplayItems() {
   return replayItems;
 }
 
+function closeReplayModal() {
+  const modal = document.querySelector('#replayModal');
+  if (modal) modal.remove();
+  document.body.classList.remove('replay-modal-open');
+}
+
+function openReplayModal(title, embedUrl) {
+  closeReplayModal();
+  document.body.classList.add('replay-modal-open');
+  const modal = document.createElement('div');
+  modal.id = 'replayModal';
+  modal.className = 'replay-modal-overlay';
+  modal.innerHTML = `<div class="replay-modal-box">
+    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><button type="button" id="replayModalClose">×</button></div>
+    <div class="replay-iframe-wrap"><iframe src="${esc(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" scrolling="no" frameborder="0" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeReplayModal();
+  });
+  const closeBtn = modal.querySelector('#replayModalClose');
+  if (closeBtn) closeBtn.addEventListener('click', closeReplayModal);
+  document.addEventListener('keydown', function onKey(e) {
+    if (e.key === 'Escape') {
+      closeReplayModal();
+      document.removeEventListener('keydown', onKey);
+    }
+  });
+}
+
 function bindReplayCards(root) {
   root.querySelectorAll('.replay-card').forEach(card => {
     card.addEventListener('click', function () {
       const url = this.dataset.url || '#';
+      const embedUrl = this.dataset.embedUrl || '';
+      const sourceType = String(this.dataset.sourceType || '').toLowerCase();
+      const title = this.dataset.title || '赛事回放';
+      const isIframe = ['iframe', 'bilibili', 'xigua'].includes(sourceType);
+
+      if (isIframe && embedUrl) {
+        openReplayModal(title, embedUrl);
+        return;
+      }
+
       if (!url || url === '#') {
         alert('该经典回顾片源稍后接入');
         return;
