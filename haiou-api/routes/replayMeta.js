@@ -18,6 +18,7 @@ function decodeHtml(s) {
 function normalizeUrl(u) {
   if (!u) return "";
   if (u.startsWith("//")) return "https:" + u;
+  if (u.startsWith("http://")) return "https://" + u.slice(7);
   return u;
 }
 
