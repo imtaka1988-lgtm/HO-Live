@@ -14,6 +14,7 @@ import { initMascot } from './mascot.js';
 import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 import { initAppIcons } from './app-icons.js';
 import { initAdminInlineEditors } from './admin-inline-editor.js';
+import { initAdminStreamLabels } from './admin-stream-labels.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -26,6 +27,7 @@ async function main() {
   initMascot();
   initAdminNeutralLabels();
   initAdminInlineEditors();
+  initAdminStreamLabels();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));
