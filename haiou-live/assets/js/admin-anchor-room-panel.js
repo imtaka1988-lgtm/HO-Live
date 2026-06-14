@@ -1,5 +1,5 @@
 /**
- * 管理后台：每个房间下方展示主播后台账号与 OBS 信息。
+ * 管理后台：每个房间下方展示并维护主播后台账号与 OBS 信息。
  */
 
 let bound = false;
@@ -80,28 +80,34 @@ function injectStyle() {
       font-weight: 800;
       margin-bottom: 6px;
     }
-    .admin-anchor-panel-value {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .admin-anchor-panel-item code,
+    .admin-anchor-panel-item input {
+      width: 100%;
+      box-sizing: border-box;
+      display: block;
+      min-height: 34px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
-    .admin-anchor-panel-value code {
-      flex: 1;
-      min-width: 0;
-      padding: 6px 8px;
-      border-radius: 7px;
+    .admin-anchor-panel-item code {
       background: #111827;
       color: #fde68a;
-      font-size: 12px;
-      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
     }
-    .admin-anchor-copy,
+    .admin-anchor-panel-item input {
+      border: 1px solid #d1d5db;
+      background: #fff;
+      color: #111827;
+      outline: none;
+    }
     .admin-anchor-action {
-      height: 30px;
-      padding: 0 10px;
-      border-radius: 7px;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 8px;
       border: 0;
       color: #fff;
       background: #f97316;
@@ -110,9 +116,8 @@ function injectStyle() {
       cursor: pointer;
       white-space: nowrap;
     }
-    .admin-anchor-action.is-dark {
-      background: #111827;
-    }
+    .admin-anchor-action.is-dark { background: #111827; }
+    .admin-anchor-action.is-blue { background: #2563eb; }
     .admin-anchor-actions {
       display: flex;
       flex-wrap: wrap;
@@ -129,6 +134,11 @@ function injectStyle() {
       font-size: 12px;
       line-height: 1.5;
     }
+    .admin-anchor-ok {
+      color: #166534;
+      background: #dcfce7;
+      border-color: #bbf7d0;
+    }
     @media (max-width: 768px) {
       .admin-anchor-panel-grid { grid-template-columns: 1fr; }
     }
@@ -136,55 +146,8 @@ function injectStyle() {
   document.head.appendChild(style);
 }
 
-function valueRow(label, value) {
-  const text = String(value || '未配置');
-  return `<div class="admin-anchor-panel-item">
-    <label>${esc(label)}</label>
-    <div class="admin-anchor-panel-value"><code title="${esc(text)}">${esc(text)}</code><button class="admin-anchor-copy" data-copy="${esc(text)}" ${value ? '' : 'disabled'}>复制</button></div>
-  </div>`;
-}
-
 function removeInlineRows() {
   document.querySelectorAll('.admin-room-inline-editor-row').forEach(function (row) { row.remove(); });
-}
-
-function findHls(bundle) {
-  const stream = bundle.streamProfile || {};
-  if (stream.pullHlsUrl) return stream.pullHlsUrl;
-  const list = Array.isArray(bundle.playbackStreams) ? bundle.playbackStreams : [];
-  const hls = list.find(function (x) { return x.type === 'hls'; });
-  return hls ? hls.url : '';
-}
-
-function renderPanel(roomId, bundle) {
-  const anchor = bundle.anchor || null;
-  const stream = bundle.streamProfile || {};
-  const hls = findHls(bundle);
-  const passwordTip = bundle.generatedPassword ? `<div class="admin-anchor-tip">新密码：<b>${esc(bundle.generatedPassword)}</b>。请立即复制保存，关闭后不再显示。</div>` : '';
-
-  if (!anchor) {
-    return `<div class="admin-anchor-panel-card">
-      <div class="admin-anchor-panel-head"><div><h3>房间 #${esc(roomId)} 主播后台</h3><p>该房间还没有主播账号。</p></div></div>
-      <div class="admin-anchor-actions"><button class="admin-anchor-action is-dark" data-anchor-generate="${esc(roomId)}">生成主播账号</button></div>
-      <div class="admin-anchor-tip">老房间可以在这里补生成主播账号。生成后主播只能管理这个房间。</div>
-    </div>`;
-  }
-
-  return `<div class="admin-anchor-panel-card">
-    <div class="admin-anchor-panel-head"><div><h3>房间 #${esc(roomId)} 主播后台</h3><p>主播只能管理当前房间，播放源和系统配置仍由管理员控制。</p></div></div>
-    <div class="admin-anchor-panel-grid">
-      ${valueRow('主播账号', anchor.username)}
-      ${valueRow('主播状态', anchor.status)}
-      ${valueRow('OBS 服务器', stream.obsServer)}
-      ${valueRow('OBS 推流码', stream.obsStreamKey || stream.streamName)}
-      ${valueRow('推流名 streamName', stream.streamName)}
-      ${valueRow('HLS 播放地址', hls)}
-    </div>
-    <div class="admin-anchor-actions">
-      <button class="admin-anchor-action" data-anchor-reset="${esc(roomId)}">重置主播密码</button>
-    </div>
-    ${passwordTip}
-  </div>`;
 }
 
 function placePanel(roomId, html) {
@@ -196,6 +159,47 @@ function placePanel(roomId, html) {
   wrap.className = 'admin-room-inline-editor-row admin-anchor-bundle-row';
   wrap.innerHTML = '<td colspan="7" style="padding:0 8px 14px;background:#eef2ff;border-bottom:1px solid #c7d2fe;">' + html + '</td>';
   row.insertAdjacentElement('afterend', wrap);
+}
+
+function itemCode(label, value, className) {
+  return `<div class="admin-anchor-panel-item"><label>${esc(label)}</label><code class="${className || ''}" title="${esc(value || '')}">${esc(value || '未生成')}</code></div>`;
+}
+
+function itemInput(label, value, className, placeholder) {
+  return `<div class="admin-anchor-panel-item"><label>${esc(label)}</label><input class="${className || ''}" value="${esc(value || '')}" placeholder="${esc(placeholder || '')}"></div>`;
+}
+
+function renderPanel(roomId, bundle) {
+  const anchor = bundle.anchor || null;
+  const stream = bundle.streamProfile || {};
+  const password = bundle.generatedPassword || '';
+  const saveTip = bundle.saved ? '<div class="admin-anchor-tip admin-anchor-ok">OBS 信息已保存。主播后台会展示你这里保存的服务器和推流码。</div>' : '';
+  const passwordTip = password ? `<div class="admin-anchor-tip">主播新密码：<b class="anchor-generated-password">${esc(password)}</b>。请立即复制保存，关闭后不再显示。</div>` : '<div class="admin-anchor-tip">密码已加密保存，后台无法查看原密码。需要发给主播时，请先点击“重置主播密码”。</div>';
+
+  if (!anchor) {
+    return `<div class="admin-anchor-panel-card">
+      <div class="admin-anchor-panel-head"><div><h3>房间 #${esc(roomId)} 主播后台</h3><p>该房间还没有主播账号。</p></div></div>
+      <div class="admin-anchor-actions"><button class="admin-anchor-action is-dark" data-anchor-generate="${esc(roomId)}">生成主播账号</button></div>
+      <div class="admin-anchor-tip">老房间可以在这里补生成主播账号。生成后主播只能管理这个房间。</div>
+    </div>`;
+  }
+
+  return `<div class="admin-anchor-panel-card" data-anchor-room-id="${esc(roomId)}">
+    <div class="admin-anchor-panel-head"><div><h3>房间 #${esc(roomId)} 主播后台</h3><p>这里设置的是给主播看的 OBS 推流信息，播放地址不展示给主播。</p></div></div>
+    <div class="admin-anchor-panel-grid">
+      ${itemCode('主播账号', anchor.username, 'anchor-username')}
+      ${itemCode('主播状态', anchor.status, '')}
+      ${itemInput('OBS 服务器', stream.obsServer || '', 'anchor-obs-server', '例如：rtmp://push.haiolive.cn/live')}
+      ${itemInput('OBS 推流码', stream.obsStreamKey || '', 'anchor-obs-key', '例如：room1 或带鉴权的推流码')}
+    </div>
+    <div class="admin-anchor-actions">
+      <button class="admin-anchor-action is-blue" data-anchor-save-obs="${esc(roomId)}">保存 OBS 信息</button>
+      <button class="admin-anchor-action" data-anchor-reset="${esc(roomId)}">重置主播密码</button>
+      <button class="admin-anchor-action is-dark" data-anchor-copy-all="${esc(roomId)}">复制四项发给主播</button>
+    </div>
+    ${saveTip}
+    ${passwordTip}
+  </div>`;
 }
 
 async function openPanel(roomId) {
@@ -217,6 +221,24 @@ async function generateAnchor(roomId) {
   placePanel(roomId, renderPanel(roomId, data));
 }
 
+async function saveObs(roomId) {
+  const card = document.querySelector('.admin-anchor-panel-card[data-anchor-room-id="' + roomId + '"]');
+  if (!card) return;
+  const obsServer = (card.querySelector('.anchor-obs-server') || {}).value || '';
+  const obsStreamKey = (card.querySelector('.anchor-obs-key') || {}).value || '';
+  const currentPassword = (card.querySelector('.anchor-generated-password') || {}).textContent || '';
+  const data = await apiJson('/api/admin/rooms/' + encodeURIComponent(roomId) + '/anchor-bundle/stream-profile', {
+    method: 'PUT',
+    body: JSON.stringify({ obsServer, obsStreamKey })
+  });
+  if (!data || !data.ok) {
+    alert('保存失败：' + ((data && data.error) || '未知错误'));
+    return;
+  }
+  if (currentPassword) data.generatedPassword = currentPassword;
+  placePanel(roomId, renderPanel(roomId, data));
+}
+
 async function resetPassword(roomId) {
   if (!confirm('确定重置这个主播的密码吗？旧密码会立即失效。')) return;
   const data = await apiJson('/api/admin/rooms/' + encodeURIComponent(roomId) + '/anchor-bundle/reset-password', { method: 'POST' });
@@ -227,15 +249,34 @@ async function resetPassword(roomId) {
   placePanel(roomId, renderPanel(roomId, data));
 }
 
-function copyText(value, btn) {
-  const text = String(value || '');
-  if (!text || text === '未配置') return;
+function copyForAnchor(roomId) {
+  const card = document.querySelector('.admin-anchor-panel-card[data-anchor-room-id="' + roomId + '"]');
+  if (!card) return;
+  const username = (card.querySelector('.anchor-username') || {}).textContent || '';
+  const password = (card.querySelector('.anchor-generated-password') || {}).textContent || '';
+  const obsServer = (card.querySelector('.anchor-obs-server') || {}).value || '';
+  const obsKey = (card.querySelector('.anchor-obs-key') || {}).value || '';
+
+  if (!password) {
+    alert('当前密码不可查看。请先点击“重置主播密码”，生成新密码后再复制给主播。');
+    return;
+  }
+  if (!obsServer || !obsKey) {
+    alert('请先填写并保存 OBS 服务器和 OBS 推流码。');
+    return;
+  }
+
+  const text = [
+    '主播后台账号：' + username,
+    '主播后台密码：' + password,
+    'OBS 服务器：' + obsServer,
+    'OBS 推流码：' + obsKey
+  ].join('\n');
+
   navigator.clipboard.writeText(text).then(function () {
-    const old = btn.textContent;
-    btn.textContent = '已复制';
-    setTimeout(function () { btn.textContent = old; }, 1200);
+    alert('已复制，可以直接发给主播。');
   }).catch(function () {
-    window.prompt('复制下面内容：', text);
+    window.prompt('复制下面内容发给主播：', text);
   });
 }
 
@@ -274,14 +315,20 @@ export function initAdminAnchorRoomPanel() {
       return;
     }
 
+    const save = e.target.closest && e.target.closest('[data-anchor-save-obs]');
+    if (save) {
+      saveObs(save.dataset.anchorSaveObs);
+      return;
+    }
+
     const reset = e.target.closest && e.target.closest('[data-anchor-reset]');
     if (reset) {
       resetPassword(reset.dataset.anchorReset);
       return;
     }
 
-    const copy = e.target.closest && e.target.closest('.admin-anchor-copy');
-    if (copy) copyText(copy.dataset.copy, copy);
+    const copyAll = e.target.closest && e.target.closest('[data-anchor-copy-all]');
+    if (copyAll) copyForAnchor(copyAll.dataset.anchorCopyAll);
   });
 
   const observer = new MutationObserver(addButtons);
