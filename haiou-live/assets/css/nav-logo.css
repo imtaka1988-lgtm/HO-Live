@@ -1,0 +1,103 @@
+/* 顶部品牌 Logo：去掉外部黑色块，文字跟随导航栏深浅自动变化 */
+
+.logo-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-main);
+  text-decoration: none;
+  background: transparent !important;
+}
+
+.pc-logo-brand.logo-link {
+  flex: 0 0 230px;
+}
+
+.logo-brand .logo-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(255, 106, 0, .22);
+}
+
+.logo-brand .logo-mark img {
+  width: 42px !important;
+  height: 42px !important;
+  object-fit: cover;
+  display: block;
+}
+
+.logo-brand .logo-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.05;
+  min-width: 0;
+}
+
+.logo-brand .logo-name {
+  color: currentColor;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.logo-brand .logo-domain {
+  margin-top: 3px;
+  color: var(--brand-yellow);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.site-header.is-hero .logo-brand {
+  color: #fff;
+}
+
+.site-header:not(.is-hero) .logo-brand {
+  color: #111827;
+}
+
+body[data-page="admin"] .site-header .logo-brand {
+  color: #fff;
+}
+
+.mobile-header .mobile-logo-brand {
+  gap: 8px;
+  flex: 0 0 auto;
+  color: #fff;
+}
+
+.mobile-header .mobile-logo-brand .logo-mark {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  box-shadow: 0 4px 12px rgba(255, 106, 0, .20);
+}
+
+.mobile-header .mobile-logo-brand .logo-mark img {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.mobile-header .mobile-logo-brand .logo-name {
+  font-size: 15px;
+}
+
+.mobile-header .mobile-logo-brand .logo-domain {
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .pc-logo-brand.logo-link {
+    flex: 0 0 auto;
+  }
+}
