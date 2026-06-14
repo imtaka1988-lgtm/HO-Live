@@ -4,7 +4,7 @@
 
 import { state, href, asset, esc } from './config.js';
 import { liveCard } from './ui.js';
-import { getUserInfo } from './api.js';
+import { getUserInfo, getUserFollows } from './api.js';
 
 function ensureUserCenterStyles() {
   if (document.querySelector('link[data-user-center-style]')) return;
@@ -33,21 +33,67 @@ function maskPhone(phone) {
   return s.slice(0, 3) + '****' + s.slice(-4);
 }
 
+function followRoomCard(room) {
+  return `<a class="follow-room-card" href="${href('pages/room.html?id=' + room.id)}">
+    <img src="${asset(room.cover || 'assets/img/thumb-1.svg')}" alt="${esc(room.title || '')}">
+    <div><b>${esc(room.title || '直播间')}</b><span>${esc(room.anchorName || '主播')} · ${esc(room.status || 'offline')}</span></div>
+    <em>进入</em>
+  </a>`;
+}
+
+function renderFollowRooms(rooms) {
+  if (!rooms || !rooms.length) {
+    return `<div class="follow-empty-box">
+      <b>暂未关注直播间</b>
+      <span>进入直播间点击“关注”，这里会自动显示。</span>
+      <a href="${href('pages/live.html')}">去看看直播</a>
+    </div>`;
+  }
+  return `<div class="follow-room-list">${rooms.map(followRoomCard).join('')}</div>`;
+}
+
 export function renderFollow() {
-  return `<main class="mobile-page">
-    <section class="m-follow-empty">
-      <div class="m-empty-icon"></div>
-      <div>登录账号关注喜欢的主播</div>
-      <a class="m-login-btn" href="${href('pages/login.html')}">登录</a>
+  ensureUserCenterStyles();
+  const token = getToken();
+
+  if (!token) {
+    return `<main class="mobile-page">
+      <section class="m-follow-empty">
+        <div class="m-empty-icon"></div>
+        <div>登录账号关注喜欢的主播</div>
+        <a class="m-login-btn" href="${href('pages/login.html')}">登录</a>
+      </section>
+      <div class="m-section-title">为你推荐</div>
+      <div class="m-live-grid">${state.cfg.rooms.slice(0,6).map(r => liveCard(r)).join('')}</div>
+    </main>
+    <main class="page-shell pc-only">
+      <div class="container">
+        <div class="admin-card">
+          <h2>关注</h2>
+          <p>登录后可查看已关注的直播间。</p>
+          <a class="user-main-btn" href="${href('pages/login.html')}">登录 / 注册</a>
+        </div>
+      </div>
+    </main>`;
+  }
+
+  return `<main class="mobile-page user-center-page">
+    <section class="user-center-hero">
+      <div class="user-center-profile">
+        <img src="${asset('assets/img/avatar-default.svg')}" alt="">
+        <div><h2>我的关注</h2><p>你关注的直播间会显示在这里</p></div>
+      </div>
     </section>
-    <div class="m-section-title">为你推荐</div>
-    <div class="m-live-grid">${state.cfg.rooms.slice(0,6).map(r => liveCard(r)).join('')}</div>
+    <section class="user-center-section">
+      <h3>已关注直播间</h3>
+      <div id="followList"><div class="follow-loading">关注列表加载中...</div></div>
+    </section>
   </main>
   <main class="page-shell pc-only">
     <div class="container">
-      <div class="admin-card">
-        <h2>关注</h2>
-        <p>PC 端关注页可后续扩展为主播列表、预约提醒和站内信。</p>
+      <div class="user-center-pc-panel">
+        <h2 style="margin:0 0 14px;font-size:20px;font-weight:900;color:#111827;">我的关注</h2>
+        <div id="pcFollowList"><div class="follow-loading">关注列表加载中...</div></div>
       </div>
     </div>
   </main>`;
@@ -82,6 +128,7 @@ export function renderUser() {
   const phone = maskPhone(user.phone);
   const level = user.level || 1;
   const coins = user.coins || 0;
+  const followCount = user.followCount || 0;
   const avatar = user.avatar || 'assets/img/avatar-default.svg';
 
   return `<main class="mobile-page user-page user-center-page">
@@ -102,7 +149,7 @@ export function renderUser() {
 
     <section class="user-center-stats">
       <div><b id="userLevel">LV.${esc(level)}</b><span>等级</span></div>
-      <div><b>0</b><span>关注</span></div>
+      <div><b id="userFollowCount">${esc(followCount)}</b><span>关注</span></div>
       <div><b id="userCoins">${esc(coins)}</b><span>金币</span></div>
     </section>
 
@@ -124,7 +171,7 @@ export function renderUser() {
       </div>
     </section>
 
-    <section class="user-center-note">当前账号已开通聊天室发言身份。后续可逐步接入关注提醒、观看记录、专属徽章等功能。</section>
+    <section class="user-center-note">当前账号已开通聊天室发言身份。关注直播间后，会在“我的关注”中显示。</section>
 
     <section style="margin:14px 12px 0;"><button id="btnUserLogoutMobile" class="user-center-logout" type="button">退出登录</button></section>
   </main>
@@ -147,7 +194,7 @@ export function renderUser() {
           </div>
           <div class="user-center-pc-grid">
             <div><b>LV.${esc(level)}</b><span>等级</span></div>
-            <div><b>0</b><span>关注</span></div>
+            <div><b id="pcUserFollowCount">${esc(followCount)}</b><span>关注</span></div>
             <div><b>${esc(coins)}</b><span>金币</span></div>
           </div>
         </div>
@@ -193,5 +240,23 @@ export function bindUserEvents() {
   getUserInfo(token).then(function (res) {
     if (!res || !res.ok || !res.user) return;
     localStorage.setItem('user_profile', JSON.stringify(res.user));
+    if (res.user.followCount !== undefined) {
+      document.querySelectorAll('#userFollowCount,#pcUserFollowCount').forEach(el => el.textContent = String(res.user.followCount || 0));
+    }
   }).catch(function () {});
+
+  const followBox = document.querySelector('#followList');
+  const pcFollowBox = document.querySelector('#pcFollowList');
+  if (followBox || pcFollowBox) {
+    getUserFollows(token).then(function (res) {
+      if (!res || !res.ok) throw new Error('failed');
+      const html = renderFollowRooms(res.rooms || []);
+      if (followBox) followBox.innerHTML = html;
+      if (pcFollowBox) pcFollowBox.innerHTML = html;
+    }).catch(function () {
+      const html = '<div class="follow-empty-box"><b>关注列表加载失败</b><span>请稍后刷新重试。</span></div>';
+      if (followBox) followBox.innerHTML = html;
+      if (pcFollowBox) pcFollowBox.innerHTML = html;
+    });
+  }
 }
