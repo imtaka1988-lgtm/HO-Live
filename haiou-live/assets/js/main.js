@@ -16,6 +16,7 @@ import { initAppIcons } from './app-icons.js';
 import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
+import { initPlayerStreamTypeFix } from './player-stream-type-fix.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
 import { initAdminSiteMessages } from './admin-site-messages.js';
@@ -101,6 +102,7 @@ async function main() {
   initMobileChatFocusFix();
   initAppIcons();
   applyTheme(cfg);
+  initPlayerStreamTypeFix();
   initPlayerLineSwitcher();
   renderGlobalChrome();
   applyPcMemberLevel();
