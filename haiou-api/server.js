@@ -91,6 +91,7 @@ app.use("/api/user/messages", require("./routes/userMessages")(pool));
 app.use("/api/admin", require("./routes/adminObsTemplate")(pool));
 app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
+app.use("/api/admin", require("./routes/adminRoomDeleteCleanup")(pool));
 app.use("/api/admin", require("./routes/admin")(pool));
 app.use("/api/anchor", require("./routes/anchor")(pool));
 app.use("/api/anchor/upload", require("./routes/anchorUpload")(pool));
