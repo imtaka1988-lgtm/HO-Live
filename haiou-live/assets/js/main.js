@@ -24,6 +24,7 @@ import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
+import { initUserLevelBenefits } from './user-level-benefits.js';
 
 function loadMemberEntryCss() {
   if (document.querySelector('link[data-member-entry-style]')) return;
@@ -91,6 +92,7 @@ async function main() {
   renderGlobalChrome();
   applyPcMemberLevel();
   bootPage();
+  initUserLevelBenefits();
   initUserAvatarPreview();
   initUserMessageStatusFix();
   initAdminReplayImport();
