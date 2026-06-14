@@ -92,13 +92,23 @@ function replayCard(item) {
   </article>`;
 }
 
+async function fetchReplayFile(path) {
+  try {
+    const res = await fetch(href(path) + '?t=' + Date.now());
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 async function loadReplayItems() {
   if (replayItems.length) return replayItems;
 
-  const res = await fetch(href('assets/data/replays.json') + '?t=' + Date.now());
-  if (!res.ok) throw new Error(res.status);
-  const data = await res.json();
-  replayItems = (Array.isArray(data) ? data : [])
+  const baseItems = await fetchReplayFile('assets/data/replays.json');
+  const localItems = await fetchReplayFile('assets/data/replays.local.json');
+  replayItems = localItems.concat(baseItems)
     .filter(item => item && item.enabled !== false)
     .sort((a, b) => (a.sort || 99) - (b.sort || 99));
   return replayItems;
