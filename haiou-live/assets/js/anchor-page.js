@@ -75,12 +75,12 @@ export function renderAnchorPage() {
 
 function roomFormHtml(room) {
   return `<h2>我的直播间 #${esc(room.id)}</h2>
-    <p>这里修改后会同步到前台直播间和管理员后台。</p>
+    <p>这里修改后会同步到前台直播间和管理员后台。封面不填会保留管理员后台原封面，不会清空。</p>
     <div class="anchor-grid">
       <div class="anchor-field"><label>房间标题</label><input class="anchor-room-title" value="${esc(room.title || '')}"></div>
       <div class="anchor-field"><label>主播名称</label><input class="anchor-room-name" value="${esc(room.anchorName || '')}"></div>
     </div>
-    <div class="anchor-field"><label>封面图片地址</label><input class="anchor-room-cover" value="${esc(room.cover || '')}" placeholder="填写图片 URL 或站内图片路径"></div>
+    <div class="anchor-field"><label>封面图片地址</label><input class="anchor-room-cover" value="${esc(room.cover || '')}" placeholder="不填则保留管理员后台默认封面"></div>
     <div class="anchor-field"><label>直播间公告</label><textarea class="anchor-room-announcement">${esc(room.announcement || '')}</textarea></div>
     <div class="anchor-actions"><button class="anchor-btn primary" id="btnAnchorSaveRoom">保存房间资料</button></div>
     <div class="anchor-msg" id="anchorSaveMsg"></div>`;
@@ -136,9 +136,10 @@ async function saveRoom() {
   const body = {
     title: (document.querySelector('.anchor-room-title') || {}).value || '',
     anchor_name: (document.querySelector('.anchor-room-name') || {}).value || '',
-    cover: (document.querySelector('.anchor-room-cover') || {}).value || '',
     announcement: (document.querySelector('.anchor-room-announcement') || {}).value || ''
   };
+  const coverValue = ((document.querySelector('.anchor-room-cover') || {}).value || '').trim();
+  if (coverValue) body.cover = coverValue;
   const data = await apiJson('/api/anchor/room', { method: 'PUT', body: JSON.stringify(body) });
   if (data && data.ok) {
     if (msg) msg.textContent = '已保存，前台直播间会同步更新。';
