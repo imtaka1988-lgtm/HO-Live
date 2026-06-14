@@ -49,6 +49,9 @@ app.use("/api/user", require("./routes/user")(pool));
 // 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
 
+// 挂载回放保存路由：/api/admin/replays
+app.use("/api/admin/replays", require("./routes/adminReplays"));
+
 // 挂载回放元数据抓取路由：/api/admin/replay-meta/bilibili
 app.use("/api/admin/replay-meta", require("./routes/replayMeta"));
 
