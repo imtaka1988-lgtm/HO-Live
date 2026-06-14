@@ -1,5 +1,5 @@
 /**
- * 直播页经典战役回顾占位板块
+ * 经典战役回顾板块
  * 第一版只展示卡片，不接真实播放源。
  */
 
@@ -16,6 +16,12 @@ const FILTERS = [
 let replayItems = [];
 let currentFilter = 'all';
 
+function replayTabsHtml() {
+  return `<div class="replay-tabs" id="replayTabs">
+    ${FILTERS.map(([key, text]) => `<button type="button" class="${key === 'all' ? 'is-active' : ''}" data-filter="${key}">${text}</button>`).join('')}
+  </div>`;
+}
+
 export function renderRoomReplaySection() {
   return `<main class="room-below room-replays-area" id="roomReplaysArea">
     <div class="container">
@@ -24,13 +30,38 @@ export function renderRoomReplaySection() {
           <h2>经典战役回顾</h2>
           <p>精选足球、篮球经典比赛回顾，真实片源后续接入。</p>
         </div>
-        <div class="replay-tabs" id="replayTabs">
-          ${FILTERS.map(([key, text]) => `<button type="button" class="${key === 'all' ? 'is-active' : ''}" data-filter="${key}">${text}</button>`).join('')}
-        </div>
+        ${replayTabsHtml()}
       </div>
       <div class="replay-grid" id="roomReplayGrid"><div class="replay-loading">经典回顾加载中...</div></div>
     </div>
   </main>`;
+}
+
+export function renderReplaysPage() {
+  return `<main class="page-shell replays-page">
+    <div class="container">
+      <div class="replays-page-hero">
+        <span>赛事回放</span>
+        <h1>经典战役回顾</h1>
+        <p>足球、篮球经典比赛回看专区。当前为占位展示，真实 HLS / FLV 片源后续接入。</p>
+      </div>
+      <div class="replay-head replay-head-page">
+        <div>
+          <h2>全部回放</h2>
+          <p>按分类快速浏览经典赛事。</p>
+        </div>
+        ${replayTabsHtml()}
+      </div>
+      <div class="replay-grid replay-grid-page" id="roomReplayGrid"><div class="replay-loading">经典回顾加载中...</div></div>
+    </div>
+  </main>`;
+}
+
+export function renderHomeReplaySection() {
+  return `<section class="home-replays-section">
+    <div class="section-head"><h2>赛事回放</h2><a href="${href('pages/replays.html')}">查看更多 ›</a></div>
+    <div class="replay-grid home-replay-grid" id="homeReplayGrid"><div class="replay-loading">经典回顾加载中...</div></div>
+  </section>`;
 }
 
 function itemMatchesFilter(item, filter) {
@@ -59,19 +90,20 @@ function replayCard(item) {
   </article>`;
 }
 
-function renderReplayGrid() {
-  const grid = document.querySelector('#roomReplayGrid');
-  if (!grid) return;
+async function loadReplayItems() {
+  if (replayItems.length) return replayItems;
 
-  const list = replayItems.filter(item => itemMatchesFilter(item, currentFilter));
-  if (!list.length) {
-    grid.innerHTML = '<div class="replay-empty">暂无该分类回顾</div>';
-    return;
-  }
+  const res = await fetch(href('assets/data/replays.json') + '?t=' + Date.now());
+  if (!res.ok) throw new Error(res.status);
+  const data = await res.json();
+  replayItems = (Array.isArray(data) ? data : [])
+    .filter(item => item && item.enabled !== false)
+    .sort((a, b) => (a.sort || 99) - (b.sort || 99));
+  return replayItems;
+}
 
-  grid.innerHTML = list.map(replayCard).join('');
-
-  grid.querySelectorAll('.replay-card').forEach(card => {
+function bindReplayCards(root) {
+  root.querySelectorAll('.replay-card').forEach(card => {
     card.addEventListener('click', function () {
       const url = this.dataset.url || '#';
       if (!url || url === '#') {
@@ -83,32 +115,55 @@ function renderReplayGrid() {
   });
 }
 
-function bindReplayTabs() {
+function renderReplayGrid(grid, options = {}) {
+  if (!grid) return;
+
+  const limit = options.limit || 0;
+  let list = replayItems.filter(item => itemMatchesFilter(item, currentFilter));
+  if (limit > 0) list = list.slice(0, limit);
+
+  if (!list.length) {
+    grid.innerHTML = '<div class="replay-empty">暂无该分类回顾</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(replayCard).join('');
+  bindReplayCards(grid);
+}
+
+function bindReplayTabs(grid) {
   document.querySelectorAll('#replayTabs button').forEach(btn => {
     btn.addEventListener('click', function () {
       currentFilter = this.dataset.filter || 'all';
       document.querySelectorAll('#replayTabs button').forEach(x => x.classList.remove('is-active'));
       this.classList.add('is-active');
-      renderReplayGrid();
+      renderReplayGrid(grid);
     });
   });
 }
 
 export async function initRoomReplays() {
-  if (document.body.dataset.page !== 'room') return;
+  if (!['room', 'replays'].includes(document.body.dataset.page)) return;
   const grid = document.querySelector('#roomReplayGrid');
   if (!grid) return;
 
-  bindReplayTabs();
+  bindReplayTabs(grid);
 
   try {
-    const res = await fetch(href('assets/data/replays.json') + '?t=' + Date.now());
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    replayItems = (Array.isArray(data) ? data : [])
-      .filter(item => item && item.enabled !== false)
-      .sort((a, b) => (a.sort || 99) - (b.sort || 99));
-    renderReplayGrid();
+    await loadReplayItems();
+    renderReplayGrid(grid);
+  } catch (e) {
+    grid.innerHTML = '<div class="replay-empty">经典回顾暂时无法加载</div>';
+  }
+}
+
+export async function initHomeReplays() {
+  const grid = document.querySelector('#homeReplayGrid');
+  if (!grid) return;
+
+  try {
+    await loadReplayItems();
+    renderReplayGrid(grid, { limit: 4 });
   } catch (e) {
     grid.innerHTML = '<div class="replay-empty">经典回顾暂时无法加载</div>';
   }
