@@ -16,6 +16,7 @@ import { horizontalMatchCard } from './ui.js';
 import { LivePlayer } from './player.js';
 import { leagueName, matchName } from './odds-i18n.js';
 import { renderRoomReplaySection, renderReplaysPage, initRoomReplays } from './replays.js';
+import { getRoomFollowStatus, followRoom, unfollowRoom } from './api.js';
 
 function roomStatusMeta(room) {
   const status = String(room && room.status ? room.status : 'live').toLowerCase();
@@ -46,6 +47,44 @@ function roomStatusMeta(room) {
   };
 }
 
+async function initRoomFollow(roomId) {
+  const btn = document.querySelector('.follow-btn');
+  if (!btn || !roomId) return;
+
+  const token = localStorage.getItem('token') || '';
+  let followed = false;
+
+  function paint() {
+    btn.textContent = followed ? '已关注' : '关注';
+    btn.classList.toggle('is-followed', followed);
+  }
+
+  if (!token) {
+    btn.addEventListener('click', function () {
+      location.href = href('pages/login.html');
+    });
+    return;
+  }
+
+  btn.disabled = true;
+  const status = await getRoomFollowStatus(roomId, token);
+  followed = !!(status && status.ok && status.followed);
+  paint();
+  btn.disabled = false;
+
+  btn.addEventListener('click', async function () {
+    btn.disabled = true;
+    const result = followed ? await unfollowRoom(roomId, token) : await followRoom(roomId, token);
+    if (result && result.ok) {
+      followed = !!result.followed;
+      paint();
+    } else {
+      alert('关注操作失败，请稍后重试');
+    }
+    btn.disabled = false;
+  });
+}
+
 export function renderRoom() {
   document.body.classList.add('mobile-room');
   const id = qs.get('id') || '1';
@@ -73,6 +112,7 @@ export function renderRoom() {
   if (mobileTabs.length && mobileChatBody && mobileProfileBody) { mobileTabs.forEach(t => { t.addEventListener('click', function () { mobileTabs.forEach(x => x.classList.remove('is-active')); this.classList.add('is-active'); if (this.dataset.tab === 'chat') { mobileChatBody.classList.remove('hide'); mobileProfileBody.classList.add('hide'); } else { mobileProfileBody.classList.remove('hide'); mobileChatBody.classList.add('hide'); } }); }); }
   setTimeout(() => initChatSocket(room.id), 120);
   startRoomInfoPolling(room.id);
+  initRoomFollow(room.id);
 
   const mobileInput = document.querySelector('.mobile-chat-input input');
   if (mobileInput) { mobileInput.addEventListener('focus', () => document.body.classList.add('mobile-chat-focus')); mobileInput.addEventListener('blur', () => document.body.classList.remove('mobile-chat-focus')); }
@@ -89,11 +129,11 @@ export function renderRoom() {
 function updateRoomViewportHeight() { if (document.body.dataset.page !== 'room') return; const h = window.visualViewport ? window.visualViewport.height : window.innerHeight; document.documentElement.style.setProperty('--room-vh', h + 'px'); }
 function initPlayer(room) { const video = document.querySelector('#liveVideo'); const videoBox = document.querySelector('#videoBox'); if (!video) return; if (LivePlayer) { LivePlayer.init({ videoEl: video, container: videoBox || video.parentNode, room: room }); return; } const ph = document.querySelector('#videoPlaceholder'); const streamUrl = room.streamUrl || (room.streams && room.streams[0] && room.streams[0].url); if (streamUrl) { video.src = streamUrl; video.addEventListener('loadedmetadata', () => ph?.classList.add('hide')); video.addEventListener('play', () => ph?.classList.add('hide')); } }
 
-// ===================== 实时指数（保留旧函数，当前直播页已改为经典回顾） =====================
+// ===================== 实时指数（保留旧函数，当前直播页已改为经典回顾） ====================
 
 async function loadOddsForRoom(roomId) { var area = document.querySelector('#roomOddsArea'); var scroll = document.querySelector('#oddsScroll'); if (!area || !scroll) return; try { var res = await fetch('/api/public/rooms/' + roomId + '/odds'); if (!res.ok) { area.style.display = 'none'; return; } var data = await res.json(); } catch (e) { area.style.display = 'none'; return; } if (!data.ok || !data.display || !data.games || data.games.length === 0) { area.style.display = 'none'; return; } var titleEl = area.querySelector('h2'); if (titleEl) titleEl.textContent = data.title || '实时指数'; if (data.message) { var msgEl = area.querySelector('.odds-disclaimer'); if (msgEl) msgEl.textContent = data.message; } renderOddsCards(data.games, scroll); resizeOddsCards(); }
 function formatTime(iso) { if (!iso) return ''; var m = iso.match(/T(\d{2}:\d{2})/); return m ? m[1] : ''; }
-function renderOddsCards(games, container) { var html = ''; for (var i = 0; i < games.length; i++) { var g = games[i]; html += '<div class="odds-card">'; html += '<div class="odds-card-header"><span class="odds-sport">' + esc(leagueName(g.sport_title, g.sport_key)) + '</span><span class="odds-time">' + formatTime(g.commence_time) + '</span></div>'; html += '<div class="odds-teams">' + esc(matchName(g.home_team, g.away_team)) + '</div>'; if (g.h2h && g.h2h.length === 2) { html += '<div class="odds-row"><span class="odds-label">胜负</span><span class="odds-item">主 <b>' + g.h2h[0].price + '</b></span><span class="odds-item">客 <b>' + g.h2h[1].price + '</b></span></div>'; } if (g.spreads && g.spreads.length === 2) { html += '<div class="odds-row"><span class="odds-label">让分</span><span class="odds-item">主' + (g.spreads[0].point > 0 ? '+' : '') + g.spreads[0].point + '&nbsp;<b>' + g.spreads[0].price + '</b></span><span class="odds-item">客' + (g.spreads[1].point > 0 ? '+' : '') + g.spreads[1].point + '&nbsp;<b>' + g.spreads[1].price + '</b></span></div>'; } if (g.totals && g.totals.length === 2) { html += '<div class="odds-row"><span class="odds-label">大小</span><span class="odds-item">大 ' + g.totals[0].point + '&nbsp;<b>' + g.totals[0].price + '</b></span><span class="odds-item">小 ' + g.totals[1].point + '&nbsp;<b>' + g.totals[1].price + '</b></span></div>'; } html += '<div class="odds-footer">数据来源：' + esc(g.bookmaker || '') + '</div>'; html += '</div>'; } container.innerHTML = html; }
+function renderOddsCards(games, container) { var html = ''; for (var i = 0; i < games.length; i++) { var g = games[i]; html += '<div class="odds-card">'; html += '<div class="odds-card-header"><span class="odds-sport">' + esc(leagueName(g.sport_title, g.sport_key)) + '</span><span class="odds-time">' + formatTime(g.commence_time) + '</span></div>'; html += '<div class="odds-teams">' + esc(matchName(g.home_team, g.away_team)) + '</div>'; if (g.h2h && g.h2h.length === 2) { html += '<div class="odds-row"><span class="odds-label">胜负</span><span class="odds-item">主 <b>' + g.h2h[0].price + '</b></span><span class="odds-item">客 <b>' + g.h2h[1].price + '</b></span></div>'; } if (g.spreads && g.spreads.length === 2) { html += '<div class="odds-row"><span class="odds-label">让分</span><span class="odds-item">主' + (g.spreads[0].point > 0 ? '+' : '') + g.spreads[0].point + '&nbsp;<b>' + g.spreads[0].price + '</b></span><span class="odds-item">客' + (g.spreads[1].point > 0 ? '+' : '') + g.spreads[1].point + '&nbsp;<b>' + g.spreads[1].price + '</b></span></div>'; } if (g.totals && g.totals.length === 2) { html += '<div class="odds-row"><span class="odds-label">大小</span><span class="odds-item">大 ' + g.totals[0].point + '&nbsp;<b>' + g.totals[0].price + '</b></span><span class="odds-item">小 ' + g.totals[1].price + '</b></span></div>'; } html += '<div class="odds-footer">数据来源：' + esc(g.bookmaker || '') + '</div>'; html += '</div>'; } container.innerHTML = html; }
 
 // ===================== 自适应卡片宽度（全局共用的 resize） ———
 
@@ -128,5 +168,5 @@ export function bootPage() {
   if (page === 'replays') initRoomReplays();
   if (page === 'admin') bindAdminEvents();
   if (page === 'login') bindLoginEvents();
-  if (page === 'user') bindUserEvents();
+  if (['user', 'follow'].includes(page)) bindUserEvents();
 }
