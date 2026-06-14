@@ -48,9 +48,19 @@ const userLoginRateLimit = createLoginRateLimit({
   blockMs: 10 * 60 * 1000
 });
 
+const userRegisterRateLimit = createLoginRateLimit({
+  keyPrefix: "user-register",
+  identityField: "phone",
+  maxAttempts: 5,
+  windowMs: 10 * 60 * 1000,
+  blockMs: 30 * 60 * 1000,
+  message: "注册操作过于频繁，请稍后再试"
+});
+
 app.post("/api/admin/login", adminLoginRateLimit);
 app.post("/api/anchor/login", anchorLoginRateLimit);
 app.post("/api/auth/login", userLoginRateLimit);
+app.post("/api/auth/register", userRegisterRateLimit);
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "127.0.0.1",
