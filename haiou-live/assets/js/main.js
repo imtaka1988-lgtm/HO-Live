@@ -12,10 +12,12 @@ import { renderGlobalChrome, renderFooter } from './ui.js';
 import { bootPage } from './router.js';
 import { initMascot } from './mascot.js';
 import { initAdminNeutralLabels } from './admin-neutral-labels.js';
+import { initAppIcons } from './app-icons.js';
 
 async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
+  initAppIcons();
   applyTheme(cfg);
   renderGlobalChrome();
   bootPage();
