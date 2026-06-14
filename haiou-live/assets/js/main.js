@@ -25,6 +25,7 @@ import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
 import { initUserLevelBenefits } from './user-level-benefits.js';
+import { initMobileChatFocusFix } from './mobile-chat-focus.js';
 
 function loadExtraCss() {
   const files = [
@@ -92,6 +93,7 @@ async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
   loadExtraCss();
+  initMobileChatFocusFix();
   initAppIcons();
   applyTheme(cfg);
   initPlayerLineSwitcher();
