@@ -4,6 +4,7 @@ const userAuthMiddleware = require("../middleware/userAuth");
 let followsTableReady = false;
 let expLogTableReady = false;
 const FOLLOW_EXP_REWARD = 3;
+const DAILY_LOGIN_EXP_REWARD = 5;
 
 async function ensureFollowsTable(pool) {
   if (followsTableReady) return;
@@ -49,6 +50,10 @@ async function awardUserExpOnce(pool, userId, action, refId, amount) {
   return addUserExp(pool, userId, amount);
 }
 
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 module.exports = function (pool) {
   const router = express.Router();
 
@@ -75,8 +80,13 @@ module.exports = function (pool) {
         followCount = Number(countRows[0].cnt || 0);
       } catch (e) {}
 
-      const exp = Number(u.coins || 0);
-      const level = Math.max(Number(u.level || 1), levelFromExp(exp));
+      let dailyReward = null;
+      try {
+        dailyReward = await awardUserExpOnce(pool, u.id, "daily_login", todayKey(), DAILY_LOGIN_EXP_REWARD);
+      } catch (e) {}
+
+      const exp = dailyReward ? Number(dailyReward.exp || 0) : Number(u.coins || 0);
+      const level = dailyReward ? Number(dailyReward.level || 1) : Math.max(Number(u.level || 1), levelFromExp(exp));
 
       res.json({
         ok: true,
@@ -91,7 +101,8 @@ module.exports = function (pool) {
           followCount,
           status: u.status,
           createdAt: u.created_at
-        }
+        },
+        dailyReward
       });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
