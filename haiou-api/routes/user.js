@@ -2,6 +2,7 @@ const express = require("express");
 const userAuthMiddleware = require("../middleware/userAuth");
 
 let followsTableReady = false;
+const FOLLOW_EXP_REWARD = 3;
 
 async function ensureFollowsTable(pool) {
   if (followsTableReady) return;
@@ -9,6 +10,24 @@ async function ensureFollowsTable(pool) {
     "CREATE TABLE IF NOT EXISTS user_follows (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, room_id INT UNSIGNED NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_room (user_id, room_id), KEY idx_user_id (user_id), KEY idx_room_id (room_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
   );
   followsTableReady = true;
+}
+
+function levelFromExp(exp) {
+  const n = Number(exp || 0);
+  if (n >= 600) return 5;
+  if (n >= 300) return 4;
+  if (n >= 150) return 3;
+  if (n >= 50) return 2;
+  return 1;
+}
+
+async function addUserExp(pool, userId, amount) {
+  const [rows] = await pool.query("SELECT coins, level FROM users WHERE id = ?", [userId]);
+  if (!rows.length) return null;
+  const exp = Number(rows[0].coins || 0) + amount;
+  const level = Math.max(Number(rows[0].level || 1), levelFromExp(exp));
+  await pool.query("UPDATE users SET coins = ?, level = ? WHERE id = ?", [exp, level, userId]);
+  return { exp, level, added: amount };
 }
 
 module.exports = function (pool) {
@@ -37,6 +56,9 @@ module.exports = function (pool) {
         followCount = Number(countRows[0].cnt || 0);
       } catch (e) {}
 
+      const exp = Number(u.coins || 0);
+      const level = Math.max(Number(u.level || 1), levelFromExp(exp));
+
       res.json({
         ok: true,
         user: {
@@ -44,8 +66,9 @@ module.exports = function (pool) {
           phone: u.phone,
           nickname: u.nickname || "",
           avatar: u.avatar || "",
-          level: u.level || 0,
-          coins: u.coins || 0,
+          level,
+          coins: exp,
+          exp,
           followCount,
           status: u.status,
           createdAt: u.created_at
@@ -88,8 +111,9 @@ module.exports = function (pool) {
       if (!roomId) return res.status(400).json({ ok: false, error: "无效的房间 ID" });
       const [rooms] = await pool.query("SELECT id FROM rooms WHERE id = ?", [roomId]);
       if (!rooms.length) return res.status(404).json({ ok: false, error: "房间不存在" });
-      await pool.query("INSERT IGNORE INTO user_follows (user_id, room_id) VALUES (?, ?)", [req.user.id, roomId]);
-      res.json({ ok: true, followed: true });
+      const [result] = await pool.query("INSERT IGNORE INTO user_follows (user_id, room_id) VALUES (?, ?)", [req.user.id, roomId]);
+      const reward = result.affectedRows > 0 ? await addUserExp(pool, req.user.id, FOLLOW_EXP_REWARD) : null;
+      res.json({ ok: true, followed: true, reward });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
