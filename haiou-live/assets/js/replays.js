@@ -43,7 +43,7 @@ export function renderReplaysPage() {
       <div class="replays-page-hero">
         <span>赛事回放</span>
         <h1>经典战役回顾</h1>
-        <p>足球、篮球经典比赛回看专区。当前为占位展示，真实 HLS / FLV 片源后续接入。</p>
+        <p>精选足球、篮球精彩比赛集锦与经典回放，随时重温高光瞬间。</p>
       </div>
       <div class="replay-head replay-head-page">
         <div>
