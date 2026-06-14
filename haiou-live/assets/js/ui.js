@@ -218,3 +218,37 @@ export function horizontalMatchCard(m) {
 }
 
 // ===================== 手机浮动广告 =====================
+
+export function mobileFloatAd() {
+  const mf = state.cfg.ads.mobileFloat || '';
+  const text = typeof mf === 'object' ? (mf.text || '') : mf;
+  return `<div class="m-float-ad" id="mobileFloatBar"><span class="close" id="btnCloseFloat">×</span><img src="${asset(state.cfg.brand.logo)}" alt=""><span class="text">${esc(text)}</span><a class="download" href="javascript:void(0)" id="btnDownloadFloat">下载APP</a></div>`;
+}
+
+/** 为浮动广告绑定关闭和下载弹窗事件 */
+export function bindFloatBarEvents() {
+  var closeBtn = document.querySelector('#btnCloseFloat');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', function () {
+      var bar = document.querySelector('#mobileFloatBar');
+      if (bar) bar.style.display = 'none';
+    });
+  }
+  var downloadBtn = document.querySelector('#btnDownloadFloat');
+  if (downloadBtn) {
+    downloadBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      showDownloadAppModal();
+    });
+  }
+}
+
+// ===================== 页脚 =====================
+
+export function renderFooter() {
+  if (['app', 'login', 'user', 'follow'].includes(page)) return;
+  const footer = document.createElement('footer');
+  footer.className = 'footer pc-only';
+  footer.innerHTML = `<div><img src="${asset(state.cfg.brand.logo)}" alt=""><div><a href="#">新手主播教程</a><a href="#">直播常见问题</a><a href="#">用户协议说明</a></div></div>`;
+  document.body.appendChild(footer);
+}
