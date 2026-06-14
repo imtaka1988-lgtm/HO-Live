@@ -55,6 +55,9 @@ app.use("/api/user/avatar", require("./routes/userAvatar")(pool));
 // 挂载普通用户站内信：/api/user/messages
 app.use("/api/user/messages", require("./routes/userMessages")(pool));
 
+// 挂载管理员新增房间套件：新房间自动生成主播账号和推流配置
+app.use("/api/admin", require("./routes/adminRoomCreateBundle")(pool));
+
 // 挂载管理员路由：/api/admin/login, /api/admin/me 等
 app.use("/api/admin", require("./routes/admin")(pool));
 
