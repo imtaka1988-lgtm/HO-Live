@@ -1,14 +1,20 @@
 # 海鸥直播 / HO-Live
 
-> 当前状态：V4 修复封包版（2026-06-14）
+> 当前状态：V4 最终封包版（2026-06-14）
 
-这是海鸥直播体育直播站代码仓库。当前版本已经完成一轮安全、稳定性和后台房间管理修复，可以作为当前稳定封包继续使用。
+这是海鸥直播体育直播站代码仓库。当前版本已经完成安全、稳定性、后台房间管理、Nginx 与聊天室连接限制加固，可以作为当前线上稳定封包继续使用。
 
 ---
 
 ## 一、当前封包结论
 
 可以按当前 `main` 分支作为线上版本使用。
+
+最终稳定封包分支：
+
+```text
+stable-sealed-20260614
+```
 
 本轮修复重点：
 
@@ -23,6 +29,10 @@
 - 减少公开健康检查接口信息暴露
 - 去掉公开房间列表访问时改表逻辑
 - 整理重复创建房间路由挂载
+- Nginx CSP 删除未知外部域名
+- Nginx `/api/` 增加请求体大小限制
+- CORS 支持域名白名单配置
+- WebSocket 聊天室增加单 IP / 总连接数限制
 
 ---
 
@@ -34,7 +44,11 @@
 cd /var/www
 git pull origin main
 pm2 restart all
+nginx -t
+systemctl reload nginx
 ```
+
+如果 `nginx -t` 报错，不要执行 `systemctl reload nginx`，先修 Nginx 配置。
 
 前端 JS 或页面更新后，浏览器建议强刷：
 
@@ -46,32 +60,41 @@ Ctrl + F5
 
 ## 三、稳定备份与回退
 
-稳定备份分支：
+最终稳定封包分支：
+
+```text
+stable-sealed-20260614
+```
+
+如果线上出现严重问题，优先回退到最终稳定封包：
+
+```bash
+cd /var/www
+git fetch origin
+git reset --hard origin/stable-sealed-20260614
+pm2 restart all
+nginx -t
+systemctl reload nginx
+```
+
+原始稳定备份分支，也就是本轮修复前的备份：
 
 ```text
 stable-delivery-20260614
 ```
 
-稳定备份提交：
+原始稳定备份提交：
 
 ```text
 d6b7c9fbf7f0e1e5d017341edd48caa601dd60f6
 ```
 
-如果线上出现严重问题，可以回退：
+如果要回到本轮修复前，可以执行：
 
 ```bash
 cd /var/www
 git fetch origin
 git reset --hard origin/stable-delivery-20260614
-pm2 restart all
-```
-
-或者固定回退到提交：
-
-```bash
-cd /var/www
-git reset --hard d6b7c9fbf7f0e1e5d017341edd48caa601dd60f6
 pm2 restart all
 ```
 
@@ -164,7 +187,28 @@ LIVE_CALLBACK_ALLOW_UNSIGNED=1
 
 ---
 
-## 七、重点验收清单
+## 七、CORS 与聊天室连接限制
+
+CORS 默认保持原行为，不设置 `CORS_ORIGIN` 时不会限制来源，避免误伤当前线上。
+
+如果要收紧跨域来源，可以设置：
+
+```bash
+CORS_ORIGIN=https://s6.lol,https://www.s6.lol
+```
+
+聊天室 WebSocket 默认限制：
+
+```bash
+CHAT_WS_MAX_CONNECTIONS_PER_IP=20
+CHAT_WS_MAX_CONNECTIONS_TOTAL=1000
+```
+
+这两个值可以按实际流量调整。
+
+---
+
+## 八、重点验收清单
 
 每次更新后，建议至少检查这些：
 
@@ -181,11 +225,13 @@ LIVE_CALLBACK_ALLOW_UNSIGNED=1
 10. 重置主播密码后可以登录主播后台
 11. 手动填写 m3u8 / flv 播放源后前台能播放
 12. 如果使用直播回调，key 配置正确
+13. 聊天室能连接和发言
+14. Nginx `nginx -t` 测试通过
 ```
 
 ---
 
-## 八、本轮主要修复记录
+## 九、本轮主要修复记录
 
 已完成：
 
@@ -207,10 +253,15 @@ LIVE_CALLBACK_ALLOW_UNSIGNED=1
 16. 公开房间列表移除访问时改表
 17. 直播回调接口 key 鉴权
 18. 整体复查后补强 URL 工具大小写绕过
+19. README 封包文档
+20. Nginx CSP 删除未知外部域名
+21. Nginx `/api/` 请求体大小限制
+22. CORS 可配置白名单
+23. WebSocket 单 IP / 总连接数限制
 
 ---
 
-## 九、当前不建议再动的地方
+## 十、当前不建议再动的地方
 
 为了保持稳定，当前不建议继续大改：
 
