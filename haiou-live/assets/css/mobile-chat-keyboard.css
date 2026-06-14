@@ -30,7 +30,14 @@
   }
 
   body[data-page="room"].mobile-chat-focus .video-box {
-    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    flex: 0 0 0 !important;
+    visibility: hidden !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body[data-page="room"].mobile-chat-focus .mobile-chat-section {
