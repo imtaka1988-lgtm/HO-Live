@@ -71,11 +71,10 @@ function itemMatchesFilter(item, filter) {
   return item.sport === filter;
 }
 
-function isIosSafari() {
+function isMobileDevice() {
   const ua = navigator.userAgent || '';
-  const isAppleMobile = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(ua);
-  return isAppleMobile && isSafari;
+  const isTouchIpad = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return isTouchIpad || /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
 }
 
 function replayCard(item) {
@@ -127,17 +126,42 @@ function closeReplayModal() {
   document.body.classList.remove('replay-modal-open');
 }
 
-function openReplayModal(title, embedUrl, sourceUrl) {
+function openReplayFallback(title) {
   closeReplayModal();
   document.body.classList.add('replay-modal-open');
   const modal = document.createElement('div');
   modal.id = 'replayModal';
   modal.className = 'replay-modal-overlay';
-  const sourceBtn = sourceUrl && sourceUrl !== '#'
-    ? `<a href="${esc(sourceUrl)}" target="_blank" rel="noopener" style="height:30px;display:inline-flex;align-items:center;padding:0 10px;border-radius:999px;background:rgba(255,106,0,.95);color:#fff;font-size:12px;font-weight:900;text-decoration:none;white-space:nowrap;">原站打开</a>`
-    : '';
+  const msg = isMobileDevice()
+    ? '手机浏览器暂时无法稳定播放该回放，请前往电脑端观看。'
+    : '当前浏览器播放异常，请刷新页面后重试，或稍后在电脑端观看。';
+  modal.innerHTML = `<div class="replay-modal-box replay-mobile-tip-box">
+    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><button type="button" id="replayModalClose">×</button></div>
+    <div class="replay-mobile-tip-content">
+      <div class="replay-mobile-tip-icon">!</div>
+      <h3>暂不支持播放</h3>
+      <p>${esc(msg)}</p>
+      <button type="button" id="replayFallbackOk">我知道了</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeReplayModal();
+  });
+  const closeBtn = modal.querySelector('#replayModalClose');
+  const okBtn = modal.querySelector('#replayFallbackOk');
+  if (closeBtn) closeBtn.addEventListener('click', closeReplayModal);
+  if (okBtn) okBtn.addEventListener('click', closeReplayModal);
+}
+
+function openReplayModal(title, embedUrl) {
+  closeReplayModal();
+  document.body.classList.add('replay-modal-open');
+  const modal = document.createElement('div');
+  modal.id = 'replayModal';
+  modal.className = 'replay-modal-overlay';
   modal.innerHTML = `<div class="replay-modal-box">
-    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><div style="display:flex;align-items:center;gap:8px;">${sourceBtn}<button type="button" id="replayModalClose">×</button></div></div>
+    <div class="replay-modal-head"><b>${esc(title || '赛事回放')}</b><div style="display:flex;align-items:center;gap:8px;"><button type="button" id="replayFallbackBtn" style="height:30px;padding:0 10px;border-radius:999px;background:rgba(255,106,0,.95);color:#fff;font-size:12px;font-weight:900;line-height:30px;width:auto;">播放异常？</button><button type="button" id="replayModalClose">×</button></div></div>
     <div class="replay-iframe-wrap"><iframe src="${esc(embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" scrolling="no" frameborder="0" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
   </div>`;
   document.body.appendChild(modal);
@@ -145,7 +169,9 @@ function openReplayModal(title, embedUrl, sourceUrl) {
     if (e.target === modal) closeReplayModal();
   });
   const closeBtn = modal.querySelector('#replayModalClose');
+  const fallbackBtn = modal.querySelector('#replayFallbackBtn');
   if (closeBtn) closeBtn.addEventListener('click', closeReplayModal);
+  if (fallbackBtn) fallbackBtn.addEventListener('click', function () { openReplayFallback(title); });
   document.addEventListener('keydown', function onKey(e) {
     if (e.key === 'Escape') {
       closeReplayModal();
@@ -164,11 +190,7 @@ function bindReplayCards(root) {
       const isIframe = ['iframe', 'bilibili', 'xigua'].includes(sourceType);
 
       if (isIframe && embedUrl) {
-        if (sourceType === 'bilibili' && isIosSafari() && url && url !== '#') {
-          window.open(url, '_blank', 'noopener');
-          return;
-        }
-        openReplayModal(title, embedUrl, url);
+        openReplayModal(title, embedUrl);
         return;
       }
 
