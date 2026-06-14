@@ -17,6 +17,7 @@ import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
+import { initAdminReplayImport } from './admin-replay-import.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -26,6 +27,7 @@ async function main() {
   initPlayerLineSwitcher();
   renderGlobalChrome();
   bootPage();
+  initAdminReplayImport();
   initPlayerCoverFit();
   renderFooter();
   initMascot();
