@@ -33,6 +33,28 @@ function maskPhone(phone) {
   return s.slice(0, 3) + '****' + s.slice(-4);
 }
 
+function levelMeta(expValue) {
+  const exp = Number(expValue || 0);
+  const points = [0, 50, 150, 300, 600];
+  let level = 1;
+  for (let i = 0; i < points.length; i += 1) {
+    if (exp >= points[i]) level = i + 1;
+  }
+  const current = points[level - 1] || 0;
+  const next = points[level] || null;
+  const percent = next ? Math.max(0, Math.min(100, Math.round(((exp - current) / (next - current)) * 100))) : 100;
+  return { level, exp, current, next, percent };
+}
+
+function levelProgressHtml(meta) {
+  const text = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`;
+  return `<section class="user-level-card">
+    <div><b>LV.${esc(meta.level)} 成长进度</b><span id="userExpText">${esc(text)}</span></div>
+    <i><em id="userExpBar" style="width:${meta.percent}%"></em></i>
+    <p>关注直播间可获得经验，后续会逐步加入发言、观看回放等成长任务。</p>
+  </section>`;
+}
+
 function followRoomCard(room) {
   return `<a class="follow-room-card" href="${href('pages/room.html?id=' + room.id)}">
     <img src="${asset(room.cover || 'assets/img/thumb-1.svg')}" alt="${esc(room.title || '')}">
@@ -50,6 +72,17 @@ function renderFollowRooms(rooms) {
     </div>`;
   }
   return `<div class="follow-room-list">${rooms.map(followRoomCard).join('')}</div>`;
+}
+
+function updateLevelDom(user) {
+  if (!user) return;
+  const meta = levelMeta(user.exp !== undefined ? user.exp : user.coins);
+  document.querySelectorAll('#userLevel').forEach(el => { el.textContent = 'LV.' + meta.level; });
+  document.querySelectorAll('#userCoins').forEach(el => { el.textContent = String(meta.exp); });
+  const expText = document.querySelector('#userExpText');
+  const expBar = document.querySelector('#userExpBar');
+  if (expText) expText.textContent = meta.next ? `${meta.exp}/${meta.next} 经验` : `${meta.exp} 经验`;
+  if (expBar) expBar.style.width = meta.percent + '%';
 }
 
 export function renderFollow() {
@@ -124,10 +157,11 @@ export function renderUser() {
     </main>`;
   }
 
+  const exp = user.exp !== undefined ? user.exp : (user.coins || 0);
+  const meta = levelMeta(exp);
   const nickname = user.nickname || '海鸥用户';
   const phone = maskPhone(user.phone);
-  const level = user.level || 1;
-  const coins = user.coins || 0;
+  const level = user.level || meta.level;
   const followCount = user.followCount || 0;
   const avatar = user.avatar || 'assets/img/avatar-default.svg';
 
@@ -150,8 +184,10 @@ export function renderUser() {
     <section class="user-center-stats">
       <div><b id="userLevel">LV.${esc(level)}</b><span>等级</span></div>
       <div><b id="userFollowCount">${esc(followCount)}</b><span>关注</span></div>
-      <div><b id="userCoins">${esc(coins)}</b><span>金币</span></div>
+      <div><b id="userCoins">${esc(exp)}</b><span>经验</span></div>
     </section>
+
+    ${levelProgressHtml(meta)}
 
     <section class="user-center-section">
       <h3>常用入口</h3>
@@ -171,7 +207,7 @@ export function renderUser() {
       </div>
     </section>
 
-    <section class="user-center-note">当前账号已开通聊天室发言身份。关注直播间后，会在“我的关注”中显示。</section>
+    <section class="user-center-note">当前账号已开通聊天室发言身份。关注直播间后，会获得少量经验并显示在“我的关注”中。</section>
 
     <section style="margin:14px 12px 0;"><button id="btnUserLogoutMobile" class="user-center-logout" type="button">退出登录</button></section>
   </main>
@@ -195,8 +231,9 @@ export function renderUser() {
           <div class="user-center-pc-grid">
             <div><b>LV.${esc(level)}</b><span>等级</span></div>
             <div><b id="pcUserFollowCount">${esc(followCount)}</b><span>关注</span></div>
-            <div><b>${esc(coins)}</b><span>金币</span></div>
+            <div><b>${esc(exp)}</b><span>经验</span></div>
           </div>
+          ${levelProgressHtml(meta)}
         </div>
         <div class="user-center-pc-panel">
           <h2 style="margin:0 0 14px;font-size:20px;font-weight:900;color:#111827;">会员快捷入口</h2>
@@ -240,6 +277,7 @@ export function bindUserEvents() {
   getUserInfo(token).then(function (res) {
     if (!res || !res.ok || !res.user) return;
     localStorage.setItem('user_profile', JSON.stringify(res.user));
+    updateLevelDom(res.user);
     if (res.user.followCount !== undefined) {
       document.querySelectorAll('#userFollowCount,#pcUserFollowCount').forEach(el => el.textContent = String(res.user.followCount || 0));
     }
