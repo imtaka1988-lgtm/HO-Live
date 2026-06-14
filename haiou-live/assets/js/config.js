@@ -136,6 +136,7 @@ export async function loadConfig() {
              quality: '高清',
              sort: r.sortOrder !== undefined ? r.sortOrder : r.sort,
              anchorName: r.anchorName || '',
+             anchorAvatar: r.anchorAvatar || '',
              announcement: r.announcement || '',
              hostId: r.anchorName ? ('h' + r.id) : 'h1',
              streamUrl: (r.streams && r.streams[0] && r.streams[0].url) || '',
