@@ -45,6 +45,125 @@ body[data-page="admin"] .admin-inline-editor-row + tr td {
   border-top-color: transparent;
 }
 
+/* 基础信息面板：左右布局美化 */
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel {
+  padding: 22px !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 18px !important;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 106, 0, .14);
+  font-size: 20px;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel h3::after {
+  content: "房间展示信息";
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel > div:nth-of-type(1) {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1.8fr) 140px 140px 110px;
+  gap: 14px !important;
+  align-items: end !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel > div:nth-of-type(2) {
+  display: grid !important;
+  grid-template-columns: minmax(360px, 1.3fr) minmax(220px, .7fr);
+  gap: 16px !important;
+  align-items: start !important;
+  margin-top: 16px !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel > div:nth-of-type(3) {
+  margin-top: 16px !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel label {
+  display: block !important;
+  width: auto !important;
+  min-width: 0 !important;
+  flex: initial !important;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel input,
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel select {
+  height: 40px !important;
+  margin-top: 6px;
+  padding: 0 12px !important;
+  font-size: 14px;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .re-announcement {
+  width: 100% !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .admin-cover-preview {
+  height: 140px;
+  margin-top: 10px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff7ed;
+  border: 1px dashed rgba(255, 106, 0, .35);
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .admin-cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .admin-cover-preview span {
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel p {
+  margin: 16px 0 0 !important;
+  padding: 11px 13px;
+  border-left: 4px solid var(--brand-yellow);
+  border-radius: 10px;
+  background: #fff7ed;
+  color: #9a3412 !important;
+  font-size: 12px !important;
+  line-height: 1.6;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .btn-room-save {
+  margin-top: 16px !important;
+  padding: 9px 22px !important;
+  font-size: 14px !important;
+}
+
+body[data-page="admin"] #roomEditor.admin-inline-editor-panel .room-save-msg {
+  display: inline-block;
+  margin-left: 12px !important;
+  font-weight: 700;
+}
+
+@media (max-width: 980px) {
+  body[data-page="admin"] #roomEditor.admin-inline-editor-panel > div:nth-of-type(1),
+  body[data-page="admin"] #roomEditor.admin-inline-editor-panel > div:nth-of-type(2) {
+    grid-template-columns: 1fr;
+  }
+}
+
 @keyframes adminInlineEditorIn {
   from {
     opacity: 0;
