@@ -18,6 +18,7 @@ import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
+import { initAdminSiteMessages } from './admin-site-messages.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -28,6 +29,7 @@ async function main() {
   renderGlobalChrome();
   bootPage();
   initAdminReplayImport();
+  initAdminSiteMessages();
   initPlayerCoverFit();
   renderFooter();
   initMascot();
