@@ -17,9 +17,20 @@
   font-size: 12px;
 }
 
+.pc-login a.has-pc-member-avatar::before,
 .pc-login a[href="/pages/user.html"]::after {
   content: none;
   display: none;
+}
+
+.pc-member-mini-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, .85), 0 4px 10px rgba(0, 0, 0, .18);
 }
 
 .pc-member-lv {
