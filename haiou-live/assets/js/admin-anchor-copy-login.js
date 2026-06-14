@@ -3,6 +3,7 @@
  */
 
 let bound = false;
+const ANCHOR_LOGIN_URL = 'https://s6.lol/pages/anchor.html';
 
 function copyText(text) {
   navigator.clipboard.writeText(text).then(function () {
@@ -41,9 +42,8 @@ export function initAdminAnchorCopyLogin() {
       return;
     }
 
-    const loginUrl = location.origin + '/pages/anchor.html';
     const text = [
-      '主播后台登录地址：' + loginUrl,
+      '主播后台登录地址：' + ANCHOR_LOGIN_URL,
       '主播后台账号：' + username,
       '主播后台密码：' + password,
       'OBS 服务器：' + obsServer,
