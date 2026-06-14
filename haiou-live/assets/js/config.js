@@ -67,8 +67,8 @@ export function asset(path) {
 // ===================== HTML 转义 =====================
 
 export function esc(s) {
-  return String(s).replace(/[&<>'"]/g, function (c) {
-    return { '&': '&', '<': '<', '>': '>', "'": '&#39;', '"': '"' }[c];
+  return String(s == null ? '' : s).replace(/[&<>'"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
   });
 }
 
