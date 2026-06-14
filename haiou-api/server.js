@@ -14,6 +14,12 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 
+const DB_PASS = process.env.DB_PASS;
+if (!DB_PASS && process.env.ALLOW_EMPTY_DB_PASS !== "1") {
+  console.error("DB_PASS missing. Set DB_PASS or set ALLOW_EMPTY_DB_PASS=1 if the database intentionally uses an empty password.");
+  process.exit(1);
+}
+
 function buildCorsOptions() {
   const origins = String(process.env.CORS_ORIGIN || "")
     .split(",")
@@ -92,7 +98,7 @@ const pool = mysql.createPool({
   port: parseInt(process.env.DB_PORT || "3306"),
   database: process.env.DB_NAME || "haiou_live",
   user: process.env.DB_USER || "haiou_app",
-  password: process.env.DB_PASS || "",
+  password: DB_PASS || "",
   waitForConnections: true,
   connectionLimit: 10
 });
@@ -111,6 +117,7 @@ app.use("/api/admin", require("./routes/adminAnchorResetPasswordSecure")(pool));
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
 app.use("/api/admin", require("./routes/adminRoomListById")(pool));
 app.use("/api/admin", require("./routes/adminRoomDeleteCleanup")(pool));
+app.use("/api/admin", require("./routes/adminOddsTimeout")());
 app.use("/api/admin", require("./routes/admin")(pool));
 app.use("/api/anchor", require("./routes/anchor")(pool));
 app.use("/api/anchor/upload", require("./routes/anchorUpload")(pool));

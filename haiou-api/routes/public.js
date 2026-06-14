@@ -99,7 +99,8 @@ module.exports = function (pool) {
       }
       res.json({ ok: true, rooms });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[public rooms legacy]", err);
+      res.status(500).json({ ok: false, error: "服务暂时不可用" });
     }
   });
 
@@ -134,7 +135,8 @@ module.exports = function (pool) {
         games: safeGames.slice(0, 8)
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[public room odds]", err);
+      res.status(500).json({ ok: false, error: "服务暂时不可用" });
     }
   });
 
@@ -159,7 +161,8 @@ module.exports = function (pool) {
       }));
       res.json({ ok: true, display: true, games_count: safeGames.length, games: safeGames.slice(0, 8) });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[public odds recommendations]", err);
+      res.status(500).json({ ok: false, error: "服务暂时不可用" });
     }
   });
 

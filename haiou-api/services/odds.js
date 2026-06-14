@@ -3,8 +3,37 @@ const https = require("https");
 const REC_SPORTS = ["basketball_nba", "basketball_wnba", "basketball_nbl"];
 const REC_REGIONS = "au,us";
 const REC_MARKETS = "h2h,spreads,totals";
+const ODDS_API_TIMEOUT_MS = parseInt(process.env.ODDS_API_TIMEOUT_MS || "5000", 10) || 5000;
 
 const recCache = {};
+
+function fetchJson(url) {
+  return new Promise((resolve) => {
+    let done = false;
+    function finish(value) {
+      if (done) return;
+      done = true;
+      resolve(value);
+    }
+
+    const req = https.get(url, (apiRes) => {
+      let body = "";
+      apiRes.on("data", ch => body += ch);
+      apiRes.on("end", () => {
+        try {
+          finish({ data: JSON.parse(body), headers: apiRes.headers });
+        } catch (e) {
+          finish(null);
+        }
+      });
+    });
+
+    req.setTimeout(ODDS_API_TIMEOUT_MS, () => {
+      req.destroy(new Error("request timeout"));
+    });
+    req.on("error", () => finish(null));
+  });
+}
 
 function pickGame(g) {
   const bm = g.bookmakers || [];
@@ -53,17 +82,12 @@ async function fetchOddsRecommendations() {
   for (const sport of REC_SPORTS) {
     try {
       const url = "https://api.the-odds-api.com/v4/sports/" + sport + "/odds?regions=" + REC_REGIONS + "&markets=" + REC_MARKETS + "&oddsFormat=decimal&apiKey=" + k;
-      const data = await new Promise((resolve) => {
-        https.get(url, (apiRes) => {
-          let body = "";
-          apiRes.on("data", ch => body += ch);
-          apiRes.on("end", () => {
-            if (!remaining) remaining = apiRes.headers["x-requests-remaining"];
-            if (!used) used = apiRes.headers["x-requests-used"];
-            try { resolve(JSON.parse(body)); } catch (e) { resolve(null); }
-          });
-        }).on("error", () => resolve(null));
-      });
+      const result = await fetchJson(url);
+      const data = result && result.data;
+      if (result && result.headers) {
+        if (!remaining) remaining = result.headers["x-requests-remaining"];
+        if (!used) used = result.headers["x-requests-used"];
+      }
       if (Array.isArray(data) && data.length > 0) allGames = allGames.concat(data.map(pickGame));
     } catch (e) { /* skip failed sport */ }
   }
@@ -89,5 +113,6 @@ module.exports = {
   recCache,
   pickGame,
   sortGames,
-  fetchOddsRecommendations
+  fetchOddsRecommendations,
+  fetchJson
 };
