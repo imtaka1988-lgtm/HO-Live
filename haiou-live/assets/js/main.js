@@ -26,13 +26,19 @@ import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
 import { initUserLevelBenefits } from './user-level-benefits.js';
 
-function loadMemberEntryCss() {
-  if (document.querySelector('link[data-member-entry-style]')) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = '/assets/css/member-entry.css';
-  link.dataset.memberEntryStyle = '1';
-  document.head.appendChild(link);
+function loadExtraCss() {
+  const files = [
+    ['member-entry-style', '/assets/css/member-entry.css'],
+    ['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css']
+  ];
+  files.forEach(function (item) {
+    if (document.querySelector('link[data-extra-style="' + item[0] + '"]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = item[1];
+    link.dataset.extraStyle = item[0];
+    document.head.appendChild(link);
+  });
 }
 
 function memberLevelFromProfile(profile) {
@@ -85,7 +91,7 @@ function applyPcMemberLevel() {
 async function main() {
   const cfg = await loadConfig();
   state.cfg = cfg;
-  loadMemberEntryCss();
+  loadExtraCss();
   initAppIcons();
   applyTheme(cfg);
   initPlayerLineSwitcher();
