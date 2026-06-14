@@ -89,6 +89,56 @@
   font-weight: 800;
 }
 
+.user-level-card {
+  margin: 0 12px 14px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, .06);
+}
+
+.user-level-card div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.user-level-card b {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.user-level-card span {
+  color: #f97316;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.user-level-card i {
+  display: block;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.user-level-card em {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff8a00, #ffb84d);
+}
+
+.user-level-card p {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .user-center-section {
   margin: 0 12px 14px;
   padding: 14px;
@@ -153,6 +203,12 @@
   border-radius: 20px;
   background: #fff;
   box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+}
+
+.user-center-pc-card .user-level-card {
+  margin: 18px 0 0;
+  box-shadow: none;
+  background: #f8fafc;
 }
 
 .user-center-pc-head {
