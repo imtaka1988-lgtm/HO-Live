@@ -33,20 +33,20 @@ module.exports = function (pool) {
 
   router.get("/health/db", async (req, res) => {
     try {
-      const [rows] = await pool.query("SELECT 1 AS alive, NOW() AS db_time");
-      res.json({ ok: true, db: "mysql", db_time: rows[0].db_time });
+      await pool.query("SELECT 1 AS alive");
+      res.json({ ok: true, db: "ok" });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      res.status(500).json({ ok: false, error: "db unavailable" });
     }
   });
 
   router.get("/health/tables", async (req, res) => {
     try {
-      const [rooms] = await pool.query("SELECT COUNT(*) AS cnt FROM rooms");
-      const [streams] = await pool.query("SELECT COUNT(*) AS cnt FROM room_streams");
-      res.json({ ok: true, rooms: rooms[0].cnt, room_streams: streams[0].cnt });
+      await pool.query("SELECT 1 FROM rooms LIMIT 1");
+      await pool.query("SELECT 1 FROM room_streams LIMIT 1");
+      res.json({ ok: true, tables: "ok" });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      res.status(500).json({ ok: false, error: "tables unavailable" });
     }
   });
 
