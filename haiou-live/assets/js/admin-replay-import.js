@@ -10,17 +10,28 @@ function normalizeCover(url) {
   return url;
 }
 
+function hasAny(text, words) {
+  return words.some(function (word) { return text.includes(word); });
+}
+
 function guessSport(title) {
   const s = String(title || '').toLowerCase();
-  if (s.includes('nba') || s.includes('火箭') || s.includes('马刺') || s.includes('篮球')) return 'basketball';
+  const basketballWords = ['nba', 'cba', 'wnba', '篮球', '籃球', '男篮', '女篮', '火箭', '马刺', '馬刺', '湖人', '勇士', '凯尔特人', '凱爾特人', '公牛', '热火', '熱火', '独行侠', '獨行俠', '快船', '太阳', '太陽', '掘金', '雄鹿', '篮网', '籃網'];
+  const footballWords = ['世界杯', 'world cup', 'fifa', '足球', '欧冠', '歐冠', '英超', '西甲', '意甲', '德甲', '法甲', '中超', '亚冠', '亞冠', '欧洲杯', '歐洲杯', '美洲杯', '国足', '國足'];
+  if (hasAny(s, basketballWords)) return 'basketball';
+  if (hasAny(s, footballWords)) return 'football';
   return 'football';
 }
 
 function guessTag(title, sport) {
   const s = String(title || '').toLowerCase();
+  if (s.includes('世界杯') || s.includes('world cup') || s.includes('fifa')) return '世界杯';
   if (s.includes('nba')) return 'NBA';
-  if (s.includes('世界杯')) return '世界杯';
-  if (s.includes('欧冠')) return '欧冠';
+  if (s.includes('欧冠') || s.includes('歐冠')) return '欧冠';
+  if (s.includes('欧洲杯') || s.includes('歐洲杯')) return '欧洲杯';
+  if (s.includes('英超')) return '英超';
+  if (s.includes('西甲')) return '西甲';
+  if (s.includes('cba')) return 'CBA';
   return sport === 'basketball' ? '篮球' : '足球';
 }
 
@@ -96,7 +107,7 @@ function bindResultCopy(meta) {
   };
 
   document.querySelectorAll('#replayMetaTitle,#replayMetaSport,#replayMetaTag,#replayMetaYear,#replayMetaDesc,#replayMetaSort')
-    .forEach(el => el.addEventListener('input', refreshJson));
+    .forEach(function (el) { el.addEventListener('input', refreshJson); el.addEventListener('change', refreshJson); });
 
   refreshJson();
 
@@ -139,7 +150,7 @@ export function initAdminReplayImport() {
   card.className = 'admin-card admin-replay-import-card';
   card.id = 'adminReplayImportCard';
   card.innerHTML = `<div class="admin-replay-import-head">
-    <div><h2>赛事回放导入</h2><p>粘贴 B站视频链接，自动识别标题、封面和播放地址。</p></div>
+    <div><h2>赛事回放导入</h2><p>粘贴 B站视频链接，自动识别标题、封面、分类和播放地址。</p></div>
   </div>
   <div class="admin-replay-import-row">
     <input id="biliReplayUrl" placeholder="粘贴 B站链接，例如：https://www.bilibili.com/video/BVxxxx/">
@@ -175,7 +186,7 @@ export function initAdminReplayImport() {
     try {
       const data = await fetchBilibiliMeta(url, token);
       if (!data || !data.ok) throw new Error((data && data.error) ? data.error : '识别失败');
-      msg.textContent = '识别成功，确认后可复制配置。';
+      msg.textContent = '识别成功，已自动分类，可手动微调。';
       msg.style.color = 'var(--success)';
       resultBox.style.display = 'block';
       resultBox.innerHTML = renderResult(data);
