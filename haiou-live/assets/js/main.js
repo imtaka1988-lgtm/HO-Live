@@ -23,6 +23,7 @@ import { initAdminCommunityConfig } from './admin-community-config.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
+import { initPcUserEntryPolish } from './pc-user-entry-polish.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -31,6 +32,7 @@ async function main() {
   applyTheme(cfg);
   initPlayerLineSwitcher();
   renderGlobalChrome();
+  initPcUserEntryPolish();
   bootPage();
   initUserMessageStatusFix();
   initAdminReplayImport();
