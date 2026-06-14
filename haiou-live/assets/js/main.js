@@ -19,6 +19,7 @@ import { initPlayerLineSwitcher } from './player-line-switcher.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
 import { initAdminSiteMessages } from './admin-site-messages.js';
+import { initAdminRoomSort } from './admin-room-sort.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -30,6 +31,7 @@ async function main() {
   bootPage();
   initAdminReplayImport();
   initAdminSiteMessages();
+  initAdminRoomSort();
   initPlayerCoverFit();
   renderFooter();
   initMascot();
