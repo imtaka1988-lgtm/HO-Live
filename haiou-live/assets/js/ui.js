@@ -13,7 +13,7 @@ export function navItems() {
     { key: 'home', text: '首页', url: 'index.html' },
     { key: 'live', text: '全部直播', url: 'pages/live.html' },
     { key: 'replays', text: '赛事回放', url: 'pages/replays.html' },
-    { key: 'app', text: '下载APP', url: 'pages/app.html', hot: true }
+    { key: 'app', text: '交流群', url: 'pages/app.html', hot: true }
   ];
 }
 
@@ -171,7 +171,7 @@ export function renderGlobalChrome() {
     const toolbar = document.createElement('div');
     toolbar.id = 'sideToolbar';
     toolbar.className = 'side-toolbar pc-only';
-    toolbar.innerHTML = `<button id="btnBackTop" title="返回顶部">▲<br>顶部</button><a href="${href('pages/app.html')}" title="下载APP">▼<br>APP</a><button id="btnFeedback" title="意见反馈">✉<br>反馈</button>`;
+    toolbar.innerHTML = `<button id="btnBackTop" title="返回顶部">▲<br>顶部</button><a href="${href('pages/app.html')}" title="交流群">群<br>聊</a><button id="btnFeedback" title="意见反馈">✉<br>反馈</button>`;
     document.body.appendChild(toolbar);
     // 返回顶部
     toolbar.querySelector('#btnBackTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
