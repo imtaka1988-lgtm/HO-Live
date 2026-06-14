@@ -20,6 +20,7 @@ import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
 import { initAdminSiteMessages } from './admin-site-messages.js';
 import { initAdminRoomSort } from './admin-room-sort.js';
+import { initAdminCardCollapse } from './admin-card-collapse.js';
 
 async function main() {
   const cfg = await loadConfig();
@@ -31,6 +32,7 @@ async function main() {
   bootPage();
   initAdminReplayImport();
   initAdminSiteMessages();
+  initAdminCardCollapse();
   initAdminRoomSort();
   initPlayerCoverFit();
   renderFooter();
