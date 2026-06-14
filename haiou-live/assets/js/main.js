@@ -52,11 +52,24 @@ function memberTitleByLevel(level) {
   return '普通会员';
 }
 
+function normalizeAvatarUrl(value) {
+  const raw = String(value || 'assets/img/avatar-default.svg').trim();
+  if (!raw) return '/assets/img/avatar-default.svg';
+  if (/^(https?:)?\/\//.test(raw) || raw.startsWith('/') || raw.startsWith('data:')) return raw;
+  return '/' + raw.replace(/^\.\//, '').replace(/^\//, '');
+}
+
 function applyPcMemberLevel() {
   const link = document.querySelector('.pc-login a[href="/pages/user.html"]');
   if (!link || link.querySelector('.pc-member-lv')) return;
   let profile = {};
   try { profile = JSON.parse(localStorage.getItem('user_profile') || '{}'); } catch (e) {}
+  const avatar = document.createElement('img');
+  avatar.className = 'pc-member-mini-avatar';
+  avatar.src = normalizeAvatarUrl(profile.avatar);
+  avatar.alt = '';
+  link.classList.add('has-pc-member-avatar');
+  link.insertBefore(avatar, link.firstChild);
   const level = memberLevelFromProfile(profile);
   const badge = document.createElement('span');
   badge.className = 'pc-member-lv';
