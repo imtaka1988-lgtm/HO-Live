@@ -15,7 +15,7 @@ module.exports = function (pool) {
   router.get("/rooms", authMiddleware, async (req, res) => {
     try {
       const [rooms] = await pool.query(
-        "SELECT id, title, category, status, cover, anchor_name AS anchorName, sort_order AS sortOrder, COALESCE(announcement, '') AS announcement FROM rooms ORDER BY id ASC"
+        "SELECT id, title, category, status, cover, anchor_name AS anchorName, sort_order AS sortOrder, COALESCE(announcement, '') AS announcement FROM rooms ORDER BY sort_order, id"
       );
 
       for (const room of rooms) {
