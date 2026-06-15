@@ -37,6 +37,7 @@ import { initMobileChatFocusFix } from './mobile-chat-focus.js';
 
 function loadExtraCss() {
   const files = [
+    ['admin-ui-consistency-style', '/assets/css/admin-ui-consistency.css'],
     ['member-entry-style', '/assets/css/member-entry.css'],
     ['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css']
   ];
