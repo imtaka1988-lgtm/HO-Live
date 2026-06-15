@@ -9,6 +9,10 @@ function isRegisterMode() {
   return new URLSearchParams(location.search).get('register') === '1';
 }
 
+function isValidPhone(phone) {
+  return /^1[3-9]\d{9}$/.test(String(phone || '').trim());
+}
+
 export function getToken() {
   return localStorage.getItem('token') || null;
 }
@@ -89,8 +93,20 @@ export function bindLoginEvents() {
     const msg = document.querySelector('#authMessage');
     const btn = document.querySelector('#btnUserAuthSubmit');
 
+    if (msg) msg.style.color = '#ef4444';
+
     if (!phone) {
       if (msg) msg.textContent = '请输入手机号';
+      return;
+    }
+
+    if (!isValidPhone(phone)) {
+      if (msg) msg.textContent = '请输入正确的手机号';
+      return;
+    }
+
+    if (!password) {
+      if (msg) msg.textContent = '请输入密码';
       return;
     }
 
@@ -109,7 +125,7 @@ export function bindLoginEvents() {
     if (btn) btn.disabled = false;
 
     if (!result || !result.ok) {
-      if (msg) msg.textContent = (result && result.error) ? result.error : '操作失败，请稍后重试';
+      if (msg) msg.textContent = (result && result.error) ? result.error : '网络异常，请稍后重试';
       return;
     }
 
@@ -118,7 +134,7 @@ export function bindLoginEvents() {
 
     if (msg) {
       msg.style.color = '#16a34a';
-      msg.textContent = '登录成功，正在进入我的页面...';
+      msg.textContent = reg ? '注册成功，正在进入我的页面...' : '登录成功，正在进入我的页面...';
     }
 
     setTimeout(function () {
