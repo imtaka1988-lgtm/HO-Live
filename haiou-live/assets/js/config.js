@@ -71,7 +71,7 @@ export function asset(path) {
 // ===================== HTML 转义 =====================
 
 export function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>'"]/g, function (c) {
+  return String(s == null ? '' : '').replace(/[&<>'"]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
   });
 }
@@ -85,6 +85,45 @@ export function $$(sel) { return document.querySelectorAll(sel); }
 
 export function safeJson(raw, fallbackVal) {
   try { return JSON.parse(raw); } catch (e) { return fallbackVal !== undefined ? fallbackVal : null; }
+}
+
+// ===================== 播放源规范化 =====================
+
+function streamUrlPath(url) {
+  var raw = String(url || '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw, location.href).pathname.toLowerCase();
+  } catch (e) {
+    return raw.split('?')[0].split('#')[0].toLowerCase();
+  }
+}
+
+function inferStreamType(stream) {
+  var path = streamUrlPath(stream && stream.url);
+  if (/\.flv$/i.test(path)) return 'flv';
+  if (/\.m3u8$/i.test(path)) return 'hls';
+  var declared = String((stream && stream.type) || '').toLowerCase();
+  return declared === 'flv' ? 'flv' : 'hls';
+}
+
+function isStreamEnabled(stream) {
+  if (!stream || !String(stream.url || '').trim()) return false;
+  return stream.enabled === undefined || stream.enabled === 1 || stream.enabled === true || stream.enabled === '1' || stream.enabled === 'true';
+}
+
+function normalizeApiStreams(streams) {
+  return (streams || []).filter(isStreamEnabled).map(function (s) {
+    return {
+      name: s.name,
+      type: inferStreamType(s),
+      url: String(s.url || '').trim(),
+      provider: 'db',
+      enabled: true,
+      default: s.default === true,
+      priority: s.priority
+    };
+  });
 }
 
 // ===================== 主题注入 =====================
@@ -122,12 +161,13 @@ export async function loadConfig() {
 
   // 2. 尝试从后端 API 获取 rooms（含 streams）, 失败则保留 JSON 中的 rooms
   try {
-    var apiRes = await fetch('/api/public/rooms');
+    var apiRes = await fetch('/api/public/rooms?t=' + Date.now());
     if (apiRes.ok) {
       var apiData = await apiRes.json();
        if (apiData.ok && Array.isArray(apiData.rooms)) {
          // 转换后端字段名到前端格式
          state.cfg.rooms = apiData.rooms.map(function (r) {
+           var enabledStreams = normalizeApiStreams(r.streams || []);
            return {
              id: r.id,
              title: r.title,
@@ -143,18 +183,8 @@ export async function loadConfig() {
              anchorAvatar: r.anchorAvatar || '',
              announcement: r.announcement || '',
              hostId: r.anchorName ? ('h' + r.id) : 'h1',
-             streamUrl: (r.streams && r.streams[0] && r.streams[0].url) || '',
-             streams: (r.streams || []).map(function (s) {
-               return {
-                 name: s.name,
-                 type: s.type,
-                 url: s.url,
-                 provider: 'db',
-                 enabled: s.enabled === 1,
-                 default: s.default === true,
-                 priority: s.priority
-               };
-             }),
+             streamUrl: (enabledStreams[0] && enabledStreams[0].url) || '',
+             streams: enabledStreams,
              viewers: '0'
            };
          });
