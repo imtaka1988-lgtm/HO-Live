@@ -7,7 +7,38 @@ function currentStreamEditorRoomId() {
   return m ? parseInt(m[1], 10) : 0;
 }
 
+function urlPath(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return '';
+  try {
+    return new URL(raw, location.href).pathname.toLowerCase();
+  } catch (e) {
+    return raw.split('?')[0].split('#')[0].toLowerCase();
+  }
+}
+
+function inferTypeFromUrl(url, fallbackType) {
+  const path = urlPath(url);
+  if (/\.flv$/i.test(path)) return 'flv';
+  if (/\.m3u8$/i.test(path)) return 'hls';
+  const fallback = String(fallbackType || '').toLowerCase();
+  return fallback === 'flv' ? 'flv' : 'hls';
+}
+
+function syncTypeSelectByUrl(item) {
+  if (!item) return;
+  const urlInput = item.querySelector('.se-url');
+  const typeSelect = item.querySelector('.se-type');
+  if (!urlInput || !typeSelect) return;
+  const nextType = inferTypeFromUrl(urlInput.value, typeSelect.value);
+  if (nextType && typeSelect.value !== nextType) {
+    typeSelect.value = nextType;
+  }
+}
+
 function streamPayload(item) {
+  syncTypeSelectByUrl(item);
+
   const gv = function (sel) {
     const el = item.querySelector(sel);
     return el ? String(el.value || '').trim() : '';
@@ -17,10 +48,13 @@ function streamPayload(item) {
     return !!(el && el.checked);
   };
 
+  const url = gv('.se-url');
+  const type = inferTypeFromUrl(url, gv('.se-type'));
+
   return {
     name: gv('.se-name'),
-    type: gv('.se-type'),
-    url: gv('.se-url'),
+    type: type,
+    url: url,
     enabled: gc('.se-enabled') ? 1 : 0,
     is_default: gc('.se-is-default') ? 1 : 0
   };
@@ -30,6 +64,20 @@ export function initAdminStreamSaveDetail() {
   if (document.body.dataset.page !== 'admin') return;
   if (window.__adminStreamSaveDetailInstalled) return;
   window.__adminStreamSaveDetailInstalled = true;
+
+  document.addEventListener('input', function (e) {
+    const input = e.target.closest && e.target.closest('.se-url');
+    if (!input) return;
+    const item = input.closest('.stream-edit-item');
+    syncTypeSelectByUrl(item);
+  }, true);
+
+  document.addEventListener('change', function (e) {
+    const input = e.target.closest && e.target.closest('.se-url');
+    if (!input) return;
+    const item = input.closest('.stream-edit-item');
+    syncTypeSelectByUrl(item);
+  }, true);
 
   document.addEventListener('click', async function (e) {
     const btn = e.target.closest && e.target.closest('.btn-stream-save');
@@ -75,7 +123,7 @@ export function initAdminStreamSaveDetail() {
 
     if (result && result.ok) {
       if (msgEl) {
-        msgEl.textContent = '已保存';
+        msgEl.textContent = '已保存（' + (data.type === 'flv' ? 'FLV' : 'HLS/m3u8') + '）';
         msgEl.style.color = 'var(--success)';
       }
     } else if (msgEl) {
