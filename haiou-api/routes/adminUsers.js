@@ -34,7 +34,9 @@ module.exports = function (pool) {
   router.get("/users", authMiddleware, async (req, res) => {
     try {
       const q = cleanSearch(req.query.q);
-      const limit = Math.min(Math.max(parseInt(req.query.limit || "50", 10) || 50, 1), 100);
+      const limit = Math.min(Math.max(parseInt(req.query.limit || "10", 10) || 10, 1), 50);
+      const page = Math.max(parseInt(req.query.page || "1", 10) || 1, 1);
+      const offset = (page - 1) * limit;
       const params = [];
       let where = "";
 
@@ -43,13 +45,17 @@ module.exports = function (pool) {
         params.push("%" + q + "%", "%" + q + "%");
       }
 
-      params.push(limit);
+      const [countRows] = await pool.query("SELECT COUNT(*) AS total FROM users " + where, params);
+      const total = Number((countRows[0] && countRows[0].total) || 0);
+      const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+      const listParams = params.concat([limit, offset]);
       const [rows] = await pool.query(
-        "SELECT id, phone, nickname, avatar, level, coins, status, created_at FROM users " + where + " ORDER BY id DESC LIMIT ?",
-        params
+        "SELECT id, phone, nickname, avatar, level, coins, status, created_at FROM users " + where + " ORDER BY id DESC LIMIT ? OFFSET ?",
+        listParams
       );
 
-      res.json({ ok: true, users: rows.map(publicUser), query: q, limit });
+      res.json({ ok: true, users: rows.map(publicUser), query: q, page, limit, total, totalPages });
     } catch (err) {
       console.error("[admin users list]", err);
       res.status(500).json({ ok: false, error: "会员列表加载失败" });
