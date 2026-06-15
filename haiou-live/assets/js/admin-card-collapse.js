@@ -4,8 +4,8 @@
  */
 
 const STORAGE_PREFIX = 'admin_card_collapsed_';
-const DEFAULT_OPEN_TITLES = ['管理后台已登录', '房间列表'];
-const SKIP_CARD_SELECTORS = ['.admin-replay-import-card'];
+const DEFAULT_OPEN_TITLES = ['管理后台已登录', '房间列表', '会员管理'];
+const SKIP_CARD_SELECTORS = ['.admin-replay-import-card', '#adminMemberCard'];
 
 function injectStyle() {
   if (document.querySelector('#adminCardCollapseStyle')) return;
