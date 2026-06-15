@@ -1,0 +1,155 @@
+/* 后台 UI 一致性修正：只改视觉，不改业务逻辑 */
+body[data-page="admin"] .admin-box {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+body[data-page="admin"] .admin-card {
+  border-radius: 18px !important;
+  border: 1px solid rgba(229, 231, 235, .9) !important;
+  background: #fff !important;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, .06) !important;
+  padding: 22px 24px !important;
+  overflow: hidden;
+}
+
+body[data-page="admin"] .admin-collapse-head {
+  width: 100%;
+  min-height: 40px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+body[data-page="admin"] .admin-card:not(.admin-card-collapsed) > .admin-collapse-head {
+  margin-bottom: 14px !important;
+}
+
+body[data-page="admin"] .admin-collapse-head > :first-child {
+  min-width: 0;
+}
+
+body[data-page="admin"] .admin-collapse-head h1,
+body[data-page="admin"] .admin-collapse-head h2,
+body[data-page="admin"] .admin-collapse-head h3 {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-size: 22px !important;
+  line-height: 1.25 !important;
+  white-space: nowrap;
+}
+
+body[data-page="admin"] .admin-collapse-head p,
+body[data-page="admin"] .admin-collapse-head span {
+  color: #6b7280 !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+body[data-page="admin"] .admin-collapse-btn {
+  margin-left: auto !important;
+  flex: 0 0 auto !important;
+  min-width: 76px !important;
+  height: 34px !important;
+  padding: 0 14px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: #111827 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .12) !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+}
+
+body[data-page="admin"] .admin-card.admin-card-collapsed {
+  padding-top: 20px !important;
+  padding-bottom: 20px !important;
+}
+
+body[data-page="admin"] .admin-card.admin-card-collapsed > .admin-collapse-head {
+  margin-bottom: 0 !important;
+}
+
+body[data-page="admin"] .admin-card button:not(.admin-collapse-btn) {
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  font-weight: 900 !important;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+
+body[data-page="admin"] .admin-card button:not(.admin-collapse-btn):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .10);
+}
+
+body[data-page="admin"] .admin-card button:disabled {
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin"] .admin-card input,
+body[data-page="admin"] .admin-card select,
+body[data-page="admin"] .admin-card textarea {
+  border-radius: 10px !important;
+  border: 1px solid #dbe3ef !important;
+  background: #fff !important;
+  color: #111827 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+body[data-page="admin"] .admin-card input,
+body[data-page="admin"] .admin-card select {
+  min-height: 36px !important;
+}
+
+body[data-page="admin"] .admin-card input:focus,
+body[data-page="admin"] .admin-card select:focus,
+body[data-page="admin"] .admin-card textarea:focus {
+  border-color: #fb923c !important;
+  box-shadow: 0 0 0 3px rgba(251, 146, 60, .12) !important;
+}
+
+body[data-page="admin"] #adminMemberCard .admin-collapse-head > div:last-of-type,
+body[data-page="admin"] #adminSiteMessageCard .admin-collapse-head > span {
+  margin-left: auto;
+}
+
+body[data-page="admin"] #memberPager {
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+body[data-page="admin"] #adminApiMiniStatus {
+  top: 16px !important;
+  right: 18px !important;
+}
+
+@media (max-width: 767px) {
+  body[data-page="admin"] .admin-box {
+    gap: 14px;
+  }
+
+  body[data-page="admin"] .admin-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  body[data-page="admin"] .admin-collapse-head {
+    align-items: flex-start !important;
+  }
+
+  body[data-page="admin"] .admin-collapse-head h1,
+  body[data-page="admin"] .admin-collapse-head h2,
+  body[data-page="admin"] .admin-collapse-head h3 {
+    font-size: 19px !important;
+  }
+}
