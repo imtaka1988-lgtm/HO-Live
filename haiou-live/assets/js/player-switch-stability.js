@@ -42,12 +42,37 @@ function isCurrentToken(player, token) {
   return !player.destroyed && player.__playToken === token;
 }
 
+function showLineToast(player, message) {
+  const container = player && player.container;
+  if (!container) return;
+  let toast = container.querySelector('.player-line-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'player-line-toast';
+    toast.style.cssText = 'position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:30;max-width:82%;padding:9px 14px;border-radius:999px;background:rgba(15,23,42,.88);color:#fff;font-size:12px;font-weight:800;text-align:center;box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:none;';
+    container.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.display = 'block';
+  clearTimeout(player.__lineToastTimer);
+  player.__lineToastTimer = setTimeout(function () {
+    if (toast) toast.style.display = 'none';
+  }, 2600);
+}
+
+function markGoodStream(player) {
+  if (!player) return;
+  if (player.currentStreamIndex >= 0) {
+    player.__lastGoodStreamIndex = player.currentStreamIndex;
+  }
+}
+
 export function initPlayerSwitchStability() {
   if (!LivePlayer || LivePlayer.__switchStabilityInstalled) return;
   LivePlayer.__switchStabilityInstalled = true;
 
   LivePlayer.__playToken = 0;
-  LivePlayer.__switchLockedUntil = 0;
+  LivePlayer.__lastGoodStreamIndex = -1;
 
   LivePlayer._destroyHls = function () {
     const hls = this.hlsInstance;
@@ -74,7 +99,8 @@ export function initPlayerSwitchStability() {
 
     const type = inferStreamType(stream);
     if (type === 'ts') {
-      this._showPlaceholder('TS 分片地址不能直接作为直播源，请填写 m3u8 或 flv 地址');
+      showLineToast(this, '该线路是 TS 分片地址，不能直接播放，请填写 m3u8 或 flv 地址');
+      this._updateLineButtons(this.currentStreamIndex);
       return;
     }
 
@@ -90,7 +116,9 @@ export function initPlayerSwitchStability() {
     else if (type === 'hls') this._playHLS(stream, token);
     else {
       this.videoEl.src = stream.url;
-      this.videoEl.play().catch(() => {
+      this.videoEl.play().then(() => {
+        if (isCurrentToken(this, token)) markGoodStream(this);
+      }).catch(() => {
         if (isCurrentToken(this, token)) this._onStreamError(stream, token);
       });
     }
@@ -105,7 +133,9 @@ export function initPlayerSwitchStability() {
 
     if (isSafariOrIOS() || video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = stream.url;
-      video.play().catch(function () {
+      video.play().then(function () {
+        if (isCurrentToken(self, token)) markGoodStream(self);
+      }).catch(function () {
         if (isCurrentToken(self, token)) self._onStreamError(stream, token);
       });
       return;
@@ -126,7 +156,9 @@ export function initPlayerSwitchStability() {
       });
       hls.on(Hls.Events.MANIFEST_PARSED, function () {
         if (!isCurrentToken(self, token)) return;
-        video.play().catch(function () {});
+        video.play().then(function () {
+          if (isCurrentToken(self, token)) markGoodStream(self);
+        }).catch(function () {});
       });
       hls.on(Hls.Events.ERROR, function (event, data) {
         if (!isCurrentToken(self, token)) return;
@@ -141,7 +173,9 @@ export function initPlayerSwitchStability() {
     }
 
     video.src = stream.url;
-    video.play().catch(function () {
+    video.play().then(function () {
+      if (isCurrentToken(self, token)) markGoodStream(self);
+    }).catch(function () {
       if (isCurrentToken(self, token)) self._onStreamError(stream, token);
     });
   };
@@ -176,7 +210,10 @@ export function initPlayerSwitchStability() {
       flvPlayer.attachMediaElement(video);
       flvPlayer.load();
       video.play().then(function () {
-        if (isCurrentToken(self, token)) self._hidePlaceholder();
+        if (isCurrentToken(self, token)) {
+          markGoodStream(self);
+          self._hidePlaceholder();
+        }
       }).catch(function () {
         if (isCurrentToken(self, token)) self._onStreamError(stream, token);
       });
@@ -192,6 +229,14 @@ export function initPlayerSwitchStability() {
   LivePlayer._onStreamError = function (failedStream, token) {
     if (this.destroyed) return;
     if (token && !isCurrentToken(this, token)) return;
+
+    const lastGood = this.__lastGoodStreamIndex;
+    if (lastGood >= 0 && this.streams[lastGood] && this.streams[lastGood] !== failedStream) {
+      showLineToast(this, '该线路暂不可用，已切回可用线路');
+      this._playStream(this.streams[lastGood], lastGood);
+      return;
+    }
+
     const next = this._findNextStream(failedStream);
     if (next) {
       this._playStream(next, this.streams.indexOf(next));
@@ -201,14 +246,12 @@ export function initPlayerSwitchStability() {
   };
 
   LivePlayer.switchTo = function (idx) {
-    const now = Date.now();
-    if (now < this.__switchLockedUntil) return;
     if (idx < 0 || idx >= this.streams.length) return;
     if (idx === this.currentStreamIndex) {
+      this._hidePlaceholder();
       this._updateLineButtons(idx);
       return;
     }
-    this.__switchLockedUntil = now + 450;
     this._playStream(this.streams[idx], idx);
   };
 }
