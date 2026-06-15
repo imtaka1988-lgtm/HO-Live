@@ -16,19 +16,16 @@ function openedAnchorRow(roomId) {
 
 function isRealRoomRow(row) {
   if (!row || !row.matches || !row.matches('#roomTableBody > tr[data-room-id]')) return false;
+  if (row.classList.contains('admin-inline-editor-row')) return false;
   if (row.classList.contains('admin-room-inline-editor-row')) return false;
   if (row.classList.contains('admin-anchor-bundle-row')) return false;
-  return true;
+  return !!row.querySelector('.btn-room-edit, .btn-stream-mgr, .btn-room-delete');
 }
 
 function cleanupFloatingAnchorButtons() {
   document.querySelectorAll('#roomTableBody .btn-anchor-bundle').forEach(function (btn) {
     const row = btn.closest('tr');
     if (isRealRoomRow(row)) return;
-    if (row && (row.classList.contains('admin-room-inline-editor-row') || row.classList.contains('admin-anchor-bundle-row'))) {
-      row.remove();
-      return;
-    }
     btn.remove();
   });
 
