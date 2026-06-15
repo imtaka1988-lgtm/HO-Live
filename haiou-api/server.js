@@ -45,7 +45,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = buildCorsOptions();
-app.use(corsOptions ? cors(corsOptions) : cors());
+if (corsOptions) app.use(cors(corsOptions));
 app.use(express.json({ limit: "4mb" }));
 
 app.use((err, req, res, next) => {
