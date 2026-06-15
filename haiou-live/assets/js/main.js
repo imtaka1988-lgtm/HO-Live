@@ -27,6 +27,7 @@ import { initAdminAnchorBundleNotice } from './admin-anchor-bundle-notice.js';
 import { initAdminAnchorRoomPanel } from './admin-anchor-room-panel.js';
 import { initAdminAnchorPanelToggle } from './admin-anchor-panel-toggle.js';
 import { initAdminAnchorCopyLogin } from './admin-anchor-copy-login.js';
+import { initAdminMembers } from './admin-members.js';
 import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
@@ -120,6 +121,7 @@ async function main() {
   initAdminAnchorPanelToggle();
   initAdminAnchorRoomPanel();
   initAdminAnchorCopyLogin();
+  initAdminMembers();
   initPlayerCoverFit();
   renderFooter();
   initMascot();
