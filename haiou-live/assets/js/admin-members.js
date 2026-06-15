@@ -155,7 +155,9 @@ export function initAdminMembers() {
       return;
     }
     if (!document.querySelector('#adminMemberCard')) {
-      box.insertAdjacentHTML('beforeend', memberCardHtml());
+      const roomCard = document.querySelector('#roomTableContainer') && document.querySelector('#roomTableContainer').closest('.admin-card');
+      if (roomCard) roomCard.insertAdjacentHTML('afterend', memberCardHtml());
+      else box.insertAdjacentHTML('beforeend', memberCardHtml());
     }
     bindMemberEvents();
     loadMembers();
