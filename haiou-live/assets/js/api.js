@@ -22,13 +22,7 @@ async function apiGet(path) {
   });
 }
 
-async function apiPost(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
+async function readJsonResponse(res, fallbackMessage) {
   let data = null;
   try {
     data = await res.json();
@@ -37,10 +31,20 @@ async function apiPost(path, body) {
   }
 
   if (!res.ok) {
-    return data || { ok: false, error: `请求失败，请稍后重试（${res.status}）` };
+    return data || { ok: false, error: fallbackMessage || `请求失败，请稍后重试（${res.status}）` };
   }
 
   return data;
+}
+
+async function apiPost(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  return readJsonResponse(res);
 }
 
 // ===================== 直播室 API =====================
@@ -205,10 +209,9 @@ export async function adminUpdateStream(roomId, streamId, data, token) {
       },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Update failed');
-    return await res.json();
+    return await readJsonResponse(res, '播放源保存失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，播放源保存失败' };
   }
 }
 
@@ -227,9 +230,9 @@ export async function adminCreateStream(roomId, data, token) {
       },
       body: JSON.stringify(data)
     });
-    return await res.json();
+    return await readJsonResponse(res, '播放源新增失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，播放源新增失败' };
   }
 }
 
