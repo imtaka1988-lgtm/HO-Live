@@ -146,17 +146,26 @@ function injectStyle() {
   document.head.appendChild(style);
 }
 
-function removeInlineRows() {
-  document.querySelectorAll('.admin-room-inline-editor-row').forEach(function (row) { row.remove(); });
+function removeAnchorRows() {
+  document.querySelectorAll('.admin-anchor-bundle-row').forEach(function (row) { row.remove(); });
+}
+
+function isRealRoomRow(row) {
+  if (!row || !row.matches || !row.matches('#roomTableBody > tr[data-room-id]')) return false;
+  if (row.classList.contains('admin-inline-editor-row')) return false;
+  if (row.classList.contains('admin-room-inline-editor-row')) return false;
+  if (row.classList.contains('admin-anchor-bundle-row')) return false;
+  return !!row.querySelector('.btn-room-edit, .btn-stream-mgr, .btn-room-delete');
 }
 
 function placePanel(roomId, html) {
   const tbody = document.querySelector('#roomTableBody');
   const row = tbody ? tbody.querySelector('tr[data-room-id="' + roomId + '"]') : null;
-  if (!tbody || !row) return;
-  removeInlineRows();
+  if (!tbody || !row || !isRealRoomRow(row)) return;
+  removeAnchorRows();
   const wrap = document.createElement('tr');
   wrap.className = 'admin-room-inline-editor-row admin-anchor-bundle-row';
+  wrap.dataset.anchorRoomId = String(roomId);
   wrap.innerHTML = '<td colspan="7" style="padding:0 8px 14px;background:#eef2ff;border-bottom:1px solid #c7d2fe;">' + html + '</td>';
   row.insertAdjacentElement('afterend', wrap);
 }
@@ -281,10 +290,11 @@ function copyForAnchor(roomId) {
 }
 
 function addButtons() {
-  document.querySelectorAll('#roomTableBody tr[data-room-id]').forEach(function (row) {
-    if (row.querySelector('.btn-anchor-bundle')) return;
+  document.querySelectorAll('#roomTableBody > tr[data-room-id]').forEach(function (row) {
+    if (!isRealRoomRow(row)) return;
     const cell = row.children[row.children.length - 1];
-    if (!cell) return;
+    if (!cell || !cell.querySelector('.btn-room-edit, .btn-stream-mgr, .btn-room-delete')) return;
+    if (cell.querySelector('.btn-anchor-bundle')) return;
     const btn = document.createElement('button');
     btn.className = 'btn-anchor-bundle';
     btn.type = 'button';
