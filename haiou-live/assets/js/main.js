@@ -15,6 +15,7 @@ import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 import { initAppIcons } from './app-icons.js';
 import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
+import { initAdminStreamSaveDetail } from './admin-stream-save-detail.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
 import { initPlayerStreamTypeFix } from './player-stream-type-fix.js';
 import { initPlayerSwitchStability } from './player-switch-stability.js';
@@ -133,6 +134,7 @@ async function main() {
   initAdminNeutralLabels();
   initAdminInlineEditors();
   initAdminStreamLabels();
+  initAdminStreamSaveDetail();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));
