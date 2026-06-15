@@ -1,3 +1,6 @@
+let memberPage = 1;
+const MEMBER_PAGE_SIZE = 10;
+
 function esc(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -25,7 +28,7 @@ function memberCardHtml() {
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
       <div>
         <h2 style="margin:0;">会员管理</h2>
-        <p style="color:#999;margin:6px 0 0;font-size:12px;">只展示会员账号资料；原密码不可查看，只能重置新密码。</p>
+        <p style="color:#999;margin:6px 0 0;font-size:12px;">一页显示 10 个会员；只展示账号资料，原密码不可查看，只能重置新密码。</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input id="memberSearchInput" placeholder="手机号 / 昵称" style="height:32px;padding:0 10px;border:1px solid #ddd;border-radius:6px;min-width:190px;">
@@ -35,6 +38,7 @@ function memberCardHtml() {
     </div>
     <div id="memberResetResult" style="display:none;margin:8px 0 10px;padding:10px;border:1px solid #fed7aa;background:#fff7ed;border-radius:8px;color:#9a3412;font-size:13px;"></div>
     <div id="memberListBox" style="overflow-x:auto;color:#666;font-size:13px;">加载中...</div>
+    <div id="memberPager" style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:10px;font-size:12px;color:#666;"></div>
   </div>`;
 }
 
@@ -75,19 +79,35 @@ function renderMembers(users) {
   </table>`;
 }
 
-async function loadMembers() {
+function renderPager(data) {
+  const pager = document.querySelector('#memberPager');
+  if (!pager) return;
+  const page = Number(data.page || 1);
+  const totalPages = Number(data.totalPages || 1);
+  const total = Number(data.total || 0);
+  pager.innerHTML = `<span>共 ${total} 个会员，第 ${page} / ${totalPages} 页</span>
+    <button id="btnMemberPrev" type="button" ${page <= 1 ? 'disabled' : ''} style="padding:5px 10px;border-radius:6px;background:#e5e7eb;color:#111;${page <= 1 ? 'opacity:.45;' : ''}">上一页</button>
+    <button id="btnMemberNext" type="button" ${page >= totalPages ? 'disabled' : ''} style="padding:5px 10px;border-radius:6px;background:#e5e7eb;color:#111;${page >= totalPages ? 'opacity:.45;' : ''}">下一页</button>`;
+}
+
+async function loadMembers(page) {
   const box = document.querySelector('#memberListBox');
   const input = document.querySelector('#memberSearchInput');
   if (!box) return;
+  if (page) memberPage = Math.max(Number(page) || 1, 1);
   const q = input ? input.value.trim() : '';
   box.innerHTML = '<div style="padding:14px;color:#999;text-align:center;">加载中...</div>';
 
-  const data = await apiJson('/api/admin/users?q=' + encodeURIComponent(q));
+  const data = await apiJson('/api/admin/users?q=' + encodeURIComponent(q) + '&page=' + memberPage + '&limit=' + MEMBER_PAGE_SIZE);
   if (!data || !data.ok) {
     box.innerHTML = '<div style="padding:14px;color:#ef4444;text-align:center;">会员列表加载失败</div>';
+    const pager = document.querySelector('#memberPager');
+    if (pager) pager.innerHTML = '';
     return;
   }
+  memberPage = Number(data.page || memberPage || 1);
   box.innerHTML = renderMembers(data.users || []);
+  renderPager(data);
 }
 
 async function resetMemberPassword(btn) {
@@ -126,19 +146,31 @@ function bindMemberEvents() {
   const refresh = document.querySelector('#btnMemberRefresh');
   const input = document.querySelector('#memberSearchInput');
 
-  if (search) search.addEventListener('click', loadMembers);
+  if (search) search.addEventListener('click', function () { memberPage = 1; loadMembers(1); });
   if (refresh) refresh.addEventListener('click', function () {
     if (input) input.value = '';
-    loadMembers();
+    memberPage = 1;
+    loadMembers(1);
   });
   if (input) input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') loadMembers();
+    if (e.key === 'Enter') { memberPage = 1; loadMembers(1); }
   });
 
   document.addEventListener('click', function (e) {
-    const btn = e.target.closest && e.target.closest('.btn-member-reset');
-    if (!btn) return;
-    resetMemberPassword(btn);
+    const resetBtn = e.target.closest && e.target.closest('.btn-member-reset');
+    if (resetBtn) {
+      resetMemberPassword(resetBtn);
+      return;
+    }
+
+    const prevBtn = e.target.closest && e.target.closest('#btnMemberPrev');
+    if (prevBtn && !prevBtn.disabled) {
+      loadMembers(memberPage - 1);
+      return;
+    }
+
+    const nextBtn = e.target.closest && e.target.closest('#btnMemberNext');
+    if (nextBtn && !nextBtn.disabled) loadMembers(memberPage + 1);
   });
 }
 
@@ -160,7 +192,7 @@ export function initAdminMembers() {
       else box.insertAdjacentHTML('beforeend', memberCardHtml());
     }
     bindMemberEvents();
-    loadMembers();
+    loadMembers(1);
   };
   wait();
 }
