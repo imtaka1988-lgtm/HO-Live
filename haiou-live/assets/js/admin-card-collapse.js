@@ -33,6 +33,7 @@ function injectStyle() {
       color: #374151;
       font-size: 12px;
       font-weight: 900;
+      flex: 0 0 auto;
     }
     .admin-card.admin-card-collapsed > *:not(.admin-collapse-head) {
       display: none !important;
@@ -62,14 +63,19 @@ function shouldSkipCard(card) {
   return SKIP_CARD_SELECTORS.some(sel => card.matches(sel));
 }
 
+function directChildContaining(card, node) {
+  let current = node;
+  while (current && current.parentElement && current.parentElement !== card) {
+    current = current.parentElement;
+  }
+  return current && current.parentElement === card ? current : node;
+}
+
 function ensureHeader(card, title) {
-  let heading = card.querySelector('h1,h2,h3');
+  const heading = card.querySelector('h1,h2,h3');
   if (!heading) return null;
 
-  let head = heading.parentElement;
-  if (!head || head.parentElement !== card) {
-    head = heading;
-  }
+  const head = directChildContaining(card, heading);
   head.classList.add('admin-collapse-head');
 
   if (head.querySelector('.admin-collapse-btn')) return head;
@@ -78,6 +84,7 @@ function ensureHeader(card, title) {
   btn.type = 'button';
   btn.className = 'admin-collapse-btn';
   btn.dataset.adminCollapseTitle = title;
+  btn.textContent = '收起 ▴';
   head.appendChild(btn);
   return head;
 }
