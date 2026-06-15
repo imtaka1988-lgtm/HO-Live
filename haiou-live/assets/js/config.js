@@ -71,7 +71,7 @@ export function asset(path) {
 // ===================== HTML 转义 =====================
 
 export function esc(s) {
-  return String(s == null ? '' : '').replace(/[&<>'"]/g, function (c) {
+  return String(s == null ? '' : s).replace(/[&<>'"]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c];
   });
 }
