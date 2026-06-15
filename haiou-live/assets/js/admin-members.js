@@ -144,6 +144,7 @@ function bindMemberEvents() {
 
 export function initAdminMembers() {
   if (document.body.dataset.page !== 'admin') return;
+  if (!adminToken()) return;
   if (window.__adminMembersBound) return;
   window.__adminMembersBound = true;
 
