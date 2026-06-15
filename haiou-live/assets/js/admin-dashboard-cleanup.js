@@ -13,6 +13,17 @@ function findAdminCardByTitle(part) {
   });
 }
 
+function findAdminCardByAnyTitle(parts) {
+  return Array.from(document.querySelectorAll('.admin-box > .admin-card')).find(function (card) {
+    const title = cardTitle(card);
+    return parts.some(function (part) { return title.includes(part); });
+  });
+}
+
+function cardById(id) {
+  return document.getElementById(id);
+}
+
 function ensureMiniApiHolder(loginCard) {
   let holder = loginCard.querySelector('#adminApiMiniStatus');
   if (holder) return holder;
@@ -48,10 +59,42 @@ function hideThemeCard() {
   if (themeCard) themeCard.style.display = 'none';
 }
 
+function insertAfter(ref, card) {
+  if (!ref || !card || ref === card) return ref || card;
+  const parent = ref.parentNode;
+  if (!parent) return ref;
+  if (ref.nextSibling === card) return card;
+  parent.insertBefore(card, ref.nextSibling);
+  return card;
+}
+
+function reorderAdminCards() {
+  const box = document.querySelector('.admin-box');
+  if (!box) return;
+
+  const login = document.querySelector('.admin-login-status');
+  const roomList = findAdminCardByTitle('房间列表');
+  const siteMessages = cardById('adminSiteMessageCard');
+  const replayImport = cardById('adminReplayImportCard');
+  const members = cardById('adminMemberCard');
+  const community = cardById('adminCommunityConfigCard');
+  const obsTemplate = findAdminCardByAnyTitle(['OBS 模板', 'OBS模版', 'OBS 模版', 'OBS模板']);
+
+  let ref = login || box.firstElementChild;
+  [roomList, siteMessages, replayImport, members].forEach(function (card) {
+    if (card) ref = insertAfter(ref, card);
+  });
+
+  [obsTemplate, community].forEach(function (card) {
+    if (card) box.appendChild(card);
+  });
+}
+
 function cleanup() {
   if (document.body.dataset.page !== 'admin') return;
   hideThemeCard();
   moveApiStatusToTop();
+  reorderAdminCards();
 }
 
 export function initAdminDashboardCleanup() {
@@ -60,7 +103,7 @@ export function initAdminDashboardCleanup() {
   const tick = function () {
     cleanup();
     attempts += 1;
-    if (attempts < 30) setTimeout(tick, 120);
+    if (attempts < 40) setTimeout(tick, 120);
   };
   tick();
 }
