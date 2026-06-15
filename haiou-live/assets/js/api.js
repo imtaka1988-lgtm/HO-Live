@@ -23,14 +23,24 @@ async function apiGet(path) {
 }
 
 async function apiPost(path, body) {
-  return fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
-  }).then(r => {
-    if (!r.ok) throw new Error(`API ${path} → ${r.status}`);
-    return r.json();
   });
+
+  let data = null;
+  try {
+    data = await res.json();
+  } catch (e) {
+    data = null;
+  }
+
+  if (!res.ok) {
+    return data || { ok: false, error: `请求失败，请稍后重试（${res.status}）` };
+  }
+
+  return data;
 }
 
 // ===================== 直播室 API =====================
@@ -260,9 +270,7 @@ export async function adminDeleteRoom(roomId, token) {
   try {
     const res = await fetch(`/api/admin/rooms/${roomId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
+      headers: { 'Authorization': 'Bearer ' + token }
     });
     return await res.json();
   } catch {
