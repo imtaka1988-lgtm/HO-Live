@@ -17,7 +17,6 @@ import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initAdminStreamSaveDetail } from './admin-stream-save-detail.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
-import { initPlayerStreamTypeFix } from './player-stream-type-fix.js';
 import { initPlayerSwitchStability } from './player-switch-stability.js';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
@@ -107,7 +106,6 @@ async function main() {
   initMobileChatFocusFix();
   initAppIcons();
   applyTheme(cfg);
-  initPlayerStreamTypeFix();
   initPlayerLineSwitcher();
   initPlayerSwitchStability();
   renderGlobalChrome();

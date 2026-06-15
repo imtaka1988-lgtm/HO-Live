@@ -30,6 +30,44 @@ function inferStreamType(stream) {
   return String((stream && stream.type) || 'hls').toLowerCase();
 }
 
+function normalizeStream(stream) {
+  if (!stream) return stream;
+  stream.type = inferStreamType(stream);
+  return stream;
+}
+
+function normalizeRoomStreams(room) {
+  if (!room) return;
+  if (Array.isArray(room.streams)) {
+    room.streams = room.streams.map(normalizeStream);
+  }
+  if (room.streamUrl && (!Array.isArray(room.streams) || room.streams.length === 0)) {
+    room.streams = [normalizeStream({
+      name: '默认线路',
+      type: 'hls',
+      url: room.streamUrl,
+      enabled: true,
+      default: true,
+      priority: 1
+    })];
+  }
+}
+
+function isPlayableOnThisDevice(stream) {
+  const type = inferStreamType(stream);
+  if (type === 'ts') return false;
+  if (type === 'flv') return !isSafariOrIOS() && flvSupported();
+  return true;
+}
+
+function sortStreams(streams) {
+  return (streams || []).slice().sort(function (a, b) {
+    if (a.default && !b.default) return -1;
+    if (!a.default && b.default) return 1;
+    return (a.priority || 99) - (b.priority || 99);
+  });
+}
+
 function resetVideo(video) {
   if (!video) return;
   try { video.pause(); } catch (e) {}
@@ -71,8 +109,41 @@ export function initPlayerSwitchStability() {
   if (!LivePlayer || LivePlayer.__switchStabilityInstalled) return;
   LivePlayer.__switchStabilityInstalled = true;
 
+  const oldInit = LivePlayer.init;
+
   LivePlayer.__playToken = 0;
   LivePlayer.__lastGoodStreamIndex = -1;
+
+  LivePlayer.init = function (options) {
+    if (options && options.room) normalizeRoomStreams(options.room);
+    const ret = oldInit.call(this, options);
+    if (this.currentStreamIndex < 0 && this.streams && this.streams.length > 0) {
+      const playable = this.streams.filter(isPlayableOnThisDevice);
+      if (playable.length === 0) {
+        const hasTs = this.streams.some(function (s) { return inferStreamType(s) === 'ts'; });
+        this._showPlaceholder(hasTs ? 'TS 分片地址不能直接作为直播源，请填写 m3u8 或 flv 地址' : '当前设备不支持该播放源，请改用 m3u8 线路');
+      }
+    }
+    return ret;
+  };
+
+  LivePlayer._getDefaultStream = function () {
+    const sorted = sortStreams(this.streams).map(normalizeStream);
+    const playable = sorted.filter(isPlayableOnThisDevice);
+    return playable[0] || null;
+  };
+
+  LivePlayer._findNextStream = function (failedStream) {
+    const streams = (this.streams || []).map(normalizeStream).filter(isPlayableOnThisDevice);
+    const failedIdx = streams.indexOf(failedStream);
+    for (let i = failedIdx + 1; i < streams.length; i++) {
+      if (streams[i] !== failedStream) return streams[i];
+    }
+    for (let j = 0; j < failedIdx; j++) {
+      if (streams[j] !== failedStream) return streams[j];
+    }
+    return null;
+  };
 
   LivePlayer._destroyHls = function () {
     const hls = this.hlsInstance;
@@ -97,10 +168,16 @@ export function initPlayerSwitchStability() {
   LivePlayer._playStream = function (stream, idx) {
     if (!stream || !stream.url || !this.videoEl) return;
 
+    normalizeStream(stream);
     const type = inferStreamType(stream);
     if (type === 'ts') {
       showLineToast(this, '该线路是 TS 分片地址，不能直接播放，请填写 m3u8 或 flv 地址');
       this._updateLineButtons(this.currentStreamIndex);
+      return;
+    }
+    if (!isPlayableOnThisDevice(stream)) {
+      showLineToast(this, '当前设备不支持该线路，请改用 m3u8 线路');
+      this._onStreamError(stream);
       return;
     }
 
