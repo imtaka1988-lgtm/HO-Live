@@ -126,6 +126,17 @@ function normalizeApiStreams(streams) {
   });
 }
 
+function allowJsonRoomFallback() {
+  return location.protocol === 'file:' || /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(location.hostname || '');
+}
+
+function clearRoomsOnApiFailure(reason) {
+  if (allowJsonRoomFallback()) return;
+  state.cfg.rooms = [];
+  state.cfg.roomsApiFailed = true;
+  state.cfg.roomsLoadError = reason || '房间列表加载失败，请稍后刷新';
+}
+
 // ===================== 主题注入 =====================
 
 export function applyTheme(cfg) {
@@ -159,39 +170,47 @@ export async function loadConfig() {
     state.cfg = { ...fallback };
   }
 
-  // 2. 尝试从后端 API 获取 rooms（含 streams）, 失败则保留 JSON 中的 rooms
+  // 2. 从后端 API 获取 rooms（含 streams）。非本地环境失败时，不再沿用 JSON 里的旧房间/旧播放源。
+  var roomsLoadedFromApi = false;
   try {
     var apiRes = await fetch('/api/public/rooms?t=' + Date.now());
-    if (apiRes.ok) {
-      var apiData = await apiRes.json();
-       if (apiData.ok && Array.isArray(apiData.rooms)) {
-         // 转换后端字段名到前端格式
-         state.cfg.rooms = apiData.rooms.map(function (r) {
-           var enabledStreams = normalizeApiStreams(r.streams || []);
-           return {
-             id: r.id,
-             title: r.title,
-             subTitle: r.subTitle || r.title,
-             category: r.category,
-             cover: r.cover,
-             poster: r.cover,
-             isLive: r.status === 'live',
-             status: r.status,
-             quality: '高清',
-             sort: r.sortOrder !== undefined ? r.sortOrder : r.sort,
-             anchorName: r.anchorName || '',
-             anchorAvatar: r.anchorAvatar || '',
-             announcement: r.announcement || '',
-             hostId: r.anchorName ? ('h' + r.id) : 'h1',
-             streamUrl: (enabledStreams[0] && enabledStreams[0].url) || '',
-             streams: enabledStreams,
-             viewers: '0'
-           };
-         });
-       }
-    }
+    if (!apiRes.ok) throw new Error('HTTP ' + apiRes.status);
+    var apiData = await apiRes.json();
+    if (!apiData.ok || !Array.isArray(apiData.rooms)) throw new Error('invalid rooms response');
+
+    roomsLoadedFromApi = true;
+    // 转换后端字段名到前端格式
+    state.cfg.rooms = apiData.rooms.map(function (r) {
+      var enabledStreams = normalizeApiStreams(r.streams || []);
+      return {
+        id: r.id,
+        title: r.title,
+        subTitle: r.subTitle || r.title,
+        category: r.category,
+        cover: r.cover,
+        poster: r.cover,
+        isLive: r.status === 'live',
+        status: r.status,
+        quality: '高清',
+        sort: r.sortOrder !== undefined ? r.sortOrder : r.sort,
+        anchorName: r.anchorName || '',
+        anchorAvatar: r.anchorAvatar || '',
+        announcement: r.announcement || '',
+        hostId: r.anchorName ? ('h' + r.id) : 'h1',
+        streamUrl: (enabledStreams[0] && enabledStreams[0].url) || '',
+        streams: enabledStreams,
+        viewers: '0'
+      };
+    });
+    state.cfg.roomsApiFailed = false;
+    state.cfg.roomsLoadError = '';
   } catch (e) {
-    console.log('[Config] API /api/public/rooms 不可用，使用 JSON 兜底');
+    console.warn('[Config] API /api/public/rooms 不可用', e && e.message ? e.message : e);
+    clearRoomsOnApiFailure('房间列表加载失败，请稍后刷新');
+  }
+
+  if (!roomsLoadedFromApi && allowJsonRoomFallback()) {
+    console.warn('[Config] 本地开发环境保留 JSON 房间兜底');
   }
 
   // 注入 CSS 变量
@@ -212,6 +231,9 @@ export function getHost(id) {
 }
 
 export function getRoom(id) {
+  if (state.cfg.roomsLoadError && (!state.cfg.rooms || state.cfg.rooms.length === 0)) {
+    return { id: id || '', title: '直播间加载失败', status: 'offline', announcement: state.cfg.roomsLoadError, streams: [] };
+  }
   return state.cfg.rooms.find(function (r) { return String(r.id) === String(id); }) || state.cfg.rooms[0] || {};
 }
 
