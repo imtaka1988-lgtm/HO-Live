@@ -151,10 +151,9 @@ export async function adminLogin(username, password) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
-    if (!res.ok) throw new Error('Login failed');
-    return await res.json();
+    return await readJsonResponse(res, '管理员登录失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，管理员登录失败' };
   }
 }
 
@@ -163,10 +162,9 @@ export async function adminGetMe(token) {
     const res = await fetch('/api/admin/me', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (!res.ok) throw new Error('Auth failed');
-    return await res.json();
+    return await readJsonResponse(res, '身份验证失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，身份验证失败' };
   }
 }
 
@@ -175,10 +173,9 @@ export async function adminGetRooms(token) {
     const res = await fetch('/api/admin/rooms', {
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    if (!res.ok) throw new Error('Auth failed');
-    return await res.json();
+    return await readJsonResponse(res, '房间列表加载失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，房间列表加载失败' };
   }
 }
 
@@ -192,10 +189,9 @@ export async function adminUpdateRoom(roomId, data, token) {
       },
       body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Update failed');
-    return await res.json();
+    return await readJsonResponse(res, '房间资料保存失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，房间资料保存失败' };
   }
 }
 
@@ -245,9 +241,9 @@ export async function adminDeleteStream(roomId, streamId, token) {
         'Authorization': 'Bearer ' + token
       }
     });
-    return await res.json();
+    return await readJsonResponse(res, '播放源删除失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，播放源删除失败' };
   }
 }
 
@@ -262,9 +258,9 @@ export async function adminCreateRoom(data, token) {
       },
       body: JSON.stringify(data)
     });
-    return await res.json();
+    return await readJsonResponse(res, '房间新增失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，房间新增失败' };
   }
 }
 
@@ -275,8 +271,8 @@ export async function adminDeleteRoom(roomId, token) {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + token }
     });
-    return await res.json();
+    return await readJsonResponse(res, '房间删除失败');
   } catch {
-    return null;
+    return { ok: false, error: '网络异常，房间删除失败' };
   }
 }
