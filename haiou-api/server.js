@@ -123,7 +123,6 @@ app.use("/api/admin", require("./routes/admin")(pool));
 app.use("/api/anchor", require("./routes/anchor")(pool));
 app.use("/api/anchor/upload", require("./routes/anchorUpload")(pool));
 app.use("/api/live/callback", require("./routes/liveCallbackKeyGuard")(pool));
-app.use("/api/live/callback", require("./routes/liveCallback")(pool));
 app.use("/api/admin/site-messages", require("./routes/adminSiteMessages")(pool));
 app.use("/api/admin/replays", require("./routes/adminReplays"));
 app.use("/api/admin/replay-meta", require("./routes/replayMeta"));
