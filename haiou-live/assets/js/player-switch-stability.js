@@ -12,10 +12,6 @@ function flvSupported() {
   return !!(Flv && Flv.isSupported && Flv.isSupported());
 }
 
-function isMobileDevice() {
-  return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent || '') || window.innerWidth <= 780;
-}
-
 function urlPath(url) {
   const raw = String(url || '').trim();
   if (!raw) return '';
@@ -60,7 +56,7 @@ function normalizeRoomStreams(room) {
 function isPlayableOnThisDevice(stream) {
   const type = inferStreamType(stream);
   if (type === 'ts') return false;
-  if (type === 'flv') return !isMobileDevice() && !isSafariOrIOS() && flvSupported();
+  if (type === 'flv') return !isSafariOrIOS() && flvSupported();
   return true;
 }
 
@@ -135,14 +131,11 @@ export function initPlayerSwitchStability() {
     const sorted = sortStreams(this.streams).map(normalizeStream);
     const playable = sorted.filter(isPlayableOnThisDevice);
 
-    if (isMobileDevice()) {
-      return playable.find(function (s) { return inferStreamType(s) === 'hls'; }) || playable[0] || null;
+    if (isSafariOrIOS()) {
+      return playable.find(function (s) { return inferStreamType(s) === 'hls'; }) || null;
     }
 
-    return playable.find(function (s) { return inferStreamType(s) === 'flv'; }) ||
-      playable.find(function (s) { return inferStreamType(s) === 'hls'; }) ||
-      playable[0] ||
-      null;
+    return playable[0] || null;
   };
 
   LivePlayer._findNextStream = function (failedStream) {
