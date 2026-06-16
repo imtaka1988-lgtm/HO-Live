@@ -25,6 +25,22 @@ function inferTypeFromUrl(url, fallbackType) {
   return fallback === 'flv' ? 'flv' : 'hls';
 }
 
+function isSafariOrIOS() {
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
+  return isIOS || isSafari;
+}
+
+function playNativeHlsTest(video, url, panel) {
+  video.src = url;
+  video.play().then(function () {
+    setTestStatus(panel, 'HLS/m3u8 测试播放成功', '#86efac');
+  }).catch(function (err) {
+    setTestStatus(panel, 'HLS 播放失败：' + (err && err.message ? err.message : '浏览器拒绝播放'), '#fecaca');
+  });
+}
+
 function syncTypeSelectByUrl(item) {
   if (!item) return;
   const urlInput = item.querySelector('.se-url');
@@ -104,36 +120,40 @@ function stopOldTest(item) {
 
 function playHlsTest(item, video, url, panel) {
   const Hls = window.Hls;
+
+  if (isSafariOrIOS() && video.canPlayType('application/vnd.apple.mpegurl')) {
+    playNativeHlsTest(video, url, panel);
+    return;
+  }
+
+  if (Hls && Hls.isSupported && Hls.isSupported()) {
+    const hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 60 });
+    item.__adminTestHls = hls;
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MEDIA_ATTACHED, function () { hls.loadSource(url); });
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      video.play().then(function () {
+        setTestStatus(panel, 'HLS/m3u8 测试播放成功', '#86efac');
+      }).catch(function () {
+        setTestStatus(panel, 'HLS 已加载，但浏览器阻止自动播放，请手动点播放键', '#fde68a');
+      });
+    });
+    hls.on(Hls.Events.ERROR, function (event, data) {
+      if (!data || !data.fatal) return;
+      const detail = data.details || data.type || '未知错误';
+      const hint = /network|manifest|level|frag|timeout|load|cors|http/i.test(String(detail)) ? '，请检查 m3u8/分片 CORS、403/404、HTTPS、鉴权是否过期' : '';
+      setTestStatus(panel, 'HLS 测试失败：' + detail + hint, '#fecaca');
+      console.warn('[Admin HLS Test]', data);
+    });
+    return;
+  }
+
   if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = url;
-    video.play().then(function () {
-      setTestStatus(panel, 'HLS/m3u8 测试播放成功', '#86efac');
-    }).catch(function (err) {
-      setTestStatus(panel, 'HLS 播放失败：' + (err && err.message ? err.message : '浏览器拒绝播放'), '#fecaca');
-    });
+    playNativeHlsTest(video, url, panel);
     return;
   }
 
-  if (!Hls || !Hls.isSupported || !Hls.isSupported()) {
-    setTestStatus(panel, '当前浏览器不支持 HLS.js 测试播放', '#fecaca');
-    return;
-  }
-
-  const hls = new Hls({ enableWorker: true, lowLatencyMode: false, backBufferLength: 60 });
-  item.__adminTestHls = hls;
-  hls.attachMedia(video);
-  hls.on(Hls.Events.MEDIA_ATTACHED, function () { hls.loadSource(url); });
-  hls.on(Hls.Events.MANIFEST_PARSED, function () {
-    video.play().then(function () {
-      setTestStatus(panel, 'HLS/m3u8 测试播放成功', '#86efac');
-    }).catch(function () {
-      setTestStatus(panel, 'HLS 已加载，但浏览器阻止自动播放，请手动点播放键', '#fde68a');
-    });
-  });
-  hls.on(Hls.Events.ERROR, function (event, data) {
-    if (!data || !data.fatal) return;
-    setTestStatus(panel, 'HLS 测试失败：' + (data.details || data.type || '未知错误'), '#fecaca');
-  });
+  setTestStatus(panel, '当前浏览器不支持 HLS.js 测试播放', '#fecaca');
 }
 
 function playFlvTest(item, video, url, panel) {
