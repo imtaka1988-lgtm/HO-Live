@@ -220,7 +220,7 @@ export function initPlayerSwitchStability() {
     const video = this.videoEl;
     const Hls = window.Hls;
 
-    if (isSafariOrIOS() || video.canPlayType('application/vnd.apple.mpegurl')) {
+    if (isSafariOrIOS()) {
       video.src = stream.url;
       video.play().then(function () {
         if (isCurrentToken(self, token)) markGoodStream(self);
