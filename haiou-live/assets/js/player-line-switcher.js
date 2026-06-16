@@ -8,8 +8,11 @@
 
 import { LivePlayer } from './player.js';
 
-function isMobile() {
-  return /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent || '') || window.innerWidth <= 780;
+function isSafariOrIOS() {
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPad|iPhone|iPod/.test(ua);
+  var isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua);
+  return isIOS || isSafari;
 }
 
 function cleanName(name) {
@@ -39,7 +42,7 @@ function displayStreamsFor(player) {
     return s && s.url && s.enabled !== false;
   });
 
-  if (isMobile()) {
+  if (isSafariOrIOS()) {
     streams = streams.filter(function (s) { return s.type !== 'flv'; });
   }
 
