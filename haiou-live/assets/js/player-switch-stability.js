@@ -105,6 +105,40 @@ function markGoodStream(player) {
   }
 }
 
+function playNativeHLS(player, stream, token) {
+  const video = player.videoEl;
+  if (!video) return;
+
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  video.preload = 'auto';
+  video.src = stream.url;
+  video.load();
+
+  let hasRealError = false;
+  const hideReady = function () {
+    if (!hasRealError && isCurrentToken(player, token)) player._hidePlaceholder();
+  };
+  const onError = function () {
+    hasRealError = true;
+    if (isCurrentToken(player, token)) player._onStreamError(stream, token);
+  };
+
+  video.addEventListener('loadedmetadata', hideReady, { once: true });
+  video.addEventListener('canplay', hideReady, { once: true });
+  video.addEventListener('error', onError, { once: true });
+
+  const promise = video.play();
+  if (promise && promise.then) {
+    promise.then(function () {
+      if (isCurrentToken(player, token)) markGoodStream(player);
+    }).catch(function () {
+      if (isCurrentToken(player, token)) player._hidePlaceholder();
+    });
+  }
+}
+
 export function initPlayerSwitchStability() {
   if (!LivePlayer || LivePlayer.__switchStabilityInstalled) return;
   LivePlayer.__switchStabilityInstalled = true;
@@ -214,12 +248,7 @@ export function initPlayerSwitchStability() {
     const Hls = window.Hls;
 
     if (isSafariOrIOS()) {
-      video.src = stream.url;
-      video.play().then(function () {
-        if (isCurrentToken(self, token)) markGoodStream(self);
-      }).catch(function () {
-        if (isCurrentToken(self, token)) self._onStreamError(stream, token);
-      });
+      playNativeHLS(this, stream, token);
       return;
     }
 
