@@ -17,7 +17,7 @@ import { initAdminInlineEditors } from './admin-inline-editor.js';
 import { initAdminStreamLabels } from './admin-stream-labels.js';
 import { initAdminStreamSaveDetail } from './admin-stream-save-detail.js';
 import { initPlayerLineSwitcher } from './player-line-switcher.js';
-import { initPlayerSwitchStability } from './player-switch-stability.js';
+import { initPlayerSwitchStability } from './player-switch-stability.js?v=ios-hls-fix-1';
 import { initPlayerCoverFit } from './player-cover-fit.js';
 import { initAdminReplayImport } from './admin-replay-import.js';
 import { initAdminSiteMessages } from './admin-site-messages.js';
