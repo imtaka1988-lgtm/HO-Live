@@ -15,10 +15,6 @@ function isRoomChatInput(target) {
   return !!(target && target.matches && target.matches('body[data-page="room"] .mobile-chat-input input'));
 }
 
-function isRoomChatSendButton(target) {
-  return !!(target && target.closest && target.closest('body[data-page="room"] .mobile-chat-input button'));
-}
-
 function viewportHeight() {
   return window.visualViewport ? window.visualViewport.height : window.innerHeight;
 }
@@ -50,13 +46,6 @@ function scheduleLayoutUpdate() {
   });
 }
 
-function settleAfterClose() {
-  scheduleLayoutUpdate();
-  resetWindowScroll();
-  setTimeout(scheduleLayoutUpdate, 80);
-  setTimeout(scheduleLayoutUpdate, 180);
-}
-
 function openChatFocus() {
   if (!isRoomPage()) return;
   clearTimeout(blurTimer);
@@ -67,26 +56,13 @@ function openChatFocus() {
   setTimeout(scheduleLayoutUpdate, 320);
 }
 
-function closeChatFocus(force) {
+function closeChatFocus() {
   clearTimeout(blurTimer);
-
-  const applyClose = function () {
-    if (!force && isRoomChatInput(document.activeElement)) return;
+  blurTimer = setTimeout(function () {
+    if (isRoomChatInput(document.activeElement)) return;
     if (document.body) document.body.classList.remove('mobile-chat-focus');
-    settleAfterClose();
-  };
-
-  if (force) {
-    applyClose();
-    return;
-  }
-
-  blurTimer = setTimeout(applyClose, 50);
-}
-
-function preCloseBeforeSend(target) {
-  if (!isRoomChatSendButton(target)) return;
-  closeChatFocus(true);
+    scheduleLayoutUpdate();
+  }, 180);
 }
 
 export function initMobileChatFocusFix() {
@@ -98,11 +74,7 @@ export function initMobileChatFocusFix() {
   }, true);
 
   document.addEventListener('focusout', function (e) {
-    if (isRoomChatInput(e.target)) closeChatFocus(false);
-  }, true);
-
-  document.addEventListener('pointerdown', function (e) {
-    preCloseBeforeSend(e.target);
+    if (isRoomChatInput(e.target)) closeChatFocus();
   }, true);
 
   if (window.visualViewport) {
