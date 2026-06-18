@@ -21,3 +21,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+.env
+*.env
+node_modules/
+logs/
+*.log
