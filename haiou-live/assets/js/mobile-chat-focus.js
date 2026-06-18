@@ -6,7 +6,6 @@
 let bound = false;
 let blurTimer = null;
 let layoutFrame = 0;
-let forceResetUntil = 0;
 
 function isRoomPage() {
   return document.body && document.body.dataset.page === 'room';
@@ -40,30 +39,22 @@ function resetWindowScroll() {
   try { document.body.scrollTop = 0; } catch (e) {}
 }
 
-function shouldResetWindow() {
-  return document.body.classList.contains('mobile-chat-focus') || Date.now() < forceResetUntil;
-}
-
 function scheduleLayoutUpdate() {
   if (layoutFrame) cancelAnimationFrame(layoutFrame);
   layoutFrame = requestAnimationFrame(function () {
     layoutFrame = 0;
     updateRoomVh();
-    if (shouldResetWindow()) {
+    if (document.body.classList.contains('mobile-chat-focus')) {
       resetWindowScroll();
     }
   });
 }
 
-function scheduleKeyboardSettling() {
-  forceResetUntil = Date.now() + 520;
+function settleAfterClose() {
   scheduleLayoutUpdate();
-  setTimeout(scheduleLayoutUpdate, 40);
-  setTimeout(scheduleLayoutUpdate, 90);
-  setTimeout(scheduleLayoutUpdate, 160);
-  setTimeout(scheduleLayoutUpdate, 260);
-  setTimeout(scheduleLayoutUpdate, 420);
-  setTimeout(scheduleLayoutUpdate, 560);
+  resetWindowScroll();
+  setTimeout(scheduleLayoutUpdate, 80);
+  setTimeout(scheduleLayoutUpdate, 180);
 }
 
 function openChatFocus() {
@@ -82,7 +73,7 @@ function closeChatFocus(force) {
   const applyClose = function () {
     if (!force && isRoomChatInput(document.activeElement)) return;
     if (document.body) document.body.classList.remove('mobile-chat-focus');
-    scheduleKeyboardSettling();
+    settleAfterClose();
   };
 
   if (force) {
@@ -114,17 +105,12 @@ export function initMobileChatFocusFix() {
     preCloseBeforeSend(e.target);
   }, true);
 
-  document.addEventListener('touchstart', function (e) {
-    preCloseBeforeSend(e.target);
-  }, { passive: true, capture: true });
-
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', scheduleLayoutUpdate, { passive: true });
     window.visualViewport.addEventListener('scroll', scheduleLayoutUpdate, { passive: true });
   }
 
   window.addEventListener('orientationchange', function () {
-    forceResetUntil = Date.now() + 600;
     setTimeout(scheduleLayoutUpdate, 80);
     setTimeout(scheduleLayoutUpdate, 260);
   }, { passive: true });
