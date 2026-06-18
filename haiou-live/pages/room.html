@@ -19,7 +19,7 @@
   <div id="app"></div>
   <script src="/assets/vendor/hls.min.js"></script>
   <script src="/assets/vendor/flv.min.js"></script>
-  <script type="module" src="/assets/js/main.js?v=ios-hls-fix-1"></script>
+  <script type="module" src="/assets/js/main.js?v=mobile-room-keyboard-fix-1"></script>
   <script type="module" src="/assets/js/room-anchor-avatar.js"></script>
   <script src="/assets/js/player-mobile-autoplay-fix.js"></script>
 <script>
@@ -29,9 +29,11 @@
         g.src = "https://pxk.axe03eu.cfd/chat/widget.js";
         g.async = true;
         g.onload = function() {
-            window.ChatWidget.init({
-                channelId: "6e0e743b5afa47b892ac8322ffaa65a6"
-            });
+            if (window.ChatWidget && typeof window.ChatWidget.init === "function") {
+                window.ChatWidget.init({
+                    channelId: "6e0e743b5afa47b892ac8322ffaa65a6"
+                });
+            }
         };
         s.parentNode.insertBefore(g, s);
     })(document, "script");
