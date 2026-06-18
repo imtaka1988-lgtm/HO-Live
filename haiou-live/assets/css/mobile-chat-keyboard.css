@@ -1,31 +1,65 @@
 @media (max-width: 780px) {
-  body[data-page="room"] {
-    height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
-    -webkit-text-size-adjust: 100%;
+  :root {
+    --room-header-height: 42px;
   }
 
   body[data-page="room"] {
-    position: fixed;
-    inset: 0;
+    height: var(--room-vh, 100dvh);
+    overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    padding-bottom: 0;
     width: 100%;
     max-width: 100vw;
     touch-action: manipulation;
   }
 
+  body[data-page="room"] .mobile-header {
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(var(--room-header-height, 42px) + env(safe-area-inset-top, 0px));
+  }
+
   body[data-page="room"] #app {
-    height: var(--room-vh, 100dvh);
+    height: calc(var(--room-vh, 100dvh) - var(--room-header-height, 42px) - env(safe-area-inset-top, 0px));
     overflow: hidden;
   }
 
   body[data-page="room"] .room-stage {
+    height: 100% !important;
+    max-height: 100%;
     overflow: hidden;
+    padding: 0;
+  }
+
+  body[data-page="room"] .room-grid,
+  body[data-page="room"] .player-panel,
+  body[data-page="room"] .mobile-chat-section {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body[data-page="room"] .mobile-chat-notice {
+    flex-shrink: 0;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body[data-page="room"] .mobile-chat-input {
+    flex-shrink: 0;
+    position: relative;
+    z-index: 5;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   body[data-page="room"] .mobile-chat-input input {
     font-size: 16px !important;
-    line-height: 42px;
+    line-height: 40px;
     -webkit-appearance: none;
     appearance: none;
     touch-action: manipulation;
@@ -68,14 +102,9 @@
   body[data-page="room"].mobile-chat-focus .mobile-chat-body {
     flex: 1 1 auto;
     min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-  }
-
-  body[data-page="room"].mobile-chat-focus .mobile-chat-input {
-    flex-shrink: 0;
-    position: relative;
-    z-index: 5;
   }
 }
