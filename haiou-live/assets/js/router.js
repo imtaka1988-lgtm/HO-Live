@@ -1,3 +1,4 @@
+
 /**
  * 海鸥直播 V4.2 — 路由分发
  */
@@ -114,9 +115,6 @@ export function renderRoom() {
   startRoomInfoPolling(room.id);
   initRoomFollow(room.id);
 
-  const mobileInput = document.querySelector('.mobile-chat-input input');
-  if (mobileInput) { mobileInput.addEventListener('focus', () => document.body.classList.add('mobile-chat-focus')); mobileInput.addEventListener('blur', () => document.body.classList.remove('mobile-chat-focus')); }
-
   if (statusMeta.playable) {
     initPlayer(room);
   }
@@ -126,7 +124,16 @@ export function renderRoom() {
   if (window.visualViewport) { window.visualViewport.addEventListener('resize', updateRoomViewportHeight); window.visualViewport.addEventListener('scroll', updateRoomViewportHeight); }
 }
 
-function updateRoomViewportHeight() { if (document.body.dataset.page !== 'room') return; const h = window.visualViewport ? window.visualViewport.height : window.innerHeight; document.documentElement.style.setProperty('--room-vh', h + 'px'); }
+function updateRoomViewportHeight() {
+  if (document.body.dataset.page !== 'room') return;
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  if (h) document.documentElement.style.setProperty('--room-vh', Math.round(h) + 'px');
+  if (document.body.classList.contains('mobile-chat-focus')) {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+}
 function initPlayer(room) { const video = document.querySelector('#liveVideo'); const videoBox = document.querySelector('#videoBox'); if (!video) return; if (LivePlayer) { LivePlayer.init({ videoEl: video, container: videoBox || video.parentNode, room: room }); return; } const ph = document.querySelector('#videoPlaceholder'); const streamUrl = room.streamUrl || (room.streams && room.streams[0] && room.streams[0].url); if (streamUrl) { video.src = streamUrl; video.addEventListener('loadedmetadata', () => ph?.classList.add('hide')); video.addEventListener('play', () => ph?.classList.add('hide')); } }
 
 // ===================== 实时指数（保留旧函数，当前直播页已改为经典回顾） ====================
