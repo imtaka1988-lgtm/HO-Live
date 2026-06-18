@@ -6,6 +6,7 @@
 let bound = false;
 let blurTimer = null;
 let layoutFrame = 0;
+let forceResetUntil = 0;
 
 function isRoomPage() {
   return document.body && document.body.dataset.page === 'room';
@@ -13,6 +14,10 @@ function isRoomPage() {
 
 function isRoomChatInput(target) {
   return !!(target && target.matches && target.matches('body[data-page="room"] .mobile-chat-input input'));
+}
+
+function isRoomChatSendButton(target) {
+  return !!(target && target.closest && target.closest('body[data-page="room"] .mobile-chat-input button'));
 }
 
 function viewportHeight() {
@@ -35,15 +40,30 @@ function resetWindowScroll() {
   try { document.body.scrollTop = 0; } catch (e) {}
 }
 
+function shouldResetWindow() {
+  return document.body.classList.contains('mobile-chat-focus') || Date.now() < forceResetUntil;
+}
+
 function scheduleLayoutUpdate() {
   if (layoutFrame) cancelAnimationFrame(layoutFrame);
   layoutFrame = requestAnimationFrame(function () {
     layoutFrame = 0;
     updateRoomVh();
-    if (document.body.classList.contains('mobile-chat-focus')) {
+    if (shouldResetWindow()) {
       resetWindowScroll();
     }
   });
+}
+
+function scheduleKeyboardSettling() {
+  forceResetUntil = Date.now() + 520;
+  scheduleLayoutUpdate();
+  setTimeout(scheduleLayoutUpdate, 40);
+  setTimeout(scheduleLayoutUpdate, 90);
+  setTimeout(scheduleLayoutUpdate, 160);
+  setTimeout(scheduleLayoutUpdate, 260);
+  setTimeout(scheduleLayoutUpdate, 420);
+  setTimeout(scheduleLayoutUpdate, 560);
 }
 
 function openChatFocus() {
@@ -56,13 +76,26 @@ function openChatFocus() {
   setTimeout(scheduleLayoutUpdate, 320);
 }
 
-function closeChatFocus() {
+function closeChatFocus(force) {
   clearTimeout(blurTimer);
-  blurTimer = setTimeout(function () {
-    if (isRoomChatInput(document.activeElement)) return;
+
+  const applyClose = function () {
+    if (!force && isRoomChatInput(document.activeElement)) return;
     if (document.body) document.body.classList.remove('mobile-chat-focus');
-    scheduleLayoutUpdate();
-  }, 180);
+    scheduleKeyboardSettling();
+  };
+
+  if (force) {
+    applyClose();
+    return;
+  }
+
+  blurTimer = setTimeout(applyClose, 50);
+}
+
+function preCloseBeforeSend(target) {
+  if (!isRoomChatSendButton(target)) return;
+  closeChatFocus(true);
 }
 
 export function initMobileChatFocusFix() {
@@ -74,8 +107,16 @@ export function initMobileChatFocusFix() {
   }, true);
 
   document.addEventListener('focusout', function (e) {
-    if (isRoomChatInput(e.target)) closeChatFocus();
+    if (isRoomChatInput(e.target)) closeChatFocus(false);
   }, true);
+
+  document.addEventListener('pointerdown', function (e) {
+    preCloseBeforeSend(e.target);
+  }, true);
+
+  document.addEventListener('touchstart', function (e) {
+    preCloseBeforeSend(e.target);
+  }, { passive: true, capture: true });
 
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', scheduleLayoutUpdate, { passive: true });
@@ -83,6 +124,7 @@ export function initMobileChatFocusFix() {
   }
 
   window.addEventListener('orientationchange', function () {
+    forceResetUntil = Date.now() + 600;
     setTimeout(scheduleLayoutUpdate, 80);
     setTimeout(scheduleLayoutUpdate, 260);
   }, { passive: true });
