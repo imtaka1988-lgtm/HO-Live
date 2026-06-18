@@ -1,202 +1,293 @@
 # 海鸥直播 / HO-Live
 
-> 当前状态：2026-06-15 最终整理封包版。当前线上已验证：后端健康检查正常、数据库正常、公共房间接口正常、`npm run check` 通过、PM2 在线、Nginx 配置通过。
+> 当前状态：2026-06-18 近成品稳定版。以当前线上服务器效果为准：手机端、电脑端直播播放已恢复正常；手机直播间键盘弹起后的大面积遮挡问题已修复。当前不再建议继续做高风险前端重构。
 
-这是海鸥直播体育直播站代码仓库。当前版本以“减少堆叠、减少重复路由、保留可回滚点、降低后续维护难度”为主，不再继续做高风险前端大重构。
+本仓库是海鸥直播体育直播站代码仓库。当前维护原则：
+
+```text
+1. 以线上可运营为第一优先级。
+2. 播放器主链路已经可用，不要随意重构。
+3. 手机直播间键盘布局已经接近可运营，不要再激进优化。
+4. 所有后续修改必须先备份，再小步提交，再真机验证。
+```
 
 ---
 
-## 一、当前封包结论
+## 一、当前稳定基线
 
-建议当前线上使用本次最终封包版本，不再继续追加低价值补丁。
+当前最接近成品的备份分支：
 
-最终封包分支：
+```text
+stable-near-final-mobile-room-20260618
+```
+
+这个分支代表当前“最接近可运营”的版本。  
+如果后续修改造成混乱，优先回退到这个分支。
+
+上一个大修前备份分支：
+
+```text
+backup-before-mobile-room-fix-20260618
+```
+
+这个分支是手机直播间键盘布局修复前的备份。它只作为更早回退点，不是当前首选回退点。
+
+不要再使用旧 README 里提到的这些旧封包分支作为默认上线依据：
 
 ```text
 release-sealed-20260615-final
-```
-
-稳定同步分支：
-
-```text
 stable-sealed-20260614
-```
-
-本次代码封包提交：
-
-```text
-30387c880831237e00b8e93c5e5fc843472d5046
-```
-
-本次上线前服务器回滚点：
-
-```text
-24bf6295ca4ccd8b7dce8d99e5fc1557ba36b13d
-```
-
-如果线上出现严重问题，优先回退到服务器自己的回滚点，而不是盲目回到更早版本。
-
----
-
-## 二、本轮最终整理内容
-
-本轮已完成的主要整理：
-
-```text
-1. 播放器源类型、HLS/FLV 保护、失败切线逻辑收敛
-2. 后台播放源保存和测试播放逻辑收敛
-3. 公共房间接口 /api/public/rooms 重复路由收敛
-4. 后台 API 错误处理统一，不再大量吞成 null
-5. 前台生产环境不再静默使用旧 JSON 房间/旧播放源兜底
-6. 后端增加 npm run check 语法检查
-7. GitHub Actions 增加后端语法检查流程
-8. CORS 默认全开放收紧
-9. 直播回调 /api/live/callback 重复路由收敛
-10. 后台房间新增/列表/删除重复逻辑收敛
-11. 后台房间列表排序统一为 sort_order, id
-```
-
----
-
-## 三、服务器更新命令
-
-推荐使用固定封包分支更新：
-
-```bash
-cd /var/www
-
-OLD_COMMIT=$(git rev-parse HEAD)
-echo "当前服务器回滚点：$OLD_COMMIT"
-
-git fetch origin
-git reset --hard origin/release-sealed-20260615-final
-
-cd /var/www/haiou-api
-npm install --no-audit --no-fund
-npm run check
-
-cd /var/www
-pm2 restart all
-nginx -t
-systemctl reload nginx
-```
-
-如果改过 `.env`，重启时使用：
-
-```bash
-pm2 restart all --update-env
-```
-
-如果 `npm run check` 报错，不要继续重启，先修报错。
-
-如果 `nginx -t` 报错，不要执行 `systemctl reload nginx`。
-
-前端 JS 或页面更新后，浏览器建议强刷：
-
-```text
-Ctrl + F5
-```
-
----
-
-## 四、稳定备份与回退
-
-本次上线前服务器实际回滚点：
-
-```text
-24bf6295ca4ccd8b7dce8d99e5fc1557ba36b13d
-```
-
-回退命令：
-
-```bash
-cd /var/www
-git reset --hard 24bf6295ca4ccd8b7dce8d99e5fc1557ba36b13d
-pm2 restart all
-nginx -t
-systemctl reload nginx
-```
-
-当前最终封包分支：
-
-```text
-release-sealed-20260615-final
-```
-
-稳定同步分支：
-
-```text
-stable-sealed-20260614
-```
-
-原始稳定备份分支，也就是更早一轮修复前的备份：
-
-```text
 stable-delivery-20260614
 ```
 
-原始稳定备份提交：
+这些分支早于当前手机直播间修复，继续按旧分支 `reset --hard` 会误导部署，并可能把当前接近成品的效果覆盖掉。
+
+---
+
+## 二、当前已确认状态
+
+当前线上/当前 main 的核心状态：
 
 ```text
-d6b7c9fbf7f0e1e5d017341edd48caa601dd60f6
+1. 手机端直播播放：可用。
+2. 电脑端直播播放：可用。
+3. 手机直播间输入框弹出键盘：大面积白色遮挡已修复。
+4. 手机直播间键盘收起后：可能有轻微白色延迟消失，当前接受，不再激进优化。
+5. 播放器 HLS/FLV 主逻辑：不要再随意改。
+6. 后台和直播配置：保持现状，小步维护。
+```
+
+重要说明：
+
+```text
+键盘收起后那一下白色延迟，不要继续硬修。
+之前尝试过“发送按钮提前收起 focus”的方案，会造成更严重的持续遮挡。
+当前策略是接受轻微过渡，不再碰这块逻辑。
 ```
 
 ---
 
-## 五、上线后必须检查
+## 三、服务器同步命令
 
-服务器检查：
-
-```bash
-curl -s http://127.0.0.1:3001/api/health
-curl -s http://127.0.0.1:3001/api/health/db
-curl -s http://127.0.0.1:3001/api/public/rooms | head -c 1000
-pm2 logs haiou-api --lines 80
-```
-
-正常结果应包括：
-
-```text
-/api/health 返回 status: ok
-/api/health/db 返回 ok: true
-/api/public/rooms 返回 ok: true 和 rooms 数组
-PM2 显示 haiou-api online
-```
-
-如果 `pm2 logs` 里出现旧错误，先执行：
+如果服务器当前已经正常，不要随便 reset。  
+只在确认要部署 GitHub main 时执行：
 
 ```bash
-pm2 flush haiou-api
-pm2 logs haiou-api --lines 60
+cd /var/www
+
+git fetch origin
+git pull --ff-only origin main
 ```
 
-清空后如果不再出现，说明是历史日志残留。
+如果 `git pull --ff-only` 报错，说明服务器本地和 GitHub 有分叉。不要直接强制覆盖，先检查：
+
+```bash
+git status
+git log --oneline -5
+```
+
+本轮手机直播间修复主要是前端静态文件更新，通常不需要重启后端。  
+如果你改了后端或环境变量，再执行：
+
+```bash
+pm2 restart all
+```
+
+如果改了 Nginx 配置，才需要：
+
+```bash
+nginx -t && systemctl reload nginx
+```
 
 ---
 
-## 六、环境变量
+## 四、回退方式
 
-数据库密码默认要求配置：
+### 1. 回到当前近成品稳定版
+
+```bash
+cd /var/www
+
+git fetch origin
+git reset --hard origin/stable-near-final-mobile-room-20260618
+```
+
+这是当前首选回退方式。
+
+### 2. 回到手机直播间修复前版本
+
+只有当前稳定版也有严重问题时，才使用：
+
+```bash
+cd /var/www
+
+git fetch origin
+git reset --hard origin/backup-before-mobile-room-fix-20260618
+```
+
+### 3. 如果 GitHub main 也需要回退
+
+先在服务器本地确认回退后效果正常，再执行：
+
+```bash
+git push -f origin main
+```
+
+强制推送会覆盖 GitHub main。没有确认前不要用。
+
+---
+
+## 五、手机直播间相关文件说明
+
+当前手机直播间最关键的文件：
+
+```text
+haiou-live/pages/room.html
+haiou-live/assets/js/main.js
+haiou-live/assets/js/router.js
+haiou-live/assets/js/mobile-chat-focus.js
+haiou-live/assets/css/mobile-chat-keyboard.css
+haiou-live/assets/css/site.css
+```
+
+### 1. room.html
+
+直播间页面入口。  
+当前会加载：
+
+```text
+hls.min.js
+flv.min.js
+main.js
+room-anchor-avatar.js
+player-mobile-autoplay-fix.js
+```
+
+不要随意调整这些脚本顺序。
+
+### 2. main.js
+
+前端主入口。  
+负责加载配置、全局 UI、路由、播放器增强、手机键盘修复模块等。
+
+### 3. router.js
+
+直播间 DOM 主要由这里生成。  
+当前已经避免在这里重复绑定手机输入框 focus/blur。  
+不要重新加回重复 focus 逻辑。
+
+### 4. mobile-chat-focus.js
+
+手机直播间输入法聚焦保护。  
+当前原则：
+
+```text
+只更新 --room-vh
+只加/删 mobile-chat-focus
+不再给 body/app/video 大量写 inline style
+不再监听发送按钮提前强制关闭 focus
+```
+
+不要再加入复杂的 pointerdown / touchstart 强制收键盘逻辑。
+
+### 5. mobile-chat-keyboard.css
+
+手机直播间键盘布局 CSS。  
+当前已经避免 `body[data-page="room"] { position: fixed; }` 这类容易造成 iOS 键盘错位的写法。
+
+不要再把整个 body 强制 fixed。
+
+---
+
+## 六、播放器相关原则
+
+播放器当前能用，不要轻易重构。
+
+不要随意改这些文件：
+
+```text
+haiou-live/assets/js/player.js
+haiou-live/assets/js/player-switch-stability.js
+haiou-live/assets/js/player-line-switcher.js
+haiou-live/assets/js/player-mobile-autoplay-fix.js
+haiou-live/assets/css/player-line-switcher.css
+haiou-live/assets/css/player-cover-fit.css
+```
+
+除非出现明确、可复现的播放 bug，否则不要动播放器主链路。
+
+当前建议：
+
+```text
+1. HLS / FLV 线路能播就不要改。
+2. iOS/Safari 直播能播就不要改。
+3. Android/PC 直播能播就不要改。
+4. 线路切换逻辑不要为了显示优化去重构。
+```
+
+---
+
+## 七、当前可接受的小瑕疵
+
+当前已知但不建议继续处理的点：
+
+```text
+手机直播间键盘收起后，白色区域可能会延迟一小会消失。
+```
+
+原因是 iOS/手机浏览器键盘收起时，`visualViewport` 高度恢复和页面布局恢复并不是同步完成。  
+当前版本至少不会持续遮挡，属于可接受瑕疵。
+
+不要为了这个小过渡继续激进修改。之前已经验证过，过度优化会引入更严重问题。
+
+---
+
+## 八、上线后检查清单
+
+每次更新后，至少检查：
+
+```text
+1. 首页能打开
+2. 直播列表能打开
+3. 手机直播间能打开
+4. 手机端能播放
+5. 电脑端能播放
+6. 手机直播间点输入框，键盘弹出不再大面积遮挡
+7. 手机直播间发送消息后，键盘收起能恢复
+8. 后台能登录
+9. 房间列表能加载
+10. 手动填写 m3u8 / flv 后前台能播放
+```
+
+手机直播间重点测试：
+
+```text
+1. 进入直播间
+2. 点聊天输入框
+3. 键盘弹出
+4. 输入文字
+5. 收起键盘
+6. 再次点输入框
+7. 切换聊天 / 主播资料
+```
+
+---
+
+## 九、环境变量提醒
+
+数据库密码建议配置：
 
 ```bash
 DB_PASS=你的数据库密码
 ```
 
-如果数据库确实故意使用空密码，才可以临时设置：
+如果数据库确实故意使用空密码，才临时设置：
 
 ```bash
 ALLOW_EMPTY_DB_PASS=1
 ```
 
-正式环境不建议空密码。
-
-Odds API 默认 5 秒超时，可以按需调整：
-
-```bash
-ODDS_API_TIMEOUT_MS=5000
-```
-
-直播回调推荐使用：
+直播回调推荐配置：
 
 ```bash
 LIVE_CALLBACK_KEY=你自己设置的随机长字符串
@@ -208,33 +299,19 @@ LIVE_CALLBACK_KEY=你自己设置的随机长字符串
 https://你的域名/api/live/callback?key=同一个随机长字符串
 ```
 
-如果暂时不使用云直播回调，可以不用管。
-
-如果临时要放开无 key 回调，可以设置：
-
-```bash
-LIVE_CALLBACK_ALLOW_UNSIGNED=1
-```
-
-正式环境不建议长期放开。
+正式环境不建议长期放开无 key 回调。
 
 ---
 
-## 七、CORS 当前规则
+## 十、CORS 说明
 
-当前 CORS 已经收紧。
-
-```text
-不设置 CORS_ORIGIN 时，不主动开放跨域。
-```
-
-如果前端和 API 是同域，例如：
+如果前端和 API 同域，例如：
 
 ```text
 https://s6.lol/api/...
 ```
 
-通常不需要设置 CORS。
+通常不需要额外设置 CORS。
 
 如果前端和 API 分开域名，例如：
 
@@ -243,7 +320,7 @@ https://s6.lol/api/...
 API：https://api.s6.lol
 ```
 
-需要设置：
+可以设置：
 
 ```bash
 CORS_ORIGIN=https://s6.lol
@@ -257,138 +334,43 @@ CORS_ORIGIN=https://s6.lol,https://www.s6.lol
 
 ---
 
-## 八、房间 ID 与排序规则
+## 十一、Git 提交注意事项
 
-当前房间 ID 规则：
+不要把服务器备份包提交到 GitHub，例如：
 
 ```text
-已有房间 ID 不自动改名。
-删除 12 号房间后，13 号仍然保持 13。
-下一次新建房间时，优先补回最小空缺 ID，也就是补回 12。
+*.tar.gz
+*.zip
+*.bak
 ```
 
-这样做比“删除 12 后立刻把 13 改成 12”更安全。
-
-原因：房间 ID 会关联主播账号、播放源、推流配置、直播回调记录、后台按钮、前台直播间链接。强行改已有房间 ID 容易导致按钮错位、播放源错位、主播账号错位。
-
-当前房间列表排序规则：
+不要提交：
 
 ```text
-后台房间列表：ORDER BY sort_order, id
-前台公共房间列表：ORDER BY sort_order, id
+.env
+node_modules/
+logs/
+*.log
 ```
 
-重点验收：
+如果误提交了压缩包，先从 Git 记录中移除：
 
-```text
-1. 删除 12 号房间
-2. 再新建房间
-3. 新房间应补回 12
-4. 房间列表应按 sort_order 优先排序，sort_order 相同再按 id 排序
-5. 每行按钮必须对应当前行房间
+```bash
+git rm --cached path/to/backup.tar.gz
+git commit -m "chore: remove backup archive from repo"
+git push origin main
 ```
 
 ---
 
-## 九、后台手动放视频源
-
-后台手动填 m3u8 / flv 播放源不受直播回调鉴权影响。
-
-你仍然可以按原方式操作：
+## 十二、后续维护原则
 
 ```text
-后台 → 房间 → 填播放源 → 保存 → 前台播放
+1. 当前版本先稳定运营。
+2. 任何修改先建备份分支。
+3. 一次只改一个问题。
+4. 播放器、手机键盘、后台保存逻辑都不要大重构。
+5. 真机视频复现后再改，不凭感觉改。
 ```
 
-影响范围说明：
-
-```text
-后台手动填播放源：不受影响
-后台新增房间：会自动生成主播账号和基础推流配置
-后台改房间资料：不受影响
-用户看直播：不受影响
-直播云厂商自动通知开播/关播：需要 key
-```
-
-注意：如果前台是 HTTPS，HTTP 的 FLV 播放源可能被浏览器当作混合内容拦截。优先使用 HTTPS 播放源。
-
----
-
-## 十、当前已知遗留点
-
-### 1. app-page.js 旧播放源逻辑源码残留
-
-`haiou-live/assets/js/app-page.js` 里仍有旧的播放源测试/保存逻辑：
-
-```text
-btn-stream-test → window.open(url)
-btn-stream-save → 旧 adminUpdateStream 保存逻辑
-```
-
-当前运行时已有新模块接管后台播放源保存和测试播放，因此这不是当前上线阻断项。
-
-但后续如果继续整理后台前端，建议单独做：
-
-```text
-app-page.js 后台模块拆分
-```
-
-不要直接粗暴整文件替换。
-
-### 2. 后台 UI patch 模块仍可继续整理
-
-当前后台 UI 已能使用。继续整理 UI patch 模块属于中风险，不建议在当前稳定封包后立刻继续改。
-
----
-
-## 十一、重点验收清单
-
-每次更新后，建议至少检查这些：
-
-```text
-1. 首页能正常打开
-2. 直播列表能正常打开
-3. 直播间能正常打开
-4. HLS 能播放
-5. PC Chrome 下 FLV 能测试
-6. 后台能登录
-7. 房间列表能加载
-8. 新建房间正常
-9. 编辑房间资料正常
-10. 删除房间正常
-11. 删除 12 后再新建能补回 12
-12. 房间列表按 sort_order, id 排列
-13. 播放源管理能展开
-14. 手动填写 m3u8 / flv 播放源后前台能播放
-15. 测试播放按钮是后台内嵌测试
-16. 上传封面、头像正常
-17. 重置主播密码后可以登录主播后台
-18. 如果使用直播回调，key 配置正确
-19. 聊天室能连接和发言
-20. Nginx nginx -t 测试通过
-21. 后台 Odds API 健康检查不会长时间卡住
-```
-
----
-
-## 十二、封包建议
-
-当前建议：
-
-```text
-不要继续改业务代码。
-先观察线上稳定性。
-后续只做明确的小任务。
-不要继续叠补丁。
-```
-
-如果要继续优化，优先级应为：
-
-```text
-1. app-page.js 后台模块拆分
-2. 后台 UI patch 模块分类收敛
-3. 增加更完整的前端构建检查
-4. 增加 API 自动化测试
-```
-
-这些不属于当前低风险封包范围。
+当前阶段目标不是继续堆功能，而是保持可运营。
