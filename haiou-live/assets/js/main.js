@@ -9,7 +9,7 @@
 
 import { loadConfig, applyTheme, state } from './config.js';
 import { renderGlobalChrome, renderFooter } from './ui.js';
-import { bootPage } from './router.js';
+import { bootPage } from './router.js?v=mobile-room-keyboard-fix-1';
 import { initMascot } from './mascot.js';
 import { initAdminNeutralLabels } from './admin-neutral-labels.js';
 import { initAppIcons } from './app-icons.js';
@@ -34,13 +34,13 @@ import { initAdminCardCollapse } from './admin-card-collapse.js';
 import { initUserMessageStatusFix } from './user-message-status-fix.js';
 import { initUserAvatarPreview } from './user-avatar-preview.js';
 import { initUserLevelBenefits } from './user-level-benefits.js';
-import { initMobileChatFocusFix } from './mobile-chat-focus.js';
+import { initMobileChatFocusFix } from './mobile-chat-focus.js?v=mobile-room-keyboard-fix-1';
 
 function loadExtraCss() {
   const files = [
     ['admin-ui-consistency-style', '/assets/css/admin-ui-consistency.css'],
     ['member-entry-style', '/assets/css/member-entry.css'],
-    ['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css']
+    ['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css?v=mobile-room-keyboard-fix-1']
   ];
   files.forEach(function (item) {
     if (document.querySelector('link[data-extra-style="' + item[0] + '"]')) return;
