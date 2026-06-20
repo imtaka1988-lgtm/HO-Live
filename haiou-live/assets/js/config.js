@@ -48,6 +48,7 @@ export function href(path) {
   if (!path) return '#';
   if (/^javascript:/i.test(path)) return '#';
   if (/^data:/i.test(path)) return '#';
+  if (path === 'index.html' || path === './index.html' || path === '/index.html') return '/';
   if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith('#')) return path;
   if (path.startsWith('/')) return path;
@@ -137,115 +138,4 @@ function clearRoomsOnApiFailure(reason) {
   state.cfg.roomsLoadError = reason || '房间列表加载失败，请稍后刷新';
 }
 
-// ===================== 主题注入 =====================
-
-export function applyTheme(cfg) {
-  var vars =
-    (cfg && cfg.theme && cfg.theme.cssVars) ||
-    (cfg && cfg.cssVars) ||
-    {};
-
-  Object.entries(vars).forEach(function (entry) {
-    var key = entry[0];
-    var value = entry[1];
-    if (!key || value == null) return;
-    var name = key.startsWith('--') ? key : '--' + key;
-    document.documentElement.style.setProperty(name, value);
-  });
-}
-
-// ===================== 配置加载 =====================
-
-export async function loadConfig() {
-  if (state.initDone) return state.cfg;
-
-  // 1. 加载基础配置（品牌、主题、广告等）从 JSON 兜底
-  try {
-    var r = await fetch(href('assets/data/site-config.json') + '?t=' + Date.now());
-    if (!r.ok) throw new Error(r.status);
-    var json = await r.json();
-    state.cfg = { ...fallback, ...json };
-  } catch (e) {
-    console.warn('[Config] using fallback config', e.message);
-    state.cfg = { ...fallback };
-  }
-
-  // 2. 从后端 API 获取 rooms（含 streams）。非本地环境失败时，不再沿用 JSON 里的旧房间/旧播放源。
-  var roomsLoadedFromApi = false;
-  try {
-    var apiRes = await fetch('/api/public/rooms?t=' + Date.now());
-    if (!apiRes.ok) throw new Error('HTTP ' + apiRes.status);
-    var apiData = await apiRes.json();
-    if (!apiData.ok || !Array.isArray(apiData.rooms)) throw new Error('invalid rooms response');
-
-    roomsLoadedFromApi = true;
-    // 转换后端字段名到前端格式
-    state.cfg.rooms = apiData.rooms.map(function (r) {
-      var enabledStreams = normalizeApiStreams(r.streams || []);
-      return {
-        id: r.id,
-        title: r.title,
-        subTitle: r.subTitle || r.title,
-        category: r.category,
-        cover: r.cover,
-        poster: r.cover,
-        isLive: r.status === 'live',
-        status: r.status,
-        quality: '高清',
-        sort: r.sortOrder !== undefined ? r.sortOrder : r.sort,
-        anchorName: r.anchorName || '',
-        anchorAvatar: r.anchorAvatar || '',
-        announcement: r.announcement || '',
-        hostId: r.anchorName ? ('h' + r.id) : 'h1',
-        streamUrl: (enabledStreams[0] && enabledStreams[0].url) || '',
-        streams: enabledStreams,
-        viewers: '0'
-      };
-    });
-    state.cfg.roomsApiFailed = false;
-    state.cfg.roomsLoadError = '';
-  } catch (e) {
-    console.warn('[Config] API /api/public/rooms 不可用', e && e.message ? e.message : e);
-    clearRoomsOnApiFailure('房间列表加载失败，请稍后刷新');
-  }
-
-  if (!roomsLoadedFromApi && allowJsonRoomFallback()) {
-    console.warn('[Config] 本地开发环境保留 JSON 房间兜底');
-  }
-
-  // 注入 CSS 变量
-  var vars = state.cfg.theme && state.cfg.theme.cssVars ? state.cfg.theme.cssVars : {};
-  var root = document.documentElement;
-  Object.keys(vars || {}).forEach(function (k) {
-    if (vars[k]) root.style.setProperty(k, vars[k]);
-  });
-
-  state.initDone = true;
-  return state.cfg;
-}
-
-// ===================== 数据查询 =====================
-
-export function getHost(id) {
-  return state.cfg.hosts.find(function (h) { return h.id === id; }) || { id: '', name: '未知主播', avatar: 'assets/img/avatar-default.svg' };
-}
-
-export function getRoom(id) {
-  if (state.cfg.roomsLoadError && (!state.cfg.rooms || state.cfg.rooms.length === 0)) {
-    return { id: id || '', title: '直播间加载失败', status: 'offline', announcement: state.cfg.roomsLoadError, streams: [] };
-  }
-  return state.cfg.rooms.find(function (r) { return String(r.id) === String(id); }) || state.cfg.rooms[0] || {};
-}
-
-export function getMatch(id) {
-  return state.cfg.matches.find(function (m) { return String(m.id) === String(id); }) || null;
-}
-
-export function filterRoomsForTab(tab) {
-  tab = tab || currentTab;
-  if (!tab || tab === 'all' || tab === 'recommend') return state.cfg.rooms;
-  if (tab === 'football') return state.cfg.rooms.filter(function (r) { return r.category === 'football'; });
-  if (tab === 'basketball') return state.cfg.rooms.filter(function (r) { return r.category === 'basketball'; });
-  if (tab === 'analysis') return state.cfg.rooms.filter(function (r) { return r.category === 'analysis'; });
-  return state.cfg.rooms;
-}
+// ===================== 主题注入
