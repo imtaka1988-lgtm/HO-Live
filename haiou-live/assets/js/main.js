@@ -77,17 +77,35 @@ function normalizeAvatarUrl(value) {
   return '/' + raw.replace(/^\.\//, '').replace(/^\//, '');
 }
 
+function ensurePcMemberName(link) {
+  const existing = link.querySelector('.pc-member-name');
+  if (existing) return existing;
+
+  const textNode = Array.from(link.childNodes).find(function (node) {
+    return node.nodeType === Node.TEXT_NODE && String(node.nodeValue || '').trim();
+  });
+  const name = document.createElement('span');
+  name.className = 'pc-member-name';
+  name.textContent = textNode ? String(textNode.nodeValue || '').trim() : String(link.textContent || '我的').trim();
+
+  if (textNode) link.replaceChild(name, textNode);
+  else link.appendChild(name);
+
+  return name;
+}
+
 function applyPcMemberLevel() {
   const link = document.querySelector('.pc-login a[href="/pages/user.html"]');
   if (!link || link.querySelector('.pc-member-lv')) return;
   let profile = {};
   try { profile = JSON.parse(localStorage.getItem('user_profile') || '{}'); } catch (e) {}
+  const nameEl = ensurePcMemberName(link);
   const avatar = document.createElement('img');
   avatar.className = 'pc-member-mini-avatar';
   avatar.src = normalizeAvatarUrl(profile.avatar);
   avatar.alt = '';
   link.classList.add('has-pc-member-avatar');
-  link.insertBefore(avatar, link.firstChild);
+  link.insertBefore(avatar, nameEl);
   const level = memberLevelFromProfile(profile);
   const badge = document.createElement('span');
   badge.className = 'pc-member-lv';
