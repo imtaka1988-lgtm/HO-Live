@@ -48,6 +48,61 @@ function roomStatusMeta(room) {
   };
 }
 
+function roomSeed(room) {
+  const raw = Number(room && room.id ? room.id : 1);
+  return Number.isFinite(raw) && raw > 0 ? raw : 1;
+}
+
+function pickSpecialties(category, seed) {
+  const football = [
+    ['英超', '欧冠', '亚冠'],
+    ['西甲', '意甲', '世界杯'],
+    ['德甲', '法甲', '中超'],
+    ['欧冠', '英超', '国家队赛事']
+  ];
+  const basketball = [
+    ['NBA', 'CBA', '世界杯'],
+    ['NBA', '欧洲杯', '亚洲杯'],
+    ['CBA', 'NBA', '篮世预'],
+    ['NBA', 'WNBA', 'NCAA']
+  ];
+  const mixed = [
+    ['英超', 'NBA', '世界杯'],
+    ['欧冠', 'CBA', '亚冠'],
+    ['西甲', 'NBA', '中超'],
+    ['意甲', '德甲', 'CBA']
+  ];
+  const list = category === 'football' ? football : (category === 'basketball' ? basketball : mixed);
+  return list[seed % list.length];
+}
+
+function buildRoomAnchorProfile(room, host, anchorName) {
+  const seed = roomSeed(room);
+  const category = String(room && room.category ? room.category : '').toLowerCase();
+  const isFootball = category === 'football';
+  const isBasketball = category === 'basketball';
+  const footballAccuracy = Math.min(88, (isFootball ? 72 : 63) + ((seed * 7) % 13));
+  const basketballAccuracy = Math.min(86, (isBasketball ? 71 : 61) + ((seed * 11) % 14));
+  const rank = ((seed * 13) % 96) + 1;
+  const avatar = room.anchorAvatar || host.avatar || 'assets/img/avatar-default.svg';
+  const name = anchorName || '主播';
+  const intro = isFootball
+    ? '专注足球临场节奏、阵容变化与指数走势解读。'
+    : (isBasketball ? '专注篮球攻防节奏、伤停变化与大小分思路。' : '专注足球、篮球赛事分析与直播解读。');
+
+  return {
+    name,
+    intro,
+    avatar,
+    wechatGroupQr: avatar,
+    footballAccuracy: footballAccuracy + '%',
+    basketballAccuracy: basketballAccuracy + '%',
+    rank: '全站第' + rank + '位',
+    specialties: pickSpecialties(category, seed),
+    contact: '请联系主播助理'
+  };
+}
+
 async function initRoomFollow(roomId) {
   const btn = document.querySelector('.follow-btn');
   if (!btn || !roomId) return;
@@ -94,9 +149,7 @@ export function renderRoom() {
   const anchorName = room.anchorName || host.name || '主播';
   const announcement = room.announcement || '欢迎进入直播间，请文明发言';
   const statusMeta = roomStatusMeta(room);
-  if (room.anchorName && state.cfg.anchorProfile) {
-    state.cfg.anchorProfile.name = room.anchorName;
-  }
+  state.cfg.anchorProfile = buildRoomAnchorProfile(room, host, anchorName);
   const app = document.querySelector('#app');
   if (!app) return;
  const ad = state.cfg.ads && state.cfg.ads.roomPlayerAd;
