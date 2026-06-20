@@ -48,6 +48,7 @@ export function href(path) {
   if (!path) return '#';
   if (/^javascript:/i.test(path)) return '#';
   if (/^data:/i.test(path)) return '#';
+  if (path === 'index.html' || path === './index.html' || path === '/index.html') return '/';
   if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith('#')) return path;
   if (path.startsWith('/')) return path;
