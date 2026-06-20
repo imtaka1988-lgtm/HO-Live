@@ -12,8 +12,56 @@ function roomSortValue(room) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function roomIdValue(room) {
+  const n = Number(room && room.id !== undefined ? room.id : Number.MAX_SAFE_INTEGER);
+  return Number.isFinite(n) ? n : Number.MAX_SAFE_INTEGER;
+}
+
 function isLiveRoom(room) {
   return !!room && (room.status === 'live' || room.isLive === true);
+}
+
+function compareRoomsByLiveFirst(a, b) {
+  const liveDelta = Number(isLiveRoom(b)) - Number(isLiveRoom(a));
+  if (liveDelta) return liveDelta;
+  const sortDelta = roomSortValue(a) - roomSortValue(b);
+  if (sortDelta) return sortDelta;
+  return roomIdValue(a) - roomIdValue(b);
+}
+
+function getDisplayRooms(rooms) {
+  return (Array.isArray(rooms) ? rooms.slice() : []).sort(compareRoomsByLiveFirst);
+}
+
+function getCategoryRooms(category) {
+  return getDisplayRooms(state.cfg.rooms).filter(r => r.category === category);
+}
+
+function renderRoomCards(rooms, limit) {
+  const list = typeof limit === 'number' ? rooms.slice(0, limit) : rooms;
+  return list.map(r => liveCard(r)).join('');
+}
+
+function updateRoomGrid(selector, rooms, limit) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.innerHTML = renderRoomCards(rooms, limit);
+}
+
+function refreshVisibleRoomLists() {
+  const allRooms = getDisplayRooms(state.cfg.rooms);
+  const footballRooms = getCategoryRooms('football');
+  const basketballRooms = getCategoryRooms('basketball');
+  const tabRooms = getDisplayRooms(filterRoomsForTab());
+
+  updateRoomGrid('#pcHomeHotRoomsGrid', allRooms, 10);
+  updateRoomGrid('#pcHomeFootballRoomsGrid', footballRooms, 5);
+  updateRoomGrid('#pcHomeBasketballRoomsGrid', basketballRooms, 5);
+  updateRoomGrid('#mobileHomeHotRoomsGrid', allRooms, 8);
+  updateRoomGrid('#mobileHomeFootballRoomsGrid', footballRooms, 4);
+  updateRoomGrid('#mobileHomeBasketballRoomsGrid', basketballRooms, 4);
+  updateRoomGrid('#pcLiveRoomsGrid', tabRooms);
+  updateRoomGrid('#mobileLiveRoomsGrid', tabRooms);
 }
 
 function getHeroRooms(rooms) {
@@ -159,6 +207,7 @@ async function refreshHeroRooms() {
     const nextRooms = normalizeApiRooms(data.rooms);
     const nextHeroRooms = getHeroRooms(nextRooms);
     state.cfg.rooms = nextRooms;
+    refreshVisibleRoomLists();
 
     if (heroSignature(currentHeroRooms) === heroSignature(nextHeroRooms)) return;
 
@@ -180,8 +229,11 @@ function startHeroAutoRefresh() {
 export function renderHome() {
   const cfg = state.cfg;
   const heroRooms = getHeroRooms(cfg.rooms);
+  const displayRooms = getDisplayRooms(cfg.rooms);
+  const footballRooms = getCategoryRooms('football');
+  const basketballRooms = getCategoryRooms('basketball');
   const defaultRoom = heroRooms[0] || {};
-  return `<section class="home-hero pc-only"><div class="home-hero-inner"><div class="hero-player-zone" id="heroPlayerZone" style="background-image:url(${asset(defaultRoom.cover||'assets/img/thumb-1.svg')})" data-room-id="${defaultRoom.id||1}"><video id="heroPreviewVideo" class="hero-preview-video" muted autoplay playsinline preload="metadata" poster="${asset(defaultRoom.cover||'assets/img/thumb-1.svg')}"></video><a class="hero-enter-btn" id="heroEnterBtn" href="${href('pages/room.html?id='+(defaultRoom.id||1))}">进入直播间</a></div><div class="hero-side-cards" id="heroSideCards">${renderHeroSideCards(heroRooms, defaultRoom.id)}</div></div></section><main class="home-main pc-only"><div class="container"><div class="section-head"><h2>正在热播</h2><a href="${href('pages/live.html')}">查看更多 ›</a></div><div class="live-grid">${cfg.rooms.slice(0,10).map(r=>liveCard(r)).join('')}</div><div class="section-head"><h2>足球直播</h2><a href="${href('pages/live.html?tab=football')}">查看更多 ›</a></div><div class="live-grid">${cfg.rooms.filter(r=>r.category==='football').slice(0,5).map(r=>liveCard(r)).join('')}</div><div class="section-head"><h2>篮球直播</h2><a href="${href('pages/live.html?tab=basketball')}">查看更多 ›</a></div><div class="live-grid">${cfg.rooms.filter(r=>r.category==='basketball').slice(0,5).map(r=>liveCard(r)).join('')}</div>${renderHomeReplaySection()}</div></main>${renderMobileHome()}`;
+  return `<section class="home-hero pc-only"><div class="home-hero-inner"><div class="hero-player-zone" id="heroPlayerZone" style="background-image:url(${asset(defaultRoom.cover||'assets/img/thumb-1.svg')})" data-room-id="${defaultRoom.id||1}"><video id="heroPreviewVideo" class="hero-preview-video" muted autoplay playsinline preload="metadata" poster="${asset(defaultRoom.cover||'assets/img/thumb-1.svg')}"></video><a class="hero-enter-btn" id="heroEnterBtn" href="${href('pages/room.html?id='+(defaultRoom.id||1))}">进入直播间</a></div><div class="hero-side-cards" id="heroSideCards">${renderHeroSideCards(heroRooms, defaultRoom.id)}</div></div></section><main class="home-main pc-only"><div class="container"><div class="section-head"><h2>正在热播</h2><a href="${href('pages/live.html')}">查看更多 ›</a></div><div class="live-grid" id="pcHomeHotRoomsGrid">${renderRoomCards(displayRooms,10)}</div><div class="section-head"><h2>足球直播</h2><a href="${href('pages/live.html?tab=football')}">查看更多 ›</a></div><div class="live-grid" id="pcHomeFootballRoomsGrid">${renderRoomCards(footballRooms,5)}</div><div class="section-head"><h2>篮球直播</h2><a href="${href('pages/live.html?tab=basketball')}">查看更多 ›</a></div><div class="live-grid" id="pcHomeBasketballRoomsGrid">${renderRoomCards(basketballRooms,5)}</div>${renderHomeReplaySection()}</div></main>${renderMobileHome()}`;
 }
 
 export function bindHeroEvents() {
@@ -199,12 +251,13 @@ function playHeroPreview(room){const zone=document.querySelector('#heroPlayerZon
 
 function renderMobileHome(){
   const cfg=state.cfg;setTimeout(bindFloatBarEvents,100);
+  const displayRooms=getDisplayRooms(cfg.rooms),footballRooms=getCategoryRooms('football'),basketballRooms=getCategoryRooms('basketball');
   const heroHtml=getHeroRooms(cfg.rooms).map(r=>`<a class="m-hero-card" href="${href('pages/room.html?id='+r.id)}"><img src="${asset(r.cover||'assets/img/thumb-1.svg')}" alt="${esc(r.title)}"><span class="m-hero-title">${esc(r.title)}</span></a>`).join('');
-  return `<main class="mobile-page"><div class="m-hero-scroll" id="mHeroScroll">${heroHtml}</div><div class="m-section-title">正在热播</div><div class="m-live-grid">${filterRoomsForTab().slice(0,8).map(r=>liveCard(r)).join('')}</div><div class="m-section-title">足球直播</div><div class="m-live-grid">${cfg.rooms.filter(r=>r.category==='football').slice(0,4).map(r=>liveCard(r)).join('')}</div><div class="m-section-title">篮球直播</div><div class="m-live-grid">${cfg.rooms.filter(r=>r.category==='basketball').slice(0,4).map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
+  return `<main class="mobile-page"><div class="m-hero-scroll" id="mHeroScroll">${heroHtml}</div><div class="m-section-title">正在热播</div><div class="m-live-grid" id="mobileHomeHotRoomsGrid">${renderRoomCards(displayRooms,8)}</div><div class="m-section-title">足球直播</div><div class="m-live-grid" id="mobileHomeFootballRoomsGrid">${renderRoomCards(footballRooms,4)}</div><div class="m-section-title">篮球直播</div><div class="m-live-grid" id="mobileHomeBasketballRoomsGrid">${renderRoomCards(basketballRooms,4)}</div>${mobileFloatAd()}</main>`;
 }
 
 export function renderLive(){
   const labels=[['all','全部'],['football','足球'],['basketball','篮球'],['analysis','分析']];
-  const rooms=filterRoomsForTab();setTimeout(bindFloatBarEvents,100);
-  return `<main class="page-shell pc-only"><div class="container"><div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div><div class="live-grid">${rooms.map(r=>liveCard(r)).join('')}</div></div></main><main class="mobile-page"><div class="m-live-grid" style="padding-top:14px">${rooms.map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
+  const rooms=getDisplayRooms(filterRoomsForTab());setTimeout(bindFloatBarEvents,100);setTimeout(startHeroAutoRefresh,0);
+  return `<main class="page-shell pc-only"><div class="container"><div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div><div class="live-grid" id="pcLiveRoomsGrid">${renderRoomCards(rooms)}</div></div></main><main class="mobile-page"><div class="m-live-grid" id="mobileLiveRoomsGrid" style="padding-top:14px">${renderRoomCards(rooms)}</div>${mobileFloatAd()}</main>`;
 }
