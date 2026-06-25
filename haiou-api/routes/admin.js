@@ -159,70 +159,7 @@ module.exports = function (pool) {
     }
   });
 
-  // ==================== Odds API: sports (admin) ====================
-  router.get("/odds/health", authMiddleware, async (req, res) => {
-    try {
-      const k = process.env.ODDS_API_KEY;
-      if (!k) return res.status(500).json({ ok: false, error: "ODDS_API_KEY 未配置" });
-      https.get("https://api.the-odds-api.com/v4/sports?apiKey=" + k, (apiRes) => {
-        let b = "";
-        apiRes.on("data", c => b += c);
-        apiRes.on("end", () => {
-          try {
-            const d = JSON.parse(b);
-            const keys = Array.isArray(d) ? d.map(s => s.key) : [];
-            res.json({
-              ok: true,
-              sports_count: keys.length,
-              sample_keys: keys.slice(0, 10),
-              football_keys: keys.filter(x => x.includes("soccer") || x.includes("football")).slice(0, 5),
-              basketball_keys: keys.filter(x => x.includes("basketball")).slice(0, 5),
-              requests_remaining: apiRes.headers["x-requests-remaining"]
-            });
-          } catch (e) {
-            res.status(500).json({ ok: false, error: "解析响应失败" });
-          }
-        });
-      }).on("error", e => res.status(500).json({ ok: false, error: "请求失败" }));
-    } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
-    }
-  });
-
-  router.get("/odds/sports", authMiddleware, async (req, res) => {
-    try {
-      const k = process.env.ODDS_API_KEY;
-      if (!k) return res.status(500).json({ ok: false, error: "ODDS_API_KEY not configured" });
-      https.get("https://api.the-odds-api.com/v4/sports?apiKey=" + k, (apiRes) => {
-        let b = "";
-        apiRes.on("data", ch => b += ch);
-        apiRes.on("end", () => {
-          try {
-            const d = JSON.parse(b);
-            if (!Array.isArray(d)) return res.status(500).json({ ok: false, error: "Invalid response" });
-            const soccer = d.filter(s => s.group === "Soccer");
-            const basketball = d.filter(s => s.group === "Basketball");
-            const pick = s => ({ key: s.key, group: s.group, title: s.title, description: s.description || "", active: s.active });
-            res.json({
-              ok: true,
-              total_sports: d.length,
-              soccer: { count: soccer.length, sports: soccer.map(pick) },
-              basketball: { count: basketball.length, sports: basketball.map(pick) }
-            });
-          } catch (e) {
-            res.status(500).json({ ok: false, error: "Failed" });
-          }
-        });
-      }).on("error", e => res.status(500).json({ ok: false, error: "Failed" }));
-    } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
-    }
-  });
-
-  router.get("/odds/sports/all", authMiddleware, async (req, res) => {
-    res.json({ ok: true, total_sports: 0 });
-  });
-
+  // odds 路由在 adminOddsTimeout.js（先加载，避免冲突）
   router.get("/odds/recommendations", authMiddleware, async (req, res) => {
     try {
       const data = await fetchOddsRecommendations();
