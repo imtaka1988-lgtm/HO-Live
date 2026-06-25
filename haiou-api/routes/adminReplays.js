@@ -98,7 +98,7 @@ router.post("/", authMiddleware, (req, res) => {
     writeList(list);
     res.json({ ok: true, action, replay, count: list.length });
   } catch (err) {
-    res.status(400).json({ ok: false, error: err.message || "保存失败" });
+    console.error("[api error]", err); res.status(400).json({ ok: false, error: "保存失败" });
   }
 });
 

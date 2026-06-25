@@ -101,7 +101,8 @@ module.exports = function (pool) {
       res.json({ ok: true, room: { id: roomId, title, category, status, cover, anchorName, announcement, sortOrder }, anchor: { id: anchorResult.insertId, roomId, username, password, displayName, status: 'active' }, streamProfile: profile, playbackStreams });
     } catch (err) {
       if (conn) { try { await conn.rollback(); } catch (e) {} }
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     } finally {
       if (conn) conn.release();
     }

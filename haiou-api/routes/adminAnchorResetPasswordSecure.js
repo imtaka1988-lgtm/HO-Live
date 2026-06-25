@@ -72,7 +72,8 @@ module.exports = function (pool) {
         reset: true
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

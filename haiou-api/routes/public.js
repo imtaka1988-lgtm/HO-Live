@@ -68,7 +68,8 @@ module.exports = function (pool) {
         room: { id: roomId, title, category, status, cover, anchorName, announcement, sortOrder }
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

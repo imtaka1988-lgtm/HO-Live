@@ -147,7 +147,7 @@ router.post("/bilibili", authMiddleware, async (req, res) => {
       embedUrl: buildEmbedUrl(bvid, meta.cid)
     });
   } catch (err) {
-    res.status(500).json({ ok: false, error: err.message || "抓取失败" });
+    console.error("[api error]", err); res.status(500).json({ ok: false, error: "抓取失败" });
   }
 });
 

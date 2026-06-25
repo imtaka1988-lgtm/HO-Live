@@ -105,7 +105,8 @@ module.exports = function (pool) {
         dailyReward
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -118,7 +119,8 @@ module.exports = function (pool) {
       );
       res.json({ ok: true, count: rooms.length, rooms });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -130,7 +132,8 @@ module.exports = function (pool) {
       const [rows] = await pool.query("SELECT id FROM user_follows WHERE user_id = ? AND room_id = ?", [req.user.id, roomId]);
       res.json({ ok: true, followed: rows.length > 0 });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -145,7 +148,8 @@ module.exports = function (pool) {
       const reward = result.affectedRows > 0 ? await awardUserExpOnce(pool, req.user.id, "follow_room", roomId, FOLLOW_EXP_REWARD) : null;
       res.json({ ok: true, followed: true, reward });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -157,7 +161,8 @@ module.exports = function (pool) {
       await pool.query("DELETE FROM user_follows WHERE user_id = ? AND room_id = ?", [req.user.id, roomId]);
       res.json({ ok: true, followed: false });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

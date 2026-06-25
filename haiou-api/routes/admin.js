@@ -21,7 +21,8 @@ module.exports = function (pool) {
       const token = jwt.sign({ id: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: "24h" });
       res.json({ ok: true, token });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -31,7 +32,8 @@ module.exports = function (pool) {
       if (rows.length === 0) return res.status(404).json({ ok: false, error: "管理员不存在" });
       res.json({ ok: true, admin: { username: rows[0].username } });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -54,7 +56,8 @@ module.exports = function (pool) {
       if (r.affectedRows === 0) return res.status(404).json({ ok: false, error: "房间不存在" });
       res.json({ ok: true, updated: r.affectedRows, fields: Object.keys(u) });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -104,7 +107,8 @@ module.exports = function (pool) {
         }
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -126,7 +130,8 @@ module.exports = function (pool) {
       const [r] = await pool.query("UPDATE room_streams SET " + set + " WHERE id = ?", vals);
       res.json({ ok: true, updated: r.affectedRows, fields: Object.keys(u) });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -155,7 +160,8 @@ module.exports = function (pool) {
 
       res.json({ ok: true, deleted: r.affectedRows });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -166,7 +172,8 @@ module.exports = function (pool) {
       if (!data) return res.status(500).json({ ok: false, error: "ODDS_API_KEY not configured" });
       res.json(data);
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

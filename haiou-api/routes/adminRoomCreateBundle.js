@@ -150,7 +150,8 @@ module.exports = function (pool) {
       if (conn) {
         try { await conn.rollback(); } catch (e) {}
       }
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     } finally {
       if (conn) conn.release();
     }

@@ -58,7 +58,8 @@ module.exports = function (pool) {
 
       res.json({ ok: true, token, user });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -99,7 +100,8 @@ module.exports = function (pool) {
 
       res.json({ ok: true, token, user });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

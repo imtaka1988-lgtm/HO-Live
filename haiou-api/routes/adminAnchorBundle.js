@@ -122,7 +122,8 @@ module.exports = function (pool) {
       if (!bundle) return res.status(404).json({ ok: false, error: "房间不存在" });
       res.json({ ok: true, ...bundle });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -137,7 +138,8 @@ module.exports = function (pool) {
       const bundle = await buildBundle(pool, roomId);
       res.json({ ok: true, ...bundle, generatedPassword: created.password, created: created.created });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -160,7 +162,8 @@ module.exports = function (pool) {
       const bundle = await buildBundle(pool, roomId);
       res.json({ ok: true, ...bundle, saved: true });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -177,7 +180,8 @@ module.exports = function (pool) {
       const bundle = await buildBundle(pool, roomId);
       res.json({ ok: true, ...bundle, generatedPassword: password, reset: true });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

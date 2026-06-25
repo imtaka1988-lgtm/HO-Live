@@ -91,7 +91,8 @@ module.exports = function (pool) {
       await pool.query("UPDATE rooms SET status = ? WHERE id = ?", [status, roomId]);
       res.json({ ok: true, matched: true, roomId, streamName, status });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

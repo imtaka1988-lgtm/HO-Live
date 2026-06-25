@@ -122,7 +122,8 @@ module.exports = function (pool) {
       const config = await getConfig(pool);
       res.json({ ok: true, config });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -131,7 +132,8 @@ module.exports = function (pool) {
       const config = await getConfig(pool);
       res.json({ ok: true, config });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -140,7 +142,8 @@ module.exports = function (pool) {
       const config = await saveConfig(pool, req.body && req.body.config ? req.body.config : req.body);
       res.json({ ok: true, config });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 

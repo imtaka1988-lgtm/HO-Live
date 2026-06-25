@@ -61,7 +61,8 @@ module.exports = function (pool) {
       await pool.query("UPDATE rooms SET cover = ? WHERE id = ?", [cover, req.anchor.roomId]);
       res.json({ ok: true, cover });
     } catch (err) {
-      res.status(400).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(400).json({ ok: false, error: "请求失败" });
     }
   });
 
@@ -73,7 +74,8 @@ module.exports = function (pool) {
       await pool.query("UPDATE rooms SET anchor_avatar = ? WHERE id = ?", [avatar, req.anchor.roomId]);
       res.json({ ok: true, avatar });
     } catch (err) {
-      res.status(400).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(400).json({ ok: false, error: "请求失败" });
     }
   });
 

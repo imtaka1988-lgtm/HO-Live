@@ -121,7 +121,8 @@ module.exports = function (pool) {
         }
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -139,7 +140,8 @@ module.exports = function (pool) {
       const room = await getRoom(pool, rows[0].roomId);
       res.json({ ok: true, anchor: rows[0], room });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -150,7 +152,8 @@ module.exports = function (pool) {
       if (!room) return res.status(404).json({ ok: false, error: "绑定房间不存在" });
       res.json({ ok: true, room });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -184,7 +187,8 @@ module.exports = function (pool) {
       const room = await getRoom(pool, req.anchor.roomId);
       res.json({ ok: true, updated: r.affectedRows, fields: Object.keys(update), room });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
@@ -216,7 +220,8 @@ module.exports = function (pool) {
         playbackStreams
       });
     } catch (err) {
-      res.status(500).json({ ok: false, error: err.message });
+      console.error("[api error]", err);
+      res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
