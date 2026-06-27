@@ -150,7 +150,17 @@ async function fetchArticleDetail(articleId) {
  * @param {number} limit
  * @returns {Promise<Array>}
  */
-async function fetchHotArticles(category = "toutiau", limit = 6) {
+/**
+ * 预热所有分类缓存（启动时+定时调用）
+ */
+async function warmupCache() {
+  const cats = ["toutiao", "kuaixun", "shendu", "yingchao", "xijia", "yijia", "dejia"];
+  for (const cat of cats) {
+    try { await fetchHotArticles(cat, 20); } catch (_) {}
+  }
+}
+
+async function fetchHotArticles(category = "toutiao", limit = 6) {
   const cacheKey = `${category}_${limit}`;
   const cached = _cache[cacheKey];
   if (cached && Date.now() - cached.ts < CACHE_TTL) {
@@ -176,4 +186,4 @@ async function fetchHotArticles(category = "toutiau", limit = 6) {
   return detailed;
 }
 
-module.exports = { fetchArticleList, fetchArticleDetail, fetchHotArticles, CATEGORY_MAP };
+module.exports = { fetchArticleList, fetchArticleDetail, fetchHotArticles, warmupCache, CATEGORY_MAP };

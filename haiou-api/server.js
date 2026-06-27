@@ -132,6 +132,11 @@ app.use("/api/schedule", require("./routes/schedule"));
 const server = http.createServer(app);
 setupChatWs(server, pool);
 
+// 启动时预热懂球帝文章缓存，之后每小时刷新
+const { warmupCache } = require("./services/dongqiudi");
+warmupCache();
+setInterval(warmupCache, 60 * 60 * 1000);
+
 server.listen(PORT, "127.0.0.1", () => {
   console.log("haiou-api running on http://127.0.0.1:" + PORT);
 });
