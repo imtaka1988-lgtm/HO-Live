@@ -14,8 +14,10 @@ const FILTERS = [
   ['dejia', '德甲'],
 ];
 
-let articleItems = [];
+// 每个分类独立缓存
+let articleCache = {};
 let currentFilter = 'toutiao';
+const ARTICLES_PER_CAT = 20;
 
 function replayTabsHtml() {
   return `<div class="replay-tabs" id="replayTabs">
@@ -66,16 +68,8 @@ export function renderHomeReplaySection() {
 }
 
 function itemMatchesFilter(item, filter) {
-  if (filter === 'toutiao') return true;
-  const kwMap = {
-    yingchao: ['英超', '英格兰', 'Premier'],
-    xijia: ['西甲', '西班牙', '巴萨', '皇马', '马竞'],
-    yijia: ['意甲', '意大利', '尤文', '国米', '米兰', '那不勒斯'],
-    dejia: ['德甲', '德国', '拜仁', '多特'],
-  };
-  const keywords = kwMap[filter] || [];
-  const text = ((item.title || '') + (item.description || '')).toLowerCase();
-  return keywords.some(kw => text.includes(kw.toLowerCase()));
+  // 不再客户端过滤，只分不同分类，全部展示
+  return true;
 }
 
 function formatTime(dateStr) {
@@ -106,13 +100,19 @@ function replayCard(item) {
   </article>`;
 }
 
-async function loadArticleItems(category) {
+async function loadArticleItems(category, forceRefresh) {
+  // 使用缓存，避免重复请求
+  if (!forceRefresh && articleCache[category] && articleCache[category].length) {
+    return articleCache[category];
+  }
   try {
-    const res = await fetch(href(`api/articles?category=${category}&limit=20`) + '&t=' + Date.now());
+    const res = await fetch(href(`api/articles?category=${category}&limit=${ARTICLES_PER_CAT}`) + '&t=' + Date.now());
     if (!res.ok) return [];
     const data = await res.json();
     if (!data.ok) return [];
-    return data.articles || [];
+    const articles = data.articles || [];
+    articleCache[category] = articles;
+    return articles;
   } catch (e) {
     console.error('加载体育资讯失败:', e);
     return [];
@@ -205,11 +205,16 @@ function bindReplayCards(root) {
   });
 }
 
-function renderArticleGrid(grid, options = {}) {
+async function renderArticleGrid(grid, options = {}) {
   if (!grid) return;
 
   const limit = options.limit || 0;
-  let list = articleItems.filter(item => itemMatchesFilter(item, currentFilter));
+
+  // 按需加载当前分类（如果缓存没有则从API获取）
+  grid.innerHTML = '<div class="replay-loading">资讯加载中...</div>';
+  const items = await loadArticleItems(currentFilter);
+
+  let list = items;
   if (limit > 0) list = list.slice(0, limit);
 
   if (!list.length) {
@@ -223,11 +228,11 @@ function renderArticleGrid(grid, options = {}) {
 
 function bindReplayTabs(grid) {
   document.querySelectorAll('#replayTabs button').forEach(btn => {
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', async function () {
       currentFilter = this.dataset.filter || 'toutiao';
       document.querySelectorAll('#replayTabs button').forEach(x => x.classList.remove('is-active'));
       this.classList.add('is-active');
-      renderArticleGrid(grid);
+      await renderArticleGrid(grid);
     });
   });
 }
@@ -240,8 +245,7 @@ export async function initRoomReplays() {
   bindReplayTabs(grid);
 
   try {
-    articleItems = await loadArticleItems('toutiao');
-    renderArticleGrid(grid);
+    await renderArticleGrid(grid);
   } catch (e) {
     grid.innerHTML = '<div class="replay-empty">资讯暂时无法加载，请刷新重试</div>';
   }
@@ -252,8 +256,11 @@ export async function initHomeReplays() {
   if (!grid) return;
 
   try {
-    articleItems = await loadArticleItems('toutiao');
-    renderArticleGrid(grid, { limit: 4 });
+    // 首页预加载头条
+    currentFilter = 'toutiao';
+    await renderArticleGrid(grid, { limit: 6 });
+    // 后台预加载其他分类
+    ['yingchao', 'xijia', 'yijia', 'dejia'].forEach(cat => loadArticleItems(cat));
   } catch (e) {
     grid.innerHTML = '<div class="replay-empty">资讯暂时无法加载</div>';
   }
