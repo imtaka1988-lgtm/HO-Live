@@ -105,214 +105,9 @@ a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;b
 .footer img{width:58px;margin:0 auto 22px;display:block}
 .footer a{color:#d9def7;margin:0 26px}
 
-/* ——— 赛事直播页 + 赛程侧边栏 ——— */
-
-.live-with-sidebar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 312px;
-  gap: 18px;
-  align-items: start;
-}
-
-.live-main {
-  min-width: 0;
-}
-
-/* 赛程侧边栏 */
-.schedule-sidebar {
-  position: sticky;
-  top: 86px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 8px 28px rgba(15, 23, 42, .07);
-  overflow: hidden;
-  max-height: calc(100vh - 110px);
-  display: flex;
-  flex-direction: column;
-}
-
-.sch-header {
-  padding: 16px 18px 12px;
-  border-bottom: 1px solid #f3f4f6;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.sch-header h3 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 900;
-  color: #111827;
-}
-
-.sch-subtitle {
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
-.sch-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 16px 16px;
-  scrollbar-width: thin;
-}
-
-.sch-body::-webkit-scrollbar { width: 4px; }
-.sch-body::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
-
-.sch-day {
-  margin-bottom: 14px;
-}
-
-.sch-day-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0 8px;
-  border-bottom: 1px solid #f9fafb;
-  margin-bottom: 6px;
-}
-
-.sch-day-label {
-  font-size: 14px;
-  font-weight: 800;
-  color: #374151;
-}
-
-.sch-today-badge {
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 999px;
-  background: #fef2f2;
-  color: #dc2626;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 20px;
-}
-
-.sch-day-count {
-  margin-left: auto;
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
-.sch-match {
-  padding: 8px 6px;
-  border-radius: 8px;
-  transition: background .12s;
-}
-
-.sch-match:hover {
-  background: #f9fafb;
-}
-
-.sch-match + .sch-match {
-  border-top: 1px solid #f3f4f6;
-}
-
-.sch-match-league {
-  font-size: 11px;
-  color: #9ca3af;
-  font-weight: 700;
-  margin-bottom: 3px;
-}
-
-.sch-match-teams {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.sch-home, .sch-away {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-}
-
-.sch-home { text-align: right; }
-.sch-away { text-align: left; }
-
-.sch-vs {
-  flex: 0 0 auto;
-  font-size: 10px;
-  color: #d1d5db;
-  font-weight: 600;
-}
-
-.sch-match-meta {
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.sch-time {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 600;
-}
-
-.sch-live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ef4444;
-  animation: sch-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes sch-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .3; }
-}
-
-.sch-live-text {
-  font-size: 12px;
-  color: #ef4444;
-  font-weight: 800;
-}
-
-.sch-final {
-  font-size: 11px;
-  color: #9ca3af;
-  font-weight: 600;
-}
-
-.sch-empty, .sch-error, .sch-loading {
-  text-align: center;
-  padding: 28px 16px;
-  color: #9ca3af;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.sch-loading-spin {
-  width: 24px;
-  height: 24px;
-  margin: 0 auto 10px;
-  border: 3px solid #f3f4f6;
-  border-top-color: #f97316;
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-@media (max-width: 1080px) {
-  .live-with-sidebar {
-    grid-template-columns: 1fr;
-  }
-
-  .schedule-sidebar {
-    display: none;
-  }
+/* ——— 赛事直播页 ——— */
+.schedule-live-grid {
+  margin-top: 16px;
 }
 
 /* ——— 全局弹窗 ——— */
@@ -905,7 +700,48 @@ body[data-page="login"] .login-actions a:last-child {
   font-size: 13px;
 }
 
-/* ===== 世界杯赛程页 ===== */
+/* ===== 赛事赛程页 ===== */
+.wc-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wc-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.wc-stats .wc-live-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  margin-right: 4px;
+  animation: wc-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes wc-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+.wc-venue {
+  font-size: 12px;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
 .wc-page-head {
   display: flex;
   align-items: flex-end;
