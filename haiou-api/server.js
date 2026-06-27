@@ -127,6 +127,7 @@ app.use("/api/admin/site-messages", require("./routes/adminSiteMessages")(pool))
 app.use("/api/admin/replays", require("./routes/adminReplays"));
 app.use("/api/admin/replay-meta", require("./routes/replayMeta"));
 app.use("/api/articles", require("./routes/publicArticles"));
+app.use("/api/schedule", require("./routes/schedule"));
 
 const server = http.createServer(app);
 setupChatWs(server, pool);

@@ -2,6 +2,7 @@
 import { state, href, asset, esc, getHost, filterRoomsForTab, currentTab } from './config.js';
 import { liveCard, horizontalMatchCard, mobileFloatAd, bindFloatBarEvents } from './ui.js';
 import { renderHomeReplaySection, initHomeReplays } from './replays.js';
+import { renderLiveWithSidebar, initScheduleSidebar } from './schedule-sidebar.js';
 
 const HERO_CARD_LIMIT = 5;
 const HERO_REFRESH_MS = 30000;
@@ -206,5 +207,7 @@ function renderMobileHome(){
 export function renderLive(){
   const labels=[['all','全部'],['football','足球'],['basketball','篮球'],['analysis','分析']];
   const rooms=filterRoomsForTab();setTimeout(bindFloatBarEvents,100);
-  return `<main class="page-shell pc-only"><div class="container"><div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div><div class="live-grid">${rooms.map(r=>liveCard(r)).join('')}</div></div></main><main class="mobile-page"><div class="m-live-grid" style="padding-top:14px">${rooms.map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
+  const tabsHtml=`<div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div>`;
+  const roomsHtml=rooms.map(r=>liveCard(r)).join('');
+  return `<main class="page-shell pc-only"><div class="container">${renderLiveWithSidebar(roomsHtml, tabsHtml)}</div></main><main class="mobile-page"><div class="m-live-grid" style="padding-top:14px">${rooms.map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
 }

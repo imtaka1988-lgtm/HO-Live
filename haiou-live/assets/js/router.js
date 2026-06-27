@@ -13,6 +13,7 @@ import { renderCommunityPage } from './community-page.js';
 import { state, href, asset, esc, getHost, getRoom } from './config.js';
 import { renderChatList, renderAnchorProfile, initChatSocket } from './chat.js';
 import { startRoomInfoPolling, stopRoomInfoPolling } from './room-refresh.js';
+import { initScheduleSidebar } from './schedule-sidebar.js';
 import { horizontalMatchCard } from './ui.js';
 import { LivePlayer } from './player.js';
 import { leagueName, matchName } from './odds-i18n.js';
@@ -225,6 +226,7 @@ export function bootPage() {
   if (html) app.innerHTML = html;
 
   if (page === 'home') bindHeroEvents();
+  if (page === 'live') initScheduleSidebar();
   if (page === 'replays') initRoomReplays();
   if (page === 'admin') bindAdminEvents();
   if (page === 'login') bindLoginEvents();
