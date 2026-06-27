@@ -12,7 +12,7 @@ export function navItems() {
   return [
     { key: 'home', text: '首页', url: 'index.html' },
     { key: 'live', text: '全部直播', url: 'pages/live.html' },
-    { key: 'replays', text: '懂球帝资讯', url: 'pages/replays.html' },
+    { key: 'replays', text: '体育资讯', url: 'pages/replays.html' },
     { key: 'app', text: '交流群', url: 'pages/app.html', hot: true }
   ];
 }

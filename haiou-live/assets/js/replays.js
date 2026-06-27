@@ -1,5 +1,5 @@
 /**
- * 懂球帝赛事资讯板块
+ * 体育资讯板块
  * 数据源：/api/articles（代理懂球帝公开接口）
  * 替代原"经典战役回顾"占位板块
  */
@@ -28,8 +28,8 @@ export function renderRoomReplaySection() {
     <div class="container">
       <div class="replay-head">
         <div>
-          <h2>懂球帝赛事资讯</h2>
-          <p>懂球帝最新足球赛事报道与分析，数据实时同步。</p>
+          <h2>体育资讯</h2>
+          <p>最新足球赛事报道与分析，实时更新。</p>
         </div>
         ${replayTabsHtml()}
       </div>
@@ -42,9 +42,9 @@ export function renderReplaysPage() {
   return `<main class="page-shell replays-page">
     <div class="container">
       <div class="replays-page-hero">
-        <span>懂球帝资讯</span>
-        <h1>懂球帝赛事资讯</h1>
-        <p>懂球帝最新足球赛事战报、分析与热点，数据实时同步更新。</p>
+        <span>赛事资讯</span>
+        <h1>体育资讯</h1>
+        <p>最新足球赛事战报、分析与热点，实时更新。</p>
       </div>
       <div class="replay-head replay-head-page">
         <div>
@@ -60,15 +60,13 @@ export function renderReplaysPage() {
 
 export function renderHomeReplaySection() {
   return `<section class="home-replays-section">
-    <div class="section-head"><h2>懂球帝资讯</h2><a href="${href('pages/replays.html')}">查看更多 ›</a></div>
+    <div class="section-head"><h2>体育资讯</h2><a href="${href('pages/replays.html')}">查看更多 ›</a></div>
     <div class="replay-grid home-replay-grid" id="homeReplayGrid"><div class="replay-loading">资讯加载中...</div></div>
   </section>`;
 }
 
 function itemMatchesFilter(item, filter) {
-  // 头条显示全部
   if (filter === 'toutiao') return true;
-  // 按联赛名称匹配标题/摘要中的关键词
   const kwMap = {
     yingchao: ['英超', '英格兰', 'Premier'],
     xijia: ['西甲', '西班牙', '巴萨', '皇马', '马竞'],
@@ -82,21 +80,19 @@ function itemMatchesFilter(item, filter) {
 
 function formatTime(dateStr) {
   if (!dateStr) return '';
-  // "2026-06-27T09:41:00" → "06-27 09:41"
   const m = String(dateStr).match(/(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
   if (m) return `${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
   return dateStr.slice(0, 16);
 }
 
 function replayCard(item) {
-  const url = item.url || `https://www.dongqiudi.com/articles/${item.id}.html`;
   const cover = item.cover || item.thumb || 'assets/img/thumb-1.svg';
   const title = item.title || '赛事资讯';
   const desc = item.description || '点击查看详情';
   const time = formatTime(item.published_at);
   const comments = item.comments_total ? `${item.comments_total}评论` : '';
 
-  return `<article class="replay-card" data-url="${esc(url)}" data-title="${esc(title)}">
+  return `<article class="replay-card" data-id="${item.id}" data-title="${esc(title)}">
     <div class="replay-cover">
       <img referrerpolicy="no-referrer" src="${asset(cover)}" alt="${esc(title)}" loading="lazy">
       ${time ? `<span class="replay-badge">${esc(time)}</span>` : ''}
@@ -118,22 +114,93 @@ async function loadArticleItems(category) {
     if (!data.ok) return [];
     return data.articles || [];
   } catch (e) {
-    console.error('加载懂球帝资讯失败:', e);
+    console.error('加载体育资讯失败:', e);
     return [];
+  }
+}
+
+// ===================== 文章详情弹窗（本站内展示） =====================
+
+function closeArticleModal() {
+  const modal = document.querySelector('#articleModal');
+  if (modal) modal.remove();
+  document.body.classList.remove('replay-modal-open');
+}
+
+async function openArticleModal(articleId, title) {
+  closeArticleModal();
+  document.body.classList.add('replay-modal-open');
+
+  const modal = document.createElement('div');
+  modal.id = 'articleModal';
+  modal.className = 'replay-modal-overlay';
+  modal.innerHTML = `<div class="replay-modal-box article-detail-box">
+    <div class="replay-modal-head">
+      <b>${esc(title || '加载中...')}</b>
+      <button type="button" id="articleModalClose">×</button>
+    </div>
+    <div class="article-detail-body" id="articleDetailBody">
+      <div class="replay-loading" style="padding:40px;text-align:center;">文章加载中...</div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) closeArticleModal();
+  });
+  modal.querySelector('#articleModalClose').addEventListener('click', closeArticleModal);
+  document.addEventListener('keydown', function onKey(e) {
+    if (e.key === 'Escape') { closeArticleModal(); document.removeEventListener('keydown', onKey); }
+  });
+
+  // 异步加载文章内容
+  try {
+    const res = await fetch(href(`api/articles/${articleId}`));
+    if (!res.ok) throw new Error('请求失败');
+    const data = await res.json();
+    if (!data.ok || !data.article) throw new Error('无数据');
+
+    const article = data.article;
+    const body = modal.querySelector('#articleDetailBody');
+    const titleEl = modal.querySelector('.replay-modal-head b');
+
+    if (titleEl && article.title) titleEl.textContent = article.title;
+
+    // 渲染正文（保留换行）
+    const paragraphs = (article.content || '').split('\n').filter(p => p.trim());
+    const imagesHtml = (article.images || []).slice(0, 5).map(
+      img => `<img src="${esc(img)}" alt="" style="max-width:100%;margin:12px 0;border-radius:8px;" loading="lazy" referrerpolicy="no-referrer">`
+    ).join('');
+
+    body.innerHTML = `
+      <div class="article-meta">
+        ${article.published_at ? `<span>${formatTime(article.published_at)}</span>` : ''}
+        <span>来源：懂球帝</span>
+      </div>
+      ${imagesHtml}
+      <div class="article-text">
+        ${paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}
+      </div>
+      ${imagesHtml ? '' : imagesHtml}
+    `;
+  } catch (e) {
+    const body = modal.querySelector('#articleDetailBody');
+    if (body) body.innerHTML = '<div class="replay-empty" style="padding:40px;text-align:center;">文章加载失败，请稍后重试</div>';
   }
 }
 
 function bindReplayCards(root) {
   root.querySelectorAll('.replay-card').forEach(card => {
     card.addEventListener('click', function () {
-      const url = this.dataset.url || '#';
-      const title = this.dataset.title || '赛事资讯';
-      if (!url || url === '#') {
+      const id = this.dataset.id;
+      const title = this.dataset.title || '体育资讯';
+      if (!id) {
         alert('该资讯暂不可用');
         return;
       }
-      // 在新标签页打开懂球帝原文
-      window.open(url, '_blank', 'noopener');
+      // 本站内弹窗展示文章
+      openArticleModal(id, title);
     });
   });
 }
@@ -152,13 +219,6 @@ function renderArticleGrid(grid, options = {}) {
 
   grid.innerHTML = list.map(replayCard).join('');
   bindReplayCards(grid);
-}
-
-async function refreshGrid(grid, category) {
-  if (!grid) return;
-  grid.innerHTML = '<div class="replay-loading">资讯加载中...</div>';
-  articleItems = await loadArticleItems(category);
-  renderArticleGrid(grid);
 }
 
 function bindReplayTabs(grid) {
