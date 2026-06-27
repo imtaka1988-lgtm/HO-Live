@@ -12,7 +12,7 @@ export function navItems() {
   return [
     { key: 'home', text: '首页', url: 'index.html' },
     { key: 'live', text: '全部直播', url: 'pages/live.html' },
-    { key: 'replays', text: '赛事回放', url: 'pages/replays.html' },
+    { key: 'replays', text: '懂球帝资讯', url: 'pages/replays.html' },
     { key: 'app', text: '交流群', url: 'pages/app.html', hot: true }
   ];
 }
@@ -192,7 +192,7 @@ export function renderBottomNav() {
   nav.innerHTML = [
     ['home', '首页', 'index.html'],
     ['live', '直播', 'pages/live.html'],
-    ['replays', '回放', 'pages/replays.html'],
+    ['replays', '资讯', 'pages/replays.html'],
     ['user', '我的', 'pages/user.html']
   ].map(([k, t, u]) => `<a class="${active === k ? 'is-active' : ''}" href="${href(u)}"><span class="nav-ico"></span><span>${t}</span></a>`).join('');
   document.body.appendChild(nav);

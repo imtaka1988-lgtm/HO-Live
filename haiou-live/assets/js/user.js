@@ -318,7 +318,7 @@ export function renderUser() {
       <div class="user-center-actions">
         <a class="user-center-action" href="#userMessageSection">我的消息<span id="userMessageHint">正在检查系统通知</span></a>
         <a class="user-center-action" href="${href('pages/follow.html')}">我的关注<span>关注直播间与主播</span></a>
-        <a class="user-center-action" href="${href('pages/replays.html')}">赛事回放<span>查看经典比赛集锦</span></a>
+        <a class="user-center-action" href="${href('pages/replays.html')}">懂球帝资讯<span>最新足球赛事报道</span></a>
         <a class="user-center-action" href="${href('pages/app.html')}">交流群<span>加入球迷交流入口</span></a>
         <a class="user-center-action" href="#" data-user-soon>修改资料<span>头像昵称后续开放</span></a>
       </div>
@@ -365,7 +365,7 @@ export function renderUser() {
           <div class="user-center-pc-links">
             <a href="#userMessageSection">我的消息</a>
             <a href="${href('pages/follow.html')}">我的关注</a>
-            <a href="${href('pages/replays.html')}">赛事回放</a>
+            <a href="${href('pages/replays.html')}">懂球帝资讯</a>
             <a href="${href('pages/app.html')}">交流群</a>
             <button type="button" data-user-soon>修改资料</button>
             <button id="btnUserLogoutPc" class="user-center-logout" type="button">退出登录</button>
