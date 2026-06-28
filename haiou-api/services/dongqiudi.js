@@ -151,7 +151,7 @@ async function fetchArticleDetail(articleId) {
  * @returns {Promise<Array>}
  */
 /**
- * 预热所有分类缓存（启动时+定时调用）
+ * 预热所有分类缓存（启动时+定时调用）— 只抓列表，不抓详情
  */
 async function warmupCache() {
   const cats = ["toutiao", "kuaixun", "shendu", "yingchao", "xijia", "yijia", "dejia"];
@@ -160,6 +160,10 @@ async function warmupCache() {
   }
 }
 
+/**
+ * 获取热点文章列表（不含正文详情，速度快）
+ * 正文在用户点击时通过 /api/articles/:id 按需加载
+ */
 async function fetchHotArticles(category = "toutiao", limit = 6) {
   const cacheKey = `${category}_${limit}`;
   const cached = _cache[cacheKey];
@@ -168,22 +172,22 @@ async function fetchHotArticles(category = "toutiao", limit = 6) {
   }
 
   const list = await fetchArticleList(category, limit);
-  const detailed = [];
-  for (const a of list) {
-    try {
-      const detail = await fetchArticleDetail(a.id);
-      if (detail) {
-        detail.thumb = a.thumb;
-        detail.comments_total = a.comments_total;
-        // 封面图：第一张配图优先
-        detail.cover = detail.images[0] || a.thumb || "";
-        detailed.push(detail);
-      }
-    } catch (_) {}
-  }
+  // 只返回列表数据，不抓详情——正文在点击时按需加载
+  const articles = list.map((a) => ({
+    id: a.id,
+    title: a.title || "",
+    description: "", // 正文按需加载
+    content: "",
+    images: [],      // 配图按需加载
+    published_at: a.published_at || "",
+    url: `https://www.dongqiudi.com/articles/${a.id}.html`,
+    thumb: a.thumb || "",
+    cover: a.thumb || "",
+    comments_total: a.comments_total || 0,
+  }));
 
-  _cache[cacheKey] = { ts: Date.now(), data: detailed };
-  return detailed;
+  _cache[cacheKey] = { ts: Date.now(), data: articles };
+  return articles;
 }
 
 module.exports = { fetchArticleList, fetchArticleDetail, fetchHotArticles, warmupCache, CATEGORY_MAP };
