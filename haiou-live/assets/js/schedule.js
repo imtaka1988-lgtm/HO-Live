@@ -31,19 +31,19 @@ function renderPcSchedule(days) {
         <h3>${day.isToday ? '🔥 今天' : esc(day.date)}</h3>
         <span>${esc(day.count)} 场比赛</span>
       </div>
-      <div class="wc-table">
+      <div class="wc-grid">
         ${(day.matches || []).map(m => `
-          <div class="wc-row">
-            <div class="wc-time">${statusBadge(m)}</div>
-            <div class="wc-info">
-              <div class="wc-league">${esc(m.league)}</div>
-              <div class="wc-teams">
-                <span>${esc(m.home)}</span>
-                <b>VS</b>
-                <span>${esc(m.away)}</span>
-              </div>
+          <div class="wc-card">
+            <div class="wc-card-league">${esc(m.league)}</div>
+            <div class="wc-card-teams">
+              <span>${esc(m.home)}</span>
+              <b>VS</b>
+              <span>${esc(m.away)}</span>
             </div>
-            <div class="wc-venue">${esc(m.venue || '')}</div>
+            <div class="wc-card-meta">
+              <span>${statusBadge(m)}</span>
+              <span>${esc(m.venue || '')}</span>
+            </div>
           </div>
         `).join('')}
       </div>

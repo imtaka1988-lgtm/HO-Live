@@ -794,10 +794,82 @@ body[data-page="login"] .login-actions a:last-child {
   font-size: 13px;
 }
 
-.wc-table {
-  padding: 4px 0;
+.wc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
+  padding: 0;
 }
 
+.wc-card {
+  padding: 18px 22px;
+  border-bottom: 1px solid #f1f5f9;
+  border-right: 1px solid #f1f5f9;
+  transition: background .12s;
+}
+
+.wc-card:hover {
+  background: #fafafa;
+}
+
+/* 奇数行右边无边框 */
+.wc-card:nth-child(odd) {
+  border-right: 1px solid #f1f5f9;
+}
+
+.wc-card:nth-child(even) {
+  border-right: 0;
+}
+
+.wc-card-league {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.wc-card-teams {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.wc-card-teams span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.wc-card-teams span:first-child { text-align: right; }
+
+.wc-card-teams b {
+  flex: 0 0 auto;
+  font-size: 10px;
+  color: #d1d5db;
+  font-weight: 700;
+}
+
+.wc-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.wc-card-meta .wc-status {
+  font-size: 12px;
+}
+
+/* 保留旧样式兼容 */
+.wc-table { padding: 4px 0; }
 .wc-row {
   display: grid;
   grid-template-columns: 90px 1fr 100px 120px;
@@ -806,11 +878,7 @@ body[data-page="login"] .login-actions a:last-child {
   padding: 16px 20px;
   border-bottom: 1px solid #f1f5f9;
 }
-
-.wc-row:last-child {
-  border-bottom: 0;
-}
-
+.wc-row:last-child { border-bottom: 0; }
 .wc-time {
   font-size: 22px;
   font-weight: 900;
@@ -968,6 +1036,22 @@ body[data-page="login"] .login-actions a:last-child {
   .wc-schedule-loading,
   .wc-empty {
     margin: 0 12px;
+  }
+
+  .wc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wc-card:nth-child(odd) {
+    border-right: 0;
+  }
+
+  .wc-card {
+    padding: 14px 16px;
+  }
+
+  .wc-card-teams {
+    font-size: 14px;
   }
 }
 
