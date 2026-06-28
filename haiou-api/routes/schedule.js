@@ -31,7 +31,9 @@ router.get("/", async (req, res) => {
     const days = Object.keys(byDate).sort();
 
     // live / scheduled / finished 分类
-    const live = events.filter(e => e.status === "STATUS_IN_PROGRESS");
+    const live = events.filter(e =>
+      e.status === "STATUS_IN_PROGRESS" || e.status === "STATUS_HALFTIME"
+    );
     const today = new Date().toISOString().slice(0, 10);
 
     const response = {

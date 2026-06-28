@@ -10,8 +10,12 @@ function statusBadge(m) {
   if (m.status === 'STATUS_IN_PROGRESS') {
     return `<span class="wc-status is-live">🔴 LIVE ${esc(m.detail || '')}</span>`;
   }
-  if (m.status === 'STATUS_FINAL') {
+  // ESPN 足球用 STATUS_FULL_TIME，篮球用 STATUS_FINAL，还有其他变体
+  if (m.status === 'STATUS_FINAL' || m.status === 'STATUS_FULL_TIME' || m.status === 'STATUS_FULL') {
     return `<span class="wc-status is-end">完赛</span>`;
+  }
+  if (m.status === 'STATUS_HALFTIME') {
+    return `<span class="wc-status is-live">⏸️ 中场</span>`;
   }
   return `<span class="wc-status is-wait">${esc(m.time || '--:--')}</span>`;
 }
