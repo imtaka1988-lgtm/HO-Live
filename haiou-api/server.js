@@ -132,10 +132,13 @@ app.use("/api/schedule", require("./routes/schedule"));
 const server = http.createServer(app);
 setupChatWs(server, pool);
 
-// 启动时预热懂球帝文章缓存，之后每小时刷新
+// 启动时预热缓存，之后定时刷新
 const { warmupCache } = require("./services/dongqiudi");
+const { getSchedule } = require("./services/espnSchedule");
 warmupCache();
+getSchedule(15); // 预热赛程
 setInterval(warmupCache, 60 * 60 * 1000);
+setInterval(() => getSchedule(15), 10 * 60 * 1000); // 赛程每10分钟刷新
 
 server.listen(PORT, "127.0.0.1", () => {
   console.log("haiou-api running on http://127.0.0.1:" + PORT);
