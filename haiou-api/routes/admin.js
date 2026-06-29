@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const https = require("https");
 const authMiddleware = require("../middleware/auth");
-const { fetchOddsRecommendations } = require("../services/odds");
 
 module.exports = function (pool) {
   const router = express.Router();
@@ -159,18 +158,6 @@ module.exports = function (pool) {
       );
 
       res.json({ ok: true, deleted: r.affectedRows });
-    } catch (err) {
-      console.error("[api error]", err);
-      res.status(500).json({ ok: false, error: "服务器错误" });
-    }
-  });
-
-  // odds 路由在 adminOddsTimeout.js（先加载，避免冲突）
-  router.get("/odds/recommendations", authMiddleware, async (req, res) => {
-    try {
-      const data = await fetchOddsRecommendations();
-      if (!data) return res.status(500).json({ ok: false, error: "ODDS_API_KEY not configured" });
-      res.json(data);
     } catch (err) {
       console.error("[api error]", err);
       res.status(500).json({ ok: false, error: "服务器错误" });

@@ -1,5 +1,6 @@
 # 环境变量 / 敏感信息
 .env
+*.env
 
 # Node 依赖
 node_modules/
@@ -9,10 +10,11 @@ haiou-live/assets/data/replays.local.json
 haiou-live/uploads/
 
 # 备份文件
-*.bak_*
+*.bak*
 
 # 日志
 *.log
+logs/
 
 # 系统文件
 .DS_Store
@@ -22,10 +24,5 @@ Thumbs.db
 .vscode/
 .idea/
 
-.env
-*.env
-node_modules/
-logs/
-*.log
-*.tar.gz
+# 归档
 *.tar.gz

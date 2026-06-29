@@ -170,7 +170,6 @@ body {
 
 .player-panel,
 .chat-panel,
-.odds-card,
 .horizontal-card,
 .admin-card,
 .user-pc-card {
@@ -185,16 +184,6 @@ body {
 
 .chat-tabs span.is-active {
   color: var(--brand-yellow-deep);
-}
-
-.odds-card {
-  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.odds-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 106, 0, .22);
-  box-shadow: 0 12px 26px rgba(255, 106, 0, .12);
 }
 
 .side-toolbar a,

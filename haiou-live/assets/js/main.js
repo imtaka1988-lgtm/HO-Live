@@ -37,14 +37,19 @@ import { initUserLevelBenefits } from './user-level-benefits.js';
 import { initMobileChatFocusFix } from './mobile-chat-focus.js?v=mobile-room-keyboard-fix-1';
 
 function loadExtraCss() {
-  const files = [
-    ['admin-ui-consistency-style', '/assets/css/admin-ui-consistency.css'],
-    ['member-entry-style', '/assets/css/member-entry.css'],
-    ['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css?v=mobile-room-keyboard-fix-1']
-  ];
+  // 按页面按需注入 CSS，避免非相关页面加载无用样式
+  var files = [];
+  if (page === 'admin') {
+    files.push(['admin-ui-consistency-style', '/assets/css/admin-ui-consistency.css']);
+  }
+  if (page === 'user' || page === 'follow') {
+    files.push(['member-entry-style', '/assets/css/member-entry.css']);
+  }
+  files.push(['mobile-chat-keyboard-style', '/assets/css/mobile-chat-keyboard.css?v=mobile-room-keyboard-fix-1']);
+
   files.forEach(function (item) {
     if (document.querySelector('link[data-extra-style="' + item[0] + '"]')) return;
-    const link = document.createElement('link');
+    var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = item[1];
     link.dataset.extraStyle = item[0];
@@ -124,33 +129,47 @@ async function main() {
   initMobileChatFocusFix();
   initAppIcons();
   applyTheme(cfg);
-  initPlayerLineSwitcher();
-  initPlayerSwitchStability();
+
+  // 播放器相关模块 — 仅房间页需要
+  if (page === 'room') {
+    initPlayerLineSwitcher();
+    initPlayerSwitchStability();
+    initPlayerCoverFit();
+  }
+
   renderGlobalChrome();
   applyPcMemberLevel();
   bootPage();
-  initAdminDashboardCleanup();
-  initUserLevelBenefits();
-  initUserAvatarPreview();
-  initUserMessageStatusFix();
-  initAdminReplayImport();
-  initAdminSiteMessages();
-  initAdminCommunityConfig();
-  initAdminCardCollapse();
-  initAdminRoomSort();
-  initAdminRoomInlineEditors();
-  initAdminAnchorBundleNotice();
-  initAdminAnchorPanelToggle();
-  initAdminAnchorRoomPanel();
-  initAdminAnchorCopyLogin();
-  initAdminMembers();
-  initPlayerCoverFit();
+
+  // 管理后台模块 — 仅管理页需要
+  if (page === 'admin') {
+    initAdminDashboardCleanup();
+    initAdminReplayImport();
+    initAdminSiteMessages();
+    initAdminCommunityConfig();
+    initAdminCardCollapse();
+    initAdminRoomSort();
+    initAdminRoomInlineEditors();
+    initAdminAnchorBundleNotice();
+    initAdminAnchorPanelToggle();
+    initAdminAnchorRoomPanel();
+    initAdminAnchorCopyLogin();
+    initAdminMembers();
+    initAdminNeutralLabels();
+    initAdminInlineEditors();
+    initAdminStreamLabels();
+    initAdminStreamSaveDetail();
+  }
+
+  // 用户相关模块 — 用户页和关注页需要
+  if (page === 'user' || page === 'follow') {
+    initUserLevelBenefits();
+    initUserAvatarPreview();
+    initUserMessageStatusFix();
+  }
+
   renderFooter();
   initMascot();
-  initAdminNeutralLabels();
-  initAdminInlineEditors();
-  initAdminStreamLabels();
-  initAdminStreamSaveDetail();
 }
 
 main().catch(err => console.error('海鸥直播启动失败：', err));

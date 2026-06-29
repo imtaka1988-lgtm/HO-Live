@@ -78,23 +78,6 @@ a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;b
 .chat-body{height:480px;overflow:auto;padding:10px 12px}.chat-input{display:grid;grid-template-columns:1fr 58px;border-top:1px solid var(--border-color)}.chat-input input{height:46px;border:0;padding:0 12px}.chat-input button{background:#f2f2f2;color:#999}
 .room-below{padding:28px 0 0}.room-below h2{font-size:26px;margin:0 0 18px}
 
-/* ——— 实时指数卡片（PC 自适应 / 手机固定） ——— */
-.odds-scroll{display:flex;gap:var(--odds-gap,16px);overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;padding:4px 0 8px;-webkit-overflow-scrolling:touch}
-.odds-scroll::-webkit-scrollbar{display:none}
-.odds-loading{padding:20px;color:#999;font-size:13px}
-@media (min-width:769px){.odds-card{flex:0 0 var(--odds-card-width,calc((100% - 32px)/3));max-width:var(--odds-card-width,calc((100% - 32px)/3));min-width:0;box-sizing:border-box;scroll-snap-align:start;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.04);overflow:hidden}}
-@media (max-width:768px){.odds-card{flex:0 0 var(--odds-card-width,320px);max-width:var(--odds-card-width,360px);scroll-snap-align:start;background:var(--card-bg);border:1px solid var(--border-color);border-radius:8px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.04);overflow:hidden}.mobile-odds-card{flex:0 0 calc(100vw - 32px)!important;max-width:360px!important}}
-.odds-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.odds-sport{font-size:11px;color:var(--brand-yellow-deep);font-weight:700}
-.odds-time{font-size:11px;color:var(--text-sub)}
-.odds-teams{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-main);line-height:1.3;word-break:break-word}
-.odds-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;font-size:11px}
-.odds-label{width:28px;color:var(--text-sub);flex-shrink:0;font-weight:700}
-.odds-item{flex:1;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.odds-item b{color:var(--brand-yellow-deep)}
-.odds-footer{margin-top:6px;font-size:10px;color:#bbb;text-align:right}
-.odds-disclaimer{color:#999;font-size:11px;margin-top:4px}
-
 /* ——— 右侧悬浮按钮 ——— */
 .side-toolbar{position:fixed!important;right:8px!important;left:auto!important;top:50%!important;bottom:auto!important;transform:translateY(-50%)!important;z-index:1000!important;display:flex!important;flex-direction:column!important;gap:8px!important}
 .side-toolbar a,.side-toolbar button{width:44px;min-height:44px;border:1px solid var(--border-color);background:#fff;color:var(--text-main);border-radius:6px;font-size:13px;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;text-decoration:none}
@@ -169,7 +152,6 @@ a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;b
   .container{width:100%;max-width:none;padding:0 12px}
   .home-hero,.home-main,.page-shell,.room-stage{display:none}
   .mobile-page{display:block;background:#fff;min-height:calc(100vh - 85px)}
-   .mobile-odds-section{margin-bottom:8px}
    .m-hero-scroll{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:12px 12px 6px;margin-bottom:4px}.m-hero-scroll::-webkit-scrollbar{display:none}
    .m-hero-card{flex:0 0 calc(100vw - 48px);scroll-snap-align:start;border-radius:8px;overflow:hidden;position:relative;text-decoration:none;color:inherit;box-shadow:0 2px 10px rgba(0,0,0,.1)}
    .m-hero-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block}

@@ -117,7 +117,6 @@ app.use("/api/admin", require("./routes/adminAnchorResetPasswordSecure")(pool));
 app.use("/api/admin", require("./routes/adminAnchorBundle")(pool));
 app.use("/api/admin", require("./routes/adminRoomListById")(pool));
 app.use("/api/admin", require("./routes/adminRoomDeleteCleanup")(pool));
-app.use("/api/admin", require("./routes/adminOddsTimeout")());
 app.use("/api/admin", require("./routes/adminUsers")(pool));
 app.use("/api/admin", require("./routes/admin")(pool));
 app.use("/api/anchor", require("./routes/anchor")(pool));
@@ -132,14 +131,34 @@ app.use("/api/schedule", require("./routes/schedule"));
 const server = http.createServer(app);
 setupChatWs(server, pool);
 
-// 启动时预热缓存，之后定时刷新
+// 预热缓存 + 赛程 — 服务器就绪后异步并行执行，不阻塞监听
 const { warmupCache } = require("./services/dongqiudi");
 const { getSchedule } = require("./services/espnSchedule");
-warmupCache();
-getSchedule(15); // 预热赛程
-setInterval(warmupCache, 60 * 60 * 1000);
-setInterval(() => getSchedule(15), 10 * 60 * 1000); // 赛程每10分钟刷新
 
-server.listen(PORT, "127.0.0.1", () => {
+function withTimeout(promise, ms, label) {
+  return Promise.race([
+    promise,
+    new Promise(function (resolve) {
+      setTimeout(function () {
+        console.warn("[warmup] " + label + " 预热超时（" + ms + "ms）");
+        resolve();
+      }, ms);
+    })
+  ]).catch(function (err) {
+    console.warn("[warmup] " + label + " 预热失败", err && err.message ? err.message : err);
+  });
+}
+
+server.listen(PORT, "127.0.0.1", function () {
   console.log("haiou-api running on http://127.0.0.1:" + PORT);
+
+  // 服务器就绪后异步并行预热，15 秒超时兜底
+  Promise.all([
+    withTimeout(warmupCache(), 15000, "懂球帝文章缓存"),
+    withTimeout(getSchedule(15), 15000, "ESPN赛程数据")
+  ]);
 });
+
+// 定时刷新
+setInterval(function () { warmupCache(); }, 60 * 60 * 1000);
+setInterval(function () { getSchedule(15); }, 10 * 60 * 1000);

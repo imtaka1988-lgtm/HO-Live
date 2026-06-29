@@ -160,27 +160,38 @@ export function applyTheme(cfg) {
 export async function loadConfig() {
   if (state.initDone) return state.cfg;
 
-  // 1. 加载基础配置（品牌、主题、广告等）从 JSON 兜底
-  try {
-    var r = await fetch(href('assets/data/site-config.json') + '?t=' + Date.now());
-    if (!r.ok) throw new Error(r.status);
-    var json = await r.json();
-    state.cfg = { ...fallback, ...json };
-  } catch (e) {
-    console.warn('[Config] using fallback config', e.message);
-    state.cfg = { ...fallback };
-  }
+  var ts = Date.now();
 
-  // 2. 从后端 API 获取 rooms（含 streams）。非本地环境失败时，不再沿用 JSON 里的旧房间/旧播放源。
-  var roomsLoadedFromApi = false;
-  try {
-    var apiRes = await fetch('/api/public/rooms?t=' + Date.now());
-    if (!apiRes.ok) throw new Error('HTTP ' + apiRes.status);
-    var apiData = await apiRes.json();
-    if (!apiData.ok || !Array.isArray(apiData.rooms)) throw new Error('invalid rooms response');
+  // 并行加载：site-config 和 rooms API 互不依赖，同时发出节省 1 个 RTT
+  var cfgPromise = fetch(href('assets/data/site-config.json') + '?t=' + ts)
+    .then(function (r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .catch(function (e) {
+      console.warn('[Config] using fallback config', e.message);
+      return null;
+    });
 
-    roomsLoadedFromApi = true;
-    // 转换后端字段名到前端格式
+  var roomsPromise = fetch('/api/public/rooms?t=' + ts)
+    .then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .catch(function (e) {
+      console.warn('[Config] API /api/public/rooms 不可用', e && e.message ? e.message : e);
+      return null;
+    });
+
+  var results = await Promise.all([cfgPromise, roomsPromise]);
+  var cfgJson = results[0];
+  var apiData = results[1];
+
+  // 应用站点配置
+  state.cfg = cfgJson ? { ...fallback, ...cfgJson } : { ...fallback };
+
+  // 处理 rooms API 响应
+  if (apiData && apiData.ok && Array.isArray(apiData.rooms)) {
     state.cfg.rooms = apiData.rooms.map(function (r) {
       var enabledStreams = normalizeApiStreams(r.streams || []);
       return {
@@ -205,13 +216,11 @@ export async function loadConfig() {
     });
     state.cfg.roomsApiFailed = false;
     state.cfg.roomsLoadError = '';
-  } catch (e) {
-    console.warn('[Config] API /api/public/rooms 不可用', e && e.message ? e.message : e);
+  } else {
     clearRoomsOnApiFailure('房间列表加载失败，请稍后刷新');
-  }
-
-  if (!roomsLoadedFromApi && allowJsonRoomFallback()) {
-    console.warn('[Config] 本地开发环境保留 JSON 房间兜底');
+    if (allowJsonRoomFallback()) {
+      console.warn('[Config] 本地开发环境保留 JSON 房间兜底');
+    }
   }
 
   // 注入 CSS 变量
