@@ -1,6 +1,6 @@
 {
   "name": "haiou-api",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "description": "HO-Live API and realtime chat service",
   "main": "server.js",
   "scripts": {
