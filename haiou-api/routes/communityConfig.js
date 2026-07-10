@@ -1,9 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middleware/auth");
 
-let tableReady = false;
 const SETTING_KEY = "community_config";
-
 const DEFAULT_CONFIG = {
   app: {
     enabled: true,
@@ -37,14 +35,6 @@ const DEFAULT_CONFIG = {
   }
 };
 
-async function ensureTable(pool) {
-  if (tableReady) return;
-  await pool.query(
-    "CREATE TABLE IF NOT EXISTS site_settings (setting_key VARCHAR(80) NOT NULL PRIMARY KEY, setting_value MEDIUMTEXT NOT NULL, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  );
-  tableReady = true;
-}
-
 function cleanText(value, max) {
   return String(value || "")
     .replace(/[\u0000-\u001f\u007f]/g, "")
@@ -54,58 +44,59 @@ function cleanText(value, max) {
 
 function cleanBool(value, fallback) {
   if (value === undefined || value === null) return fallback;
-  return !!value;
+  return Boolean(value);
 }
 
 function normalizeConfig(input) {
-  const src = input && typeof input === "object" ? input : {};
+  const source = input && typeof input === "object" ? input : {};
   return {
     app: {
-      enabled: cleanBool(src.app && src.app.enabled, DEFAULT_CONFIG.app.enabled),
-      tag: cleanText(src.app && src.app.tag, 20) || DEFAULT_CONFIG.app.tag,
-      title: cleanText(src.app && src.app.title, 60) || DEFAULT_CONFIG.app.title,
-      desc: cleanText(src.app && src.app.desc, 220) || DEFAULT_CONFIG.app.desc,
-      qrImage: cleanText(src.app && src.app.qrImage, 255) || DEFAULT_CONFIG.app.qrImage,
-      customerId: cleanText(src.app && src.app.customerId, 80) || DEFAULT_CONFIG.app.customerId,
-      groupId: cleanText(src.app && src.app.groupId, 80) || DEFAULT_CONFIG.app.groupId,
-      buttonText: cleanText(src.app && src.app.buttonText, 40) || DEFAULT_CONFIG.app.buttonText,
-      buttonLink: cleanText(src.app && src.app.buttonLink, 255) || DEFAULT_CONFIG.app.buttonLink
+      enabled: cleanBool(source.app && source.app.enabled, DEFAULT_CONFIG.app.enabled),
+      tag: cleanText(source.app && source.app.tag, 20) || DEFAULT_CONFIG.app.tag,
+      title: cleanText(source.app && source.app.title, 60) || DEFAULT_CONFIG.app.title,
+      desc: cleanText(source.app && source.app.desc, 220) || DEFAULT_CONFIG.app.desc,
+      qrImage: cleanText(source.app && source.app.qrImage, 255) || DEFAULT_CONFIG.app.qrImage,
+      customerId: cleanText(source.app && source.app.customerId, 80) || DEFAULT_CONFIG.app.customerId,
+      groupId: cleanText(source.app && source.app.groupId, 80) || DEFAULT_CONFIG.app.groupId,
+      buttonText: cleanText(source.app && source.app.buttonText, 40) || DEFAULT_CONFIG.app.buttonText,
+      buttonLink: cleanText(source.app && source.app.buttonLink, 255) || DEFAULT_CONFIG.app.buttonLink
     },
     wechat: {
-      enabled: cleanBool(src.wechat && src.wechat.enabled, DEFAULT_CONFIG.wechat.enabled),
-      tag: cleanText(src.wechat && src.wechat.tag, 20) || DEFAULT_CONFIG.wechat.tag,
-      title: cleanText(src.wechat && src.wechat.title, 60) || DEFAULT_CONFIG.wechat.title,
-      desc: cleanText(src.wechat && src.wechat.desc, 220) || DEFAULT_CONFIG.wechat.desc,
-      serviceQrImage: cleanText(src.wechat && src.wechat.serviceQrImage, 255) || DEFAULT_CONFIG.wechat.serviceQrImage,
-      groupQrImage: cleanText(src.wechat && src.wechat.groupQrImage, 255) || DEFAULT_CONFIG.wechat.groupQrImage,
-      serviceId: cleanText(src.wechat && src.wechat.serviceId, 80) || DEFAULT_CONFIG.wechat.serviceId,
-      groupId: cleanText(src.wechat && src.wechat.groupId, 80) || DEFAULT_CONFIG.wechat.groupId
+      enabled: cleanBool(source.wechat && source.wechat.enabled, DEFAULT_CONFIG.wechat.enabled),
+      tag: cleanText(source.wechat && source.wechat.tag, 20) || DEFAULT_CONFIG.wechat.tag,
+      title: cleanText(source.wechat && source.wechat.title, 60) || DEFAULT_CONFIG.wechat.title,
+      desc: cleanText(source.wechat && source.wechat.desc, 220) || DEFAULT_CONFIG.wechat.desc,
+      serviceQrImage: cleanText(source.wechat && source.wechat.serviceQrImage, 255) || DEFAULT_CONFIG.wechat.serviceQrImage,
+      groupQrImage: cleanText(source.wechat && source.wechat.groupQrImage, 255) || DEFAULT_CONFIG.wechat.groupQrImage,
+      serviceId: cleanText(source.wechat && source.wechat.serviceId, 80) || DEFAULT_CONFIG.wechat.serviceId,
+      groupId: cleanText(source.wechat && source.wechat.groupId, 80) || DEFAULT_CONFIG.wechat.groupId
     },
     official: {
-      enabled: cleanBool(src.official && src.official.enabled, DEFAULT_CONFIG.official.enabled),
-      tag: cleanText(src.official && src.official.tag, 20) || DEFAULT_CONFIG.official.tag,
-      title: cleanText(src.official && src.official.title, 60) || DEFAULT_CONFIG.official.title,
-      desc: cleanText(src.official && src.official.desc, 220) || DEFAULT_CONFIG.official.desc,
-      qrImage: cleanText(src.official && src.official.qrImage, 255) || DEFAULT_CONFIG.official.qrImage,
-      accountName: cleanText(src.official && src.official.accountName, 80) || DEFAULT_CONFIG.official.accountName,
-      pushText: cleanText(src.official && src.official.pushText, 120) || DEFAULT_CONFIG.official.pushText
+      enabled: cleanBool(source.official && source.official.enabled, DEFAULT_CONFIG.official.enabled),
+      tag: cleanText(source.official && source.official.tag, 20) || DEFAULT_CONFIG.official.tag,
+      title: cleanText(source.official && source.official.title, 60) || DEFAULT_CONFIG.official.title,
+      desc: cleanText(source.official && source.official.desc, 220) || DEFAULT_CONFIG.official.desc,
+      qrImage: cleanText(source.official && source.official.qrImage, 255) || DEFAULT_CONFIG.official.qrImage,
+      accountName: cleanText(source.official && source.official.accountName, 80) || DEFAULT_CONFIG.official.accountName,
+      pushText: cleanText(source.official && source.official.pushText, 120) || DEFAULT_CONFIG.official.pushText
     }
   };
 }
 
 async function getConfig(pool) {
-  await ensureTable(pool);
-  const [rows] = await pool.query("SELECT setting_value FROM site_settings WHERE setting_key = ?", [SETTING_KEY]);
+  const [rows] = await pool.query(
+    "SELECT setting_value FROM site_settings WHERE setting_key = ? LIMIT 1",
+    [SETTING_KEY]
+  );
   if (!rows.length) return DEFAULT_CONFIG;
   try {
     return normalizeConfig(JSON.parse(rows[0].setting_value || "{}"));
-  } catch (e) {
+  } catch (_) {
     return DEFAULT_CONFIG;
   }
 }
 
 async function saveConfig(pool, config) {
-  await ensureTable(pool);
   const normalized = normalizeConfig(config);
   await pool.query(
     "INSERT INTO site_settings (setting_key, setting_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)",
@@ -119,31 +110,31 @@ module.exports = function (pool) {
 
   router.get("/public/community-config", async (req, res) => {
     try {
-      const config = await getConfig(pool);
-      res.json({ ok: true, config });
+      res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+      return res.json({ ok: true, config: await getConfig(pool) });
     } catch (err) {
-      console.error("[api error]", err);
-      res.status(500).json({ ok: false, error: "服务器错误" });
+      console.error("[community config public]", err);
+      return res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
   router.get("/admin/community-config", authMiddleware, async (req, res) => {
     try {
-      const config = await getConfig(pool);
-      res.json({ ok: true, config });
+      res.setHeader("Cache-Control", "no-store");
+      return res.json({ ok: true, config: await getConfig(pool) });
     } catch (err) {
-      console.error("[api error]", err);
-      res.status(500).json({ ok: false, error: "服务器错误" });
+      console.error("[community config admin get]", err);
+      return res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
   router.put("/admin/community-config", authMiddleware, async (req, res) => {
     try {
-      const config = await saveConfig(pool, req.body && req.body.config ? req.body.config : req.body);
-      res.json({ ok: true, config });
+      const input = req.body && req.body.config ? req.body.config : req.body;
+      return res.json({ ok: true, config: await saveConfig(pool, input) });
     } catch (err) {
-      console.error("[api error]", err);
-      res.status(500).json({ ok: false, error: "服务器错误" });
+      console.error("[community config admin update]", err);
+      return res.status(500).json({ ok: false, error: "服务器错误" });
     }
   });
 
