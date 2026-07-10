@@ -186,12 +186,26 @@ async function shutdown(signal) {
   shuttingDown = true;
   console.log(`[shutdown] received ${signal}`);
   for (const timer of timers) clearInterval(timer);
+
+  if (chatWs && chatWs.clients) {
+    for (const client of chatWs.clients) {
+      try { client.close(1001, "server shutdown"); } catch (_) { try { client.terminate(); } catch (_) {} }
+    }
+  }
   if (chatWs && typeof chatWs.close === "function") {
     try { chatWs.close(); } catch (_) {}
   }
 
-  const forceTimer = setTimeout(() => process.exit(1), 10000);
+  const forceTimer = setTimeout(() => {
+    if (chatWs && chatWs.clients) {
+      for (const client of chatWs.clients) {
+        try { client.terminate(); } catch (_) {}
+      }
+    }
+    process.exit(1);
+  }, 10000);
   forceTimer.unref();
+
   server.close(async () => {
     try { await pool.end(); } catch (err) { console.error("[shutdown db]", err); }
     clearTimeout(forceTimer);
