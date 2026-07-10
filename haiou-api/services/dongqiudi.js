@@ -16,6 +16,8 @@ const CATEGORY_MAP = {
 
 const LIST_CACHE_TTL_MS = Number.parseInt(process.env.ARTICLE_LIST_CACHE_TTL_MS || "300000", 10) || 300000;
 const DETAIL_CACHE_TTL_MS = Number.parseInt(process.env.ARTICLE_DETAIL_CACHE_TTL_MS || "1800000", 10) || 1800000;
+const LIST_CACHE_MAX_ENTRIES = Math.max(10, Number.parseInt(process.env.ARTICLE_LIST_CACHE_MAX_ENTRIES || "64", 10) || 64);
+const DETAIL_CACHE_MAX_ENTRIES = Math.max(20, Number.parseInt(process.env.ARTICLE_DETAIL_CACHE_MAX_ENTRIES || "300", 10) || 300);
 const FETCH_TIMEOUT_MS = Number.parseInt(process.env.ARTICLE_FETCH_TIMEOUT_MS || "8000", 10) || 8000;
 const MAX_RESPONSE_BYTES = Number.parseInt(process.env.ARTICLE_MAX_RESPONSE_BYTES || "3145728", 10) || 3145728;
 const MAX_REDIRECTS = 3;
@@ -102,7 +104,19 @@ function cleanArticleId(articleId) {
 function cachedValue(cache, key, ttlMs) {
   const entry = cache.get(key);
   if (!entry || Date.now() - entry.ts >= ttlMs) return null;
+  cache.delete(key);
+  cache.set(key, entry);
   return entry.data;
+}
+
+function setBoundedCache(cache, key, data, maxEntries) {
+  if (cache.has(key)) cache.delete(key);
+  cache.set(key, { ts: Date.now(), data });
+  while (cache.size > maxEntries) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey === undefined) break;
+    cache.delete(oldestKey);
+  }
 }
 
 async function singleFlight(key, loader) {
@@ -190,7 +204,7 @@ async function fetchArticleDetail(articleId) {
   return singleFlight(`detail:${id}`, async () => {
     try {
       const detail = await loadArticleDetail(id);
-      detailCache.set(id, { ts: Date.now(), data: detail });
+      setBoundedCache(detailCache, id, detail, DETAIL_CACHE_MAX_ENTRIES);
       return detail;
     } catch (error) {
       const stale = detailCache.get(id);
@@ -225,7 +239,7 @@ async function fetchHotArticles(category = "toutiao", limit = 6) {
         cover: article.thumb,
         comments_total: article.comments_total
       }));
-      listCache.set(cacheKey, { ts: Date.now(), data: articles });
+      setBoundedCache(listCache, cacheKey, articles, LIST_CACHE_MAX_ENTRIES);
       return articles;
     } catch (error) {
       const stale = listCache.get(cacheKey);
