@@ -70,7 +70,13 @@ async function migrate() {
       "CREATE TABLE IF NOT EXISTS site_messages (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, title VARCHAR(120) NOT NULL, content TEXT NOT NULL, is_enabled TINYINT(1) NOT NULL DEFAULT 1, sort_order INT NOT NULL DEFAULT 0, created_by BIGINT UNSIGNED NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, KEY idx_enabled_sort (is_enabled, sort_order, id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
     await connection.query(
+      "CREATE TABLE IF NOT EXISTS user_follows (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, room_id INT UNSIGNED NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_room (user_id, room_id), KEY idx_user_id (user_id), KEY idx_room_id (room_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
+    await connection.query(
       "CREATE TABLE IF NOT EXISTS user_exp_logs (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id BIGINT UNSIGNED NOT NULL, action VARCHAR(64) NOT NULL, ref_id VARCHAR(64) NOT NULL DEFAULT '', exp INT NOT NULL DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_user_action_ref (user_id, action, ref_id), KEY idx_user_id (user_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
+    await connection.query(
+      "CREATE TABLE IF NOT EXISTS live_stream_events (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, provider VARCHAR(32) NOT NULL DEFAULT 'generic', room_id INT UNSIGNED NULL, stream_name VARCHAR(128) NOT NULL DEFAULT '', event_type VARCHAR(64) NOT NULL DEFAULT '', raw_json JSON NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, KEY idx_room_time (room_id, created_at), KEY idx_stream_time (stream_name, created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
 
     await addIndexIfMissing(connection, "chat_messages", "idx_chat_room_status_id", "room_id, status, id");
