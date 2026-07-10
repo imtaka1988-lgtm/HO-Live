@@ -1,25 +1,27 @@
 # 数据库迁移与运维脚本
 
-这些是历史数据库迁移和一次性运维脚本，不再需要日常运行。
+生产环境只保留两个受支持命令：
 
-| 脚本 | 用途 | 状态 |
-|------|------|------|
-| `add_cols.js` | 给 rooms 表加字段 | 已执行 |
-| `add_sports.js` | 插入体育赛事数据 | 已执行 |
-| `create_admin.js` | 创建管理员账号 | 按需使用 |
-| `fix_jwt.js` | 修复 JWT 密钥相关问题 | 已执行 |
-| `insert_sports.js` | 批量导入体育数据 | 已执行 |
-| `normalize.js` | 数据规范化处理 | 已执行 |
-| `reimport.js` | 重新导入某批数据 | 已执行 |
-| `remove_fallback.js` | 移除 fallback 数据 | 已执行 |
-| `rename_streams.js` | 重命名流线路 | 已执行 |
-| `rotate.js` | 日志/数据轮转 | 待确认 |
-
-## 使用方式
+## 数据库迁移
 
 ```bash
 cd haiou-api
-node scripts/<脚本名>.js
+npm run migrate
 ```
 
-**注意：大部分脚本已执行完毕，不要在线上重复运行。**
+迁移是幂等的。新服务器导入数据库备份后、启动 API 前执行。迁移账号需要临时拥有 `CREATE`、`ALTER` 和 `INDEX` 权限；完成后可收紧为业务运行权限。
+
+## 创建或重置管理员
+
+先通过环境变量提供账号和强密码，不要把密码写进脚本或提交到 Git：
+
+```bash
+cd haiou-api
+ADMIN_USERNAME=admin \
+ADMIN_PASSWORD='替换为至少12位的强密码' \
+npm run create-admin
+```
+
+该命令不会输出明文密码。相同用户名已存在时会更新密码哈希。
+
+历史一次性补丁、清库脚本和直接改写源码的脚本已经移除，避免在新服务器误执行。

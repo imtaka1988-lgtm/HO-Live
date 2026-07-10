@@ -1,68 +1,62 @@
-/**
- * 赛程 API — GET /api/schedule
- * 数据源：ESPN 公开 API，15 天内赛程，5 分钟缓存
- */
 const express = require("express");
-const { getSchedule } = require("../services/espnSchedule");
+const { getSchedule, beijingToday } = require("../services/espnSchedule");
 
 const router = express.Router();
-
-let _cache = null;
-let _cacheTs = 0;
-const CACHE_TTL = 5 * 60 * 1000;
+const LIVE_STATUSES = new Set([
+  "STATUS_IN_PROGRESS",
+  "STATUS_HALFTIME",
+  "STATUS_END_PERIOD",
+  "STATUS_DELAYED"
+]);
 
 router.get("/", async (req, res) => {
   try {
-    // 缓存
-    if (_cache && Date.now() - _cacheTs < CACHE_TTL) {
-      return res.json(_cache);
+    const requestedDays = Number.parseInt(req.query.days || "15", 10);
+    const daysToLoad = Math.max(1, Math.min(requestedDays || 15, 30));
+    const events = await getSchedule(daysToLoad);
+    const byDate = new Map();
+
+    for (const event of events) {
+      if (!byDate.has(event.date)) byDate.set(event.date, []);
+      byDate.get(event.date).push(event);
     }
 
-    const events = await getSchedule(15);
+    const today = beijingToday();
+    const days = [...byDate.keys()].sort().map(date => {
+      const matches = byDate.get(date).sort((a, b) => a.time.localeCompare(b.time));
+      return {
+        date,
+        count: matches.length,
+        isToday: date === today,
+        matches: matches.map(event => ({
+          id: event.id,
+          sport: event.sport,
+          league: event.league,
+          home: event.home,
+          away: event.away,
+          homeScore: event.homeScore,
+          awayScore: event.awayScore,
+          time: event.time,
+          status: event.status,
+          statusDesc: event.statusDesc,
+          detail: event.detail,
+          venue: event.venue
+        }))
+      };
+    });
 
-    // 按日期分组
-    const byDate = {};
-    for (const e of events) {
-      if (!byDate[e.date]) byDate[e.date] = [];
-      byDate[e.date].push(e);
-    }
-
-    // 排序
-    const days = Object.keys(byDate).sort();
-
-    // live / scheduled / finished 分类
-    const live = events.filter(e =>
-      e.status === "STATUS_IN_PROGRESS" || e.status === "STATUS_HALFTIME"
-    );
-    const today = new Date().toISOString().slice(0, 10);
-
-    const response = {
+    res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+    return res.json({
       ok: true,
       updated: new Date().toISOString(),
+      timezone: "Asia/Shanghai",
       total: events.length,
-      live: live.length,
-      days: days.map(date => ({
-        date,
-        count: byDate[date].length,
-        isToday: date === today,
-        matches: byDate[date].map(e => ({
-          league: e.league,
-          home: e.home,
-          away: e.away,
-          time: e.time,
-          status: e.status,
-          statusDesc: e.statusDesc,
-          detail: e.detail,
-        })),
-      })),
-    };
-
-    _cache = response;
-    _cacheTs = Date.now();
-    res.json(response);
+      live: events.filter(event => LIVE_STATUSES.has(event.status)).length,
+      days
+    });
   } catch (err) {
-    console.error("[api error]", err);
-    res.status(500).json({ ok: false, error: "获取赛程失败" });
+    console.error("[schedule api]", err);
+    return res.status(502).json({ ok: false, error: "获取赛程失败" });
   }
 });
 
