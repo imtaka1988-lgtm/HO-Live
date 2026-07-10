@@ -39,6 +39,10 @@ jobs:
         run: |
           set -o pipefail
           npm run verify 2>&1 | tee verify.log
+      - name: Build audit snapshot
+        if: always()
+        run: |
+          tar --exclude=node_modules --exclude=.env --exclude=verify.log -czf ../haiou-api-audit-source.tgz .
       - name: Upload verification log
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,3 +51,11 @@ jobs:
           path: haiou-api/verify.log
           if-no-files-found: warn
           retention-days: 7
+      - name: Upload audit source snapshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: haiou-api-audit-source-${{ github.run_id }}
+          path: haiou-api-audit-source.tgz
+          if-no-files-found: error
+          retention-days: 1
