@@ -1,14 +1,15 @@
 /**
  * ESPN 赛程抓取服务 — 免费公开 API，无需 Key
- * 覆盖足球五大联赛+欧冠+世界杯、NBA/WNBA
- * 返回 15 天内的赛程
+ * 覆盖足球五大联赛、欧战、世界杯、NBA/WNBA。
  */
-const http = require("http");
 const https = require("https");
 
-const ESPN_BASE = "http://site.api.espn.com/apis/site/v2/sports";
+const ESPN_BASE = "https://site.api.espn.com/apis/site/v2/sports";
+const FETCH_TIMEOUT_MS = Number.parseInt(process.env.ESPN_TIMEOUT_MS || "8000", 10) || 8000;
+const MAX_RESPONSE_BYTES = Number.parseInt(process.env.ESPN_MAX_RESPONSE_BYTES || "2097152", 10) || 2097152;
+const CACHE_TTL_MS = Number.parseInt(process.env.SCHEDULE_CACHE_TTL_MS || "300000", 10) || 300000;
+const agent = new https.Agent({ keepAlive: true, maxSockets: 12, timeout: FETCH_TIMEOUT_MS });
 
-// 中文队名翻译
 const TEAM_CN = {
   Portugal: "葡萄牙", England: "英格兰", Ghana: "加纳", Panama: "巴拿马",
   Croatia: "克罗地亚", Colombia: "哥伦比亚", "Congo DR": "刚果(金)",
@@ -36,7 +37,6 @@ const TEAM_CN = {
   Mali: "马里", Guinea: "几内亚", Zambia: "赞比亚", Gabon: "加蓬",
   Angola: "安哥拉", Togo: "多哥", Benin: "贝宁", Libya: "利比亚",
   Sudan: "苏丹", Kenya: "肯尼亚", Ethiopia: "埃塞俄比亚",
-  // NBA (complete)
   Lakers: "湖人", Warriors: "勇士", Celtics: "凯尔特人", Nuggets: "掘金",
   Bucks: "雄鹿", Heat: "热火", "76ers": "76人", Suns: "太阳", Mavericks: "独行侠",
   Knicks: "尼克斯", Thunder: "雷霆", Timberwolves: "森林狼", Clippers: "快船",
@@ -44,57 +44,41 @@ const TEAM_CN = {
   Bulls: "公牛", Spurs: "马刺", "Trail Blazers": "开拓者", Rockets: "火箭",
   Pacers: "步行者", Wizards: "奇才", Magic: "魔术", Hornets: "黄蜂",
   Pistons: "活塞", Hawks: "老鹰", Jazz: "爵士", Cavaliers: "骑士", Nets: "篮网",
-  // WNBA (complete)
   "Las Vegas Aces": "王牌", "New York Liberty": "自由人",
   "Indiana Fever": "狂热", "Phoenix Mercury": "水星",
   "Seattle Storm": "风暴", "Dallas Wings": "飞翼",
   "Connecticut Sun": "太阳", "Chicago Sky": "天空",
   "Atlanta Dream": "梦想", "Washington Mystics": "神秘人",
   "Portland Fire": "火焰", "Golden State Valkyries": "女武神",
-  "Toronto Tempo": "节奏", "Los Angeles Sparks": "火花",
-  "Minnesota Lynx": "山猫",
-  // 俱乐部
+  "Toronto Tempo": "节奏", "Los Angeles Sparks": "火花", "Minnesota Lynx": "山猫",
   Arsenal: "阿森纳", "Manchester City": "曼城", "Manchester Utd": "曼联",
   Liverpool: "利物浦", Chelsea: "切尔西", Tottenham: "热刺",
   Barcelona: "巴萨", "Real Madrid": "皇马", "Atletico Madrid": "马竞",
   "Bayern Munich": "拜仁", Dortmund: "多特", "RB Leipzig": "莱比锡",
   Juventus: "尤文", "AC Milan": "AC米兰", "Inter Milan": "国米", Napoli: "那不勒斯",
   "Paris SG": "巴黎", PSG: "巴黎", Marseille: "马赛", Lyon: "里昂",
-  "Manchester United": "曼联", "Manchester Utd": "曼联",
-  "Tottenham Hotspur": "热刺", "Leicester City": "莱斯特城",
-  "Everton": "埃弗顿", "Newcastle United": "纽卡斯尔",
-  "Aston Villa": "阿斯顿维拉", "West Ham United": "西汉姆联",
-  "Wolverhampton Wanderers": "狼队", "Crystal Palace": "水晶宫",
-  "Brighton and Hove Albion": "布莱顿", "Fulham": "富勒姆",
-  "Brentford": "布伦特福德", "Nottingham Forest": "诺丁汉森林",
-  "Bournemouth": "伯恩茅斯", "Southampton": "南安普顿",
-  "Leeds United": "利兹联", "Burnley": "伯恩利",
-  "Real Madrid": "皇马", Barcelona: "巴萨",
-  "Atlético Madrid": "马竞", "Atletico Madrid": "马竞",
-  "Sevilla": "塞维利亚", "Real Sociedad": "皇家社会",
-  "Villarreal": "比利亚雷亚尔", "Real Betis": "贝蒂斯",
-  "Athletic Club": "毕尔巴鄂", "Valencia": "瓦伦西亚",
-  "Bayern Munich": "拜仁", "Bayern München": "拜仁",
-  Dortmund: "多特", "Borussia Dortmund": "多特",
-  "RB Leipzig": "莱比锡", "Bayer Leverkusen": "勒沃库森",
-  "Eintracht Frankfurt": "法兰克福", "VfL Wolfsburg": "沃尔夫斯堡",
-  "Borussia Mönchengladbach": "门兴", "SC Freiburg": "弗赖堡",
-  "TSG Hoffenheim": "霍芬海姆", "VfB Stuttgart": "斯图加特",
-  "Werder Bremen": "不莱梅", "FC Augsburg": "奥格斯堡",
-  Juventus: "尤文", "Inter Milan": "国米", "AC Milan": "AC米兰",
-  Napoli: "那不勒斯", "AS Roma": "罗马", Roma: "罗马",
-  Lazio: "拉齐奥", "Atalanta": "亚特兰大", "Fiorentina": "佛罗伦萨",
-  "Paris Saint-Germain": "巴黎", Marseille: "马赛", Lyon: "里昂",
-  Monaco: "摩纳哥", "AS Monaco": "摩纳哥", Lille: "里尔",
-  "Stade Rennais": "雷恩", Nice: "尼斯", Lens: "朗斯",
-  "Benfica": "本菲卡", Porto: "波尔图", Ajax: "阿贾克斯",
-  "PSV Eindhoven": "埃因霍温", Feyenoord: "费耶诺德",
-  Celtic: "凯尔特人", Rangers: "流浪者",
-  "Shakhtar Donetsk": "顿涅茨克矿工", "Dinamo Zagreb": "萨格勒布迪纳摩",
-  "Red Star Belgrade": "贝尔格莱德红星", Olympiacos: "奥林匹亚科斯",
-  Galatasaray: "加拉塔萨雷", Fenerbahce: "费内巴切",
-  "FC Copenhagen": "哥本哈根", "Club Brugge": "布鲁日",
-  "Red Bull Salzburg": "萨尔茨堡红牛", "Young Boys": "年轻人",
+  "Manchester United": "曼联", "Tottenham Hotspur": "热刺", "Leicester City": "莱斯特城",
+  Everton: "埃弗顿", "Newcastle United": "纽卡斯尔", "Aston Villa": "阿斯顿维拉",
+  "West Ham United": "西汉姆联", "Wolverhampton Wanderers": "狼队",
+  "Crystal Palace": "水晶宫", "Brighton and Hove Albion": "布莱顿", Fulham: "富勒姆",
+  Brentford: "布伦特福德", "Nottingham Forest": "诺丁汉森林", Bournemouth: "伯恩茅斯",
+  Southampton: "南安普顿", "Leeds United": "利兹联", Burnley: "伯恩利",
+  "Atlético Madrid": "马竞", Sevilla: "塞维利亚", "Real Sociedad": "皇家社会",
+  Villarreal: "比利亚雷亚尔", "Real Betis": "贝蒂斯", "Athletic Club": "毕尔巴鄂",
+  Valencia: "瓦伦西亚", "Bayern München": "拜仁", "Borussia Dortmund": "多特",
+  "Bayer Leverkusen": "勒沃库森", "Eintracht Frankfurt": "法兰克福",
+  "VfL Wolfsburg": "沃尔夫斯堡", "Borussia Mönchengladbach": "门兴",
+  "SC Freiburg": "弗赖堡", "TSG Hoffenheim": "霍芬海姆", "VfB Stuttgart": "斯图加特",
+  "Werder Bremen": "不莱梅", "FC Augsburg": "奥格斯堡", "AS Roma": "罗马", Roma: "罗马",
+  Lazio: "拉齐奥", Atalanta: "亚特兰大", Fiorentina: "佛罗伦萨",
+  "Paris Saint-Germain": "巴黎", Monaco: "摩纳哥", "AS Monaco": "摩纳哥", Lille: "里尔",
+  "Stade Rennais": "雷恩", Nice: "尼斯", Lens: "朗斯", Benfica: "本菲卡", Porto: "波尔图",
+  Ajax: "阿贾克斯", "PSV Eindhoven": "埃因霍温", Feyenoord: "费耶诺德",
+  Celtic: "凯尔特人", Rangers: "流浪者", "Shakhtar Donetsk": "顿涅茨克矿工",
+  "Dinamo Zagreb": "萨格勒布迪纳摩", "Red Star Belgrade": "贝尔格莱德红星",
+  Olympiacos: "奥林匹亚科斯", Galatasaray: "加拉塔萨雷", Fenerbahce: "费内巴切",
+  "FC Copenhagen": "哥本哈根", "Club Brugge": "布鲁日", "Red Bull Salzburg": "萨尔茨堡红牛",
+  "Young Boys": "年轻人"
 };
 
 const LEAGUES = [
@@ -107,94 +91,165 @@ const LEAGUES = [
   ["soccer", "fra.1", "法甲"],
   ["soccer", "uefa.europa", "欧联"],
   ["basketball", "nba", "NBA"],
-  ["basketball", "wnba", "WNBA"],
+  ["basketball", "wnba", "WNBA"]
 ];
 
+const cache = { ts: 0, days: 0, data: null, inFlight: null };
+
 function fetchUrl(url) {
-  const mod = url.startsWith("https") ? https : http;
   return new Promise((resolve, reject) => {
-    const req = mod.get(url, {
-      timeout: 15000,
-      headers: { "User-Agent": "Mozilla/5.0" },
-    }, (res) => {
+    const request = https.get(url, {
+      agent,
+      timeout: FETCH_TIMEOUT_MS,
+      headers: {
+        "User-Agent": "HO-Live/1.0",
+        Accept: "application/json"
+      }
+    }, response => {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        response.resume();
+        reject(new Error(`ESPN response ${response.statusCode}`));
+        return;
+      }
+
       let body = "";
-      res.setEncoding("utf8");
-      res.on("data", (chunk) => body += chunk);
-      res.on("end", () => {
+      let size = 0;
+      response.setEncoding("utf8");
+      response.on("data", chunk => {
+        size += Buffer.byteLength(chunk);
+        if (size > MAX_RESPONSE_BYTES) {
+          request.destroy(new Error("ESPN response too large"));
+          return;
+        }
+        body += chunk;
+      });
+      response.on("end", () => {
         try { resolve(JSON.parse(body)); }
-        catch (e) { reject(new Error("JSON parse error")); }
+        catch (_) { reject(new Error("ESPN JSON parse error")); }
       });
     });
-    req.on("timeout", () => { req.destroy(new Error("timeout")); });
-    req.on("error", reject);
+    request.on("timeout", () => request.destroy(new Error("ESPN request timeout")));
+    request.on("error", reject);
   });
 }
 
 function toBeijing(datetimeStr) {
-  if (!datetimeStr) return ["", ""];
-  try {
-    const dt = new Date(datetimeStr.replace("Z", "+00:00"));
-    // Beijing = UTC+8
-    const bj = new Date(dt.getTime() + 8 * 3600 * 1000);
-    const date = bj.toISOString().slice(0, 10);
-    const time = bj.toISOString().slice(11, 16);
-    return [date, time];
-  } catch (_) {
-    return [datetimeStr.slice(0, 10), datetimeStr.slice(11, 16) || ""];
-  }
+  const date = new Date(datetimeStr || "");
+  if (Number.isNaN(date.getTime())) return ["", ""];
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date);
+  const value = type => (parts.find(part => part.type === type) || {}).value || "";
+  return [`${value("year")}-${value("month")}-${value("day")}`, `${value("hour")}:${value("minute")}`];
+}
+
+function beijingToday() {
+  return toBeijing(new Date().toISOString())[0];
+}
+
+function addDays(dateString, days) {
+  const date = new Date(`${dateString}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function teamName(competitor) {
+  const team = (competitor && competitor.team) || {};
+  const name = team.displayName || team.shortDisplayName || team.name || "?";
+  return TEAM_CN[name] || name;
+}
+
+function normalizeEvent(event, sport, leagueName) {
+  const competition = event && event.competitions && event.competitions[0];
+  if (!competition) return null;
+  const competitors = competition.competitors || [];
+  if (competitors.length < 2) return null;
+  const homeTeam = competitors.find(team => team.homeAway === "home") || competitors[0];
+  const awayTeam = competitors.find(team => team.homeAway === "away") || competitors.find(team => team !== homeTeam) || competitors[1];
+  const [date, time] = toBeijing(event.date || competition.date || "");
+  if (!date) return null;
+  const status = (event.status && event.status.type) || {};
+
+  return {
+    id: event.id || "",
+    sport,
+    league: leagueName,
+    home: teamName(homeTeam),
+    away: teamName(awayTeam),
+    homeScore: homeTeam.score == null ? "" : String(homeTeam.score),
+    awayScore: awayTeam.score == null ? "" : String(awayTeam.score),
+    date,
+    time,
+    status: status.name || "",
+    statusDesc: status.description || "",
+    venue: (competition.venue && competition.venue.fullName) || "",
+    detail: status.detail || ""
+  };
+}
+
+async function fetchLeagueEvents([sport, code, leagueName]) {
+  const data = await fetchUrl(`${ESPN_BASE}/${sport}/${code}/scoreboard`);
+  return (data.events || [])
+    .map(event => normalizeEvent(event, sport, leagueName))
+    .filter(Boolean);
 }
 
 async function fetchAllEvents() {
-  const allEvents = [];
-  for (const [sport, code, leagueName] of LEAGUES) {
-    try {
-      const url = `${ESPN_BASE}/${sport}/${code}/scoreboard`;
-      const data = await fetchUrl(url);
-      const events = data.events || [];
-      for (const e of events) {
-        const comps = e.competitions ? e.competitions[0] : null;
-        if (!comps) continue;
-        const teams = comps.competitors || [];
-        if (teams.length < 2) continue;
-        let home = (teams[0].team || {}).displayName || "?";
-        let away = (teams[1].team || {}).displayName || "?";
-        home = TEAM_CN[home] || home;
-        away = TEAM_CN[away] || away;
-        const [date, time] = toBeijing(e.date || "");
-        const status = (e.status || {}).type || {};
-        allEvents.push({
-          sport,
-          league: leagueName,
-          home,
-          away,
-          date,
-          time,
-          status: status.name || "",
-          statusDesc: status.description || "",
-          venue: (comps.venue || {}).fullName || "",
-          detail: status.detail || "",
-        });
-      }
-    } catch (_) {}
+  const results = await Promise.allSettled(LEAGUES.map(fetchLeagueEvents));
+  const events = [];
+  let failures = 0;
+  for (const result of results) {
+    if (result.status === "fulfilled") events.push(...result.value);
+    else failures += 1;
   }
-  return allEvents;
+  if (failures) console.warn(`[schedule] ${failures}/${LEAGUES.length} ESPN feeds failed`);
+  if (failures === LEAGUES.length) throw new Error("all ESPN feeds failed");
+
+  const unique = new Map();
+  for (const event of events) {
+    const key = event.id || `${event.league}:${event.date}:${event.time}:${event.home}:${event.away}`;
+    unique.set(key, event);
+  }
+  return [...unique.values()].sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
 }
 
-/**
- * 获取未来 15 天内赛程
- */
-async function getSchedule(days = 15) {
-  const all = await fetchAllEvents();
-
-  // Build date range
-  const today = new Date();
-  // reset to local midnight
-  today.setHours(0, 0, 0, 0);
-  const cutoff = new Date(today.getTime() + days * 86400 * 1000);
-  const todayStr = today.toISOString().slice(0, 10);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-
-  return all.filter(e => e.date >= todayStr && e.date <= cutoffStr);
+async function loadSchedule(days) {
+  const allEvents = await fetchAllEvents();
+  const today = beijingToday();
+  const cutoff = addDays(today, days);
+  return allEvents.filter(event => event.date >= today && event.date <= cutoff);
 }
 
-module.exports = { getSchedule };
+async function getSchedule(days = 15, options = {}) {
+  const safeDays = Math.max(1, Math.min(Number.parseInt(days, 10) || 15, 30));
+  const force = options && options.force === true;
+  const now = Date.now();
+  if (!force && cache.data && cache.days === safeDays && now - cache.ts < CACHE_TTL_MS) return cache.data;
+  if (cache.inFlight) return cache.inFlight;
+
+  cache.inFlight = loadSchedule(safeDays)
+    .then(data => {
+      cache.data = data;
+      cache.days = safeDays;
+      cache.ts = Date.now();
+      return data;
+    })
+    .catch(error => {
+      if (cache.data && cache.days === safeDays) {
+        console.warn("[schedule] serving stale cache:", error.message);
+        return cache.data;
+      }
+      throw error;
+    })
+    .finally(() => { cache.inFlight = null; });
+
+  return cache.inFlight;
+}
+
+module.exports = { getSchedule, toBeijing, beijingToday, normalizeEvent };
