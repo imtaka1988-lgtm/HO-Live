@@ -36,4 +36,14 @@ jobs:
       - name: Verify
         env:
           JWT_SECRET: test-secret-that-is-longer-than-thirty-two-characters
-        run: npm run verify
+        run: |
+          set -o pipefail
+          npm run verify 2>&1 | tee verify.log
+      - name: Upload verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-verification-log-${{ github.run_id }}
+          path: haiou-api/verify.log
+          if-no-files-found: warn
+          retention-days: 7
