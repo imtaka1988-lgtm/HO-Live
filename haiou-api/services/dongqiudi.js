@@ -1,6 +1,6 @@
 /**
- * 懂球帝文章抓取服务 — Node.js 版
- * 公开 JSON 接口，无需 API Key
+ * 懂球帝文章抓取服务。
+ * 列表短缓存，正文长缓存，并合并相同并发请求。
  */
 const https = require("https");
 
@@ -11,183 +11,244 @@ const CATEGORY_MAP = {
   yingchao: 3,
   xijia: 4,
   yijia: 5,
-  dejia: 6,
+  dejia: 6
 };
 
-// 缓存：每5分钟刷新
-let _cache = {};
-const CACHE_TTL = 5 * 60 * 1000;
+const LIST_CACHE_TTL_MS = Number.parseInt(process.env.ARTICLE_LIST_CACHE_TTL_MS || "300000", 10) || 300000;
+const DETAIL_CACHE_TTL_MS = Number.parseInt(process.env.ARTICLE_DETAIL_CACHE_TTL_MS || "1800000", 10) || 1800000;
+const FETCH_TIMEOUT_MS = Number.parseInt(process.env.ARTICLE_FETCH_TIMEOUT_MS || "8000", 10) || 8000;
+const MAX_RESPONSE_BYTES = Number.parseInt(process.env.ARTICLE_MAX_RESPONSE_BYTES || "3145728", 10) || 3145728;
+const MAX_REDIRECTS = 3;
+const agent = new https.Agent({ keepAlive: true, maxSockets: 10, timeout: FETCH_TIMEOUT_MS });
+const listCache = new Map();
+const detailCache = new Map();
+const inFlight = new Map();
 
-function fetch(url, options = {}) {
+function allowedHost(hostname) {
+  return hostname === "dongqiudi.com" || hostname.endsWith(".dongqiudi.com");
+}
+
+function fetchText(inputUrl, options = {}, redirects = 0) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, {
-      timeout: 12000,
+    let parsed;
+    try {
+      parsed = new URL(inputUrl);
+    } catch (_) {
+      reject(new Error("invalid upstream URL"));
+      return;
+    }
+    if (parsed.protocol !== "https:" || !allowedHost(parsed.hostname)) {
+      reject(new Error("upstream URL not allowed"));
+      return;
+    }
+
+    const request = https.get(parsed, {
+      agent,
+      timeout: FETCH_TIMEOUT_MS,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-        Accept: options.accept || "application/json, text/plain, */*",
-      },
-    }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        return resolve(fetch(res.headers.location, options));
+        "User-Agent": "HO-Live/1.0",
+        Accept: options.accept || "application/json, text/plain, */*"
       }
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        res.resume();
-        return reject(new Error("懂球帝响应异常：" + res.statusCode));
+    }, response => {
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        response.resume();
+        if (redirects >= MAX_REDIRECTS) {
+          reject(new Error("too many upstream redirects"));
+          return;
+        }
+        const nextUrl = new URL(response.headers.location, parsed).toString();
+        resolve(fetchText(nextUrl, options, redirects + 1));
+        return;
       }
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        response.resume();
+        reject(new Error(`懂球帝响应异常：${response.statusCode}`));
+        return;
+      }
+
       let body = "";
-      res.setEncoding("utf8");
-      res.on("data", (chunk) => { body += chunk; });
-      res.on("end", () => resolve(body));
+      let size = 0;
+      response.setEncoding("utf8");
+      response.on("data", chunk => {
+        size += Buffer.byteLength(chunk);
+        if (size > MAX_RESPONSE_BYTES) {
+          request.destroy(new Error("upstream response too large"));
+          return;
+        }
+        body += chunk;
+      });
+      response.on("end", () => resolve(body));
     });
-    req.on("timeout", () => { req.destroy(new Error("请求超时")); });
-    req.on("error", reject);
+    request.on("timeout", () => request.destroy(new Error("upstream request timeout")));
+    request.on("error", reject);
   });
 }
 
-function stripHtml(html) {
-  return html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
+function decodeEntities(text) {
+  return String(text || "")
     .replace(/&nbsp;/g, " ")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+    .replace(/&#39;/g, "'");
 }
 
-/**
- * 获取文章列表
- * @param {string} category - toutiao/kuaixun/shendu/yingchao/xijia/yijia/dejia
- * @param {number} limit
- * @returns {Promise<Array>}
- */
+function cleanArticleId(articleId) {
+  const id = String(articleId || "").trim();
+  return /^\d{1,20}$/.test(id) ? id : "";
+}
+
+function cachedValue(cache, key, ttlMs) {
+  const entry = cache.get(key);
+  if (!entry || Date.now() - entry.ts >= ttlMs) return null;
+  return entry.data;
+}
+
+async function singleFlight(key, loader) {
+  if (inFlight.has(key)) return inFlight.get(key);
+  const promise = loader().finally(() => inFlight.delete(key));
+  inFlight.set(key, promise);
+  return promise;
+}
+
 async function fetchArticleList(category = "toutiao", limit = 10) {
-  const catId = CATEGORY_MAP[category] || 56;
-  const url = `https://dongqiudi.com/api/app/tabs/web/${catId}.json`;
-  const raw = await fetch(url);
+  const catId = CATEGORY_MAP[category];
+  if (!catId) throw new Error("unsupported article category");
+  const safeLimit = Math.max(1, Math.min(Number.parseInt(limit, 10) || 10, 20));
+  const raw = await fetchText(`https://dongqiudi.com/api/app/tabs/web/${catId}.json`);
   const data = JSON.parse(raw);
-  const articles = data.articles || [];
-  return articles.slice(0, limit).map((a) => ({
-    id: a.id,
-    title: a.title || "",
-    published_at: a.published_at || "",
-    comments_total: a.comments_total || 0,
-    url: `https://www.dongqiudi.com/articles/${a.id}.html`,
-    share_url: a.share || "",
-    thumb: a.thumb || "",
+  const articles = Array.isArray(data.articles) ? data.articles : [];
+  return articles.slice(0, safeLimit).map(article => ({
+    id: article.id,
+    title: String(article.title || "").slice(0, 300),
+    published_at: article.published_at || "",
+    comments_total: Number(article.comments_total || 0),
+    url: `https://www.dongqiudi.com/articles/${article.id}.html`,
+    share_url: article.share || "",
+    thumb: article.thumb || ""
   }));
 }
 
-/**
- * 抓取单篇文章详情
- * @param {number|string} articleId
- * @returns {Promise<Object|null>}
- */
-async function fetchArticleDetail(articleId) {
-  const url = `https://m.dongqiudi.com/article_share/${articleId}.html`;
-  const html = await fetch(url, { accept: "text/html,application/xhtml+xml" });
+async function loadArticleDetail(id) {
+  const html = await fetchText(`https://m.dongqiudi.com/article_share/${id}.html`, {
+    accept: "text/html,application/xhtml+xml"
+  });
 
-  // 提取 JSON-LD
-  const ldMatch = html.match(
-    /<script\s+type="application\/ld\+json">([\s\S]*?)<\/script>/
-  );
-  let title = "",
-    description = "",
-    images = [],
-    published_at = "";
+  const ldMatch = html.match(/<script\s+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i);
+  let title = "";
+  let description = "";
+  let images = [];
+  let publishedAt = "";
   if (ldMatch) {
     try {
       const ld = JSON.parse(ldMatch[1]);
-      title = ld.title || "";
-      description = ld.description || "";
-      images = ld.images || [];
-      published_at = ld.pubDate || "";
+      title = String(ld.title || ld.headline || "").slice(0, 300);
+      description = String(ld.description || "").slice(0, 1000);
+      images = Array.isArray(ld.images) ? ld.images : (ld.image ? [ld.image] : []);
+      images = images.filter(image => /^https:\/\//i.test(String(image))).slice(0, 20);
+      publishedAt = ld.pubDate || ld.datePublished || "";
     } catch (_) {}
   }
 
-  // 提取正文
   const textBlocks = html.match(/>([^<]{30,})</g) || [];
   const seen = new Set();
   const contentLines = [];
-  const skipKw = [
+  const skipKeywords = [
     "function(", "window.", "document.", "require(", "module.",
     "_hmt", "sensorsInit", "vConsole", "new Image(", "if(typeof"
   ];
+  let contentLength = 0;
   for (const block of textBlocks) {
-    let text = block.slice(1, -1).trim();
-    text = text.replace(/&nbsp;/g, " ").replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">").replace(/&amp;/g, "&");
-    if (text.startsWith("{") || text.startsWith("//")) continue;
-    if (skipKw.some((kw) => text.includes(kw))) continue;
-    if (seen.has(text)) continue;
-    seen.add(text);
-    contentLines.push(text);
+    const value = decodeEntities(block.slice(1, -1).trim());
+    if (!value || value.startsWith("{") || value.startsWith("//")) continue;
+    if (skipKeywords.some(keyword => value.includes(keyword))) continue;
+    if (seen.has(value)) continue;
+    seen.add(value);
+    contentLines.push(value);
+    contentLength += value.length;
+    if (contentLength > 100000) break;
   }
-  const content = contentLines.join("\n\n");
 
   return {
-    id: articleId,
+    id,
     title,
     description,
-    content,
+    content: contentLines.join("\n\n").slice(0, 100000),
     images,
-    published_at,
-    url: `https://www.dongqiudi.com/articles/${articleId}.html`,
+    published_at: publishedAt,
+    url: `https://www.dongqiudi.com/articles/${id}.html`
   };
 }
 
-/**
- * 获取热点文章（含详情），带缓存
- * @param {string} category
- * @param {number} limit
- * @returns {Promise<Array>}
- */
-/**
- * 预热所有分类缓存（启动时+定时调用）— 只抓列表，不抓详情
- */
-async function warmupCache() {
-  const cats = ["toutiao", "kuaixun", "shendu", "yingchao", "xijia", "yijia", "dejia"];
-  for (const cat of cats) {
-    try { await fetchHotArticles(cat, 20); } catch (_) {}
-  }
+async function fetchArticleDetail(articleId) {
+  const id = cleanArticleId(articleId);
+  if (!id) throw new Error("invalid article ID");
+  const cached = cachedValue(detailCache, id, DETAIL_CACHE_TTL_MS);
+  if (cached) return cached;
+
+  return singleFlight(`detail:${id}`, async () => {
+    try {
+      const detail = await loadArticleDetail(id);
+      detailCache.set(id, { ts: Date.now(), data: detail });
+      return detail;
+    } catch (error) {
+      const stale = detailCache.get(id);
+      if (stale) {
+        console.warn(`[articles] serving stale detail ${id}:`, error.message);
+        return stale.data;
+      }
+      throw error;
+    }
+  });
 }
 
-/**
- * 获取热点文章列表（不含正文详情，速度快）
- * 正文在用户点击时通过 /api/articles/:id 按需加载
- */
 async function fetchHotArticles(category = "toutiao", limit = 6) {
-  const cacheKey = `${category}_${limit}`;
-  const cached = _cache[cacheKey];
-  if (cached && Date.now() - cached.ts < CACHE_TTL) {
-    return cached.data;
-  }
+  if (!CATEGORY_MAP[category]) throw new Error("unsupported article category");
+  const safeLimit = Math.max(1, Math.min(Number.parseInt(limit, 10) || 6, 20));
+  const cacheKey = `${category}:${safeLimit}`;
+  const cached = cachedValue(listCache, cacheKey, LIST_CACHE_TTL_MS);
+  if (cached) return cached;
 
-  const list = await fetchArticleList(category, limit);
-  // 只返回列表数据，不抓详情——正文在点击时按需加载
-  const articles = list.map((a) => ({
-    id: a.id,
-    title: a.title || "",
-    description: "", // 正文按需加载
-    content: "",
-    images: [],      // 配图按需加载
-    published_at: a.published_at || "",
-    url: `https://www.dongqiudi.com/articles/${a.id}.html`,
-    thumb: a.thumb || "",
-    cover: a.thumb || "",
-    comments_total: a.comments_total || 0,
-  }));
-
-  _cache[cacheKey] = { ts: Date.now(), data: articles };
-  return articles;
+  return singleFlight(`list:${cacheKey}`, async () => {
+    try {
+      const list = await fetchArticleList(category, safeLimit);
+      const articles = list.map(article => ({
+        id: article.id,
+        title: article.title,
+        description: "",
+        content: "",
+        images: [],
+        published_at: article.published_at,
+        url: article.url,
+        thumb: article.thumb,
+        cover: article.thumb,
+        comments_total: article.comments_total
+      }));
+      listCache.set(cacheKey, { ts: Date.now(), data: articles });
+      return articles;
+    } catch (error) {
+      const stale = listCache.get(cacheKey);
+      if (stale) {
+        console.warn(`[articles] serving stale list ${cacheKey}:`, error.message);
+        return stale.data;
+      }
+      throw error;
+    }
+  });
 }
 
-module.exports = { fetchArticleList, fetchArticleDetail, fetchHotArticles, warmupCache, CATEGORY_MAP };
+async function warmupCache() {
+  const categories = Object.keys(CATEGORY_MAP);
+  const results = await Promise.allSettled(categories.map(category => fetchHotArticles(category, 20)));
+  const failed = results.filter(result => result.status === "rejected");
+  if (failed.length) console.warn(`[articles] warmup failed for ${failed.length}/${categories.length} categories`);
+}
+
+module.exports = {
+  CATEGORY_MAP,
+  fetchArticleList,
+  fetchArticleDetail,
+  fetchHotArticles,
+  warmupCache
+};
