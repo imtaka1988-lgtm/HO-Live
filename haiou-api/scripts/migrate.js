@@ -20,6 +20,12 @@ async function indexExists(connection, tableName, indexName) {
   return rows.length > 0;
 }
 
+async function addColumnIfMissing(connection, tableName, columnName, definition) {
+  if (await columnExists(connection, tableName, columnName)) return;
+  await connection.query(`ALTER TABLE \`${tableName}\` ADD COLUMN \`${columnName}\` ${definition}`);
+  console.log(`[migration] added ${tableName}.${columnName}`);
+}
+
 async function addIndexIfMissing(connection, tableName, indexName, columnsSql) {
   if (await indexExists(connection, tableName, indexName)) return;
   await connection.query(`ALTER TABLE \`${tableName}\` ADD INDEX \`${indexName}\` (${columnsSql})`);
@@ -45,11 +51,17 @@ async function migrate() {
     await connection.query(
       "CREATE TABLE IF NOT EXISTS schema_migrations (name VARCHAR(190) NOT NULL PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
+    await connection.query(
+      "CREATE TABLE IF NOT EXISTS admins (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, username VARCHAR(80) NOT NULL, password_hash VARCHAR(255) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_admin_username (username)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
 
-    if (!(await columnExists(connection, "rooms", "anchor_avatar"))) {
-      await connection.query("ALTER TABLE rooms ADD COLUMN anchor_avatar VARCHAR(500) NOT NULL DEFAULT ''");
-      console.log("[migration] added rooms.anchor_avatar");
-    }
+    await addColumnIfMissing(connection, "rooms", "anchor_avatar", "VARCHAR(500) NOT NULL DEFAULT ''");
+    await addColumnIfMissing(connection, "room_streams", "provider", "VARCHAR(50) NOT NULL DEFAULT 'manual'");
+    await addColumnIfMissing(connection, "room_streams", "mode", "VARCHAR(50) NOT NULL DEFAULT 'room_fixed'");
+    await addColumnIfMissing(connection, "room_streams", "app_name", "VARCHAR(100) NOT NULL DEFAULT 'live'");
+    await addColumnIfMissing(connection, "room_streams", "stream_name", "VARCHAR(255) NOT NULL DEFAULT ''");
+    await addColumnIfMissing(connection, "room_streams", "device_policy", "VARCHAR(50) NOT NULL DEFAULT 'auto'");
+    await addColumnIfMissing(connection, "room_streams", "remark", "VARCHAR(500) NOT NULL DEFAULT ''");
 
     await connection.query(
       "CREATE TABLE IF NOT EXISTS anchors (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, room_id INT UNSIGNED NOT NULL, username VARCHAR(64) NOT NULL, password_hash VARCHAR(255) NOT NULL, display_name VARCHAR(100) NOT NULL DEFAULT '', status VARCHAR(24) NOT NULL DEFAULT 'active', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, UNIQUE KEY uniq_anchor_room (room_id), UNIQUE KEY uniq_anchor_username (username), KEY idx_anchor_status (status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
@@ -93,7 +105,7 @@ async function migrate() {
   }
 }
 
-migrate().catch(err => {
-  console.error("[migration] failed", err);
+migrate().catch(error => {
+  console.error("[migration] failed", error);
   process.exitCode = 1;
 });
