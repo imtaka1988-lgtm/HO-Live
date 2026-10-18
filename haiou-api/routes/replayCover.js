@@ -1,34 +1,34 @@
 const express = require("express");
 const https = require("https");
-const http = require("http");
 
 const router = express.Router();
+const MAX_IMAGE_BYTES = Number.parseInt(process.env.REPLAY_COVER_MAX_BYTES || "10485760", 10) || 10485760;
+const REQUEST_TIMEOUT_MS = Number.parseInt(process.env.REPLAY_COVER_TIMEOUT_MS || "9000", 10) || 9000;
+const agent = new https.Agent({ keepAlive: true, maxSockets: 10, timeout: REQUEST_TIMEOUT_MS });
 
 function isAllowedCoverUrl(raw) {
   try {
-    const u = new URL(raw);
-    if (!/^https?:$/.test(u.protocol)) return false;
-    return /(^|\.)hdslb\.com$/i.test(u.hostname);
-  } catch (e) {
+    const url = new URL(raw);
+    return url.protocol === "https:" && /(^|\.)hdslb\.com$/i.test(url.hostname);
+  } catch (_) {
     return false;
   }
 }
 
 function normalizeUrl(raw) {
-  if (!raw) return "";
-  if (raw.startsWith("//")) return "https:" + raw;
-  if (raw.startsWith("http://")) return "https://" + raw.slice(7);
-  return raw;
+  const value = String(raw || "").trim();
+  if (value.startsWith("//")) return `https:${value}`;
+  if (value.startsWith("http://")) return `https://${value.slice(7)}`;
+  return value;
 }
 
 function targetFromRequest(req) {
-  const path = String(req.query.path || "").trim();
-  if (path) {
-    if (!path.startsWith("/bfs/")) return "";
-    if (path.includes("..")) return "";
-    return "https://i2.hdslb.com" + path;
+  const requestedPath = String(req.query.path || "").trim();
+  if (requestedPath) {
+    if (!requestedPath.startsWith("/bfs/") || requestedPath.includes("..")) return "";
+    return `https://i2.hdslb.com${requestedPath}`;
   }
-  return normalizeUrl(String(req.query.url || ""));
+  return normalizeUrl(req.query.url);
 }
 
 router.get("/", (req, res) => {
@@ -37,30 +37,60 @@ router.get("/", (req, res) => {
     return res.status(400).json({ ok: false, error: "封面地址不允许" });
   }
 
-  const client = target.startsWith("https://") ? https : http;
-  const proxyReq = client.get(target, {
-    timeout: 9000,
+  const proxyRequest = https.get(target, {
+    agent,
+    timeout: REQUEST_TIMEOUT_MS,
     headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
-      "Referer": "https://www.bilibili.com/",
-      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+      "User-Agent": "HO-Live/1.0",
+      Referer: "https://www.bilibili.com/",
+      Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8"
     }
-  }, proxyRes => {
-    if (proxyRes.statusCode < 200 || proxyRes.statusCode >= 300) {
-      proxyRes.resume();
+  }, proxyResponse => {
+    if (proxyResponse.statusCode < 200 || proxyResponse.statusCode >= 300) {
+      proxyResponse.resume();
       return res.status(502).json({ ok: false, error: "封面拉取失败" });
     }
 
-    const contentType = proxyRes.headers["content-type"] || "image/jpeg";
+    const contentType = String(proxyResponse.headers["content-type"] || "").split(";")[0].trim().toLowerCase();
+    if (!contentType.startsWith("image/")) {
+      proxyResponse.resume();
+      return res.status(502).json({ ok: false, error: "上游返回的不是图片" });
+    }
+
+    const declaredLength = Number.parseInt(proxyResponse.headers["content-length"] || "0", 10) || 0;
+    if (declaredLength > MAX_IMAGE_BYTES) {
+      proxyResponse.resume();
+      return res.status(413).json({ ok: false, error: "封面图片过大" });
+    }
+
+    let transferred = 0;
+    let aborted = false;
     res.setHeader("Content-Type", contentType);
-    res.setHeader("Cache-Control", "public, max-age=86400");
-    proxyRes.pipe(res);
+    res.setHeader("Cache-Control", "public, max-age=604800, stale-while-revalidate=86400");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    if (declaredLength > 0) res.setHeader("Content-Length", String(declaredLength));
+
+    proxyResponse.on("data", chunk => {
+      transferred += chunk.length;
+      if (transferred > MAX_IMAGE_BYTES && !aborted) {
+        aborted = true;
+        proxyResponse.destroy(new Error("replay cover too large"));
+        if (!res.headersSent) res.status(413).json({ ok: false, error: "封面图片过大" });
+        else res.destroy();
+      }
+    });
+    proxyResponse.on("error", () => {
+      if (!res.headersSent) res.status(502).json({ ok: false, error: "封面代理失败" });
+      else res.destroy();
+    });
+    proxyResponse.pipe(res);
   });
 
-  proxyReq.on("timeout", () => proxyReq.destroy(new Error("封面请求超时")));
-  proxyReq.on("error", () => {
+  proxyRequest.on("timeout", () => proxyRequest.destroy(new Error("封面请求超时")));
+  proxyRequest.on("error", () => {
     if (!res.headersSent) res.status(502).json({ ok: false, error: "封面代理失败" });
   });
+  req.on("aborted", () => proxyRequest.destroy());
 });
 
 module.exports = router;

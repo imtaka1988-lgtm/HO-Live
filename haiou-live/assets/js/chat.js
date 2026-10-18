@@ -288,7 +288,7 @@ export function initChatSocket(roomId, options = {}) {
   setInputState('connecting');
 
   const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const url = `${protocol}//${location.host}/ws/chat?roomId=${encodeURIComponent(roomId)}&token=${encodeURIComponent(token)}`;
+  const url = `${protocol}//${location.host}/ws/chat?roomId=${encodeURIComponent(roomId)}`;
 
   const ws = new WebSocket(url);
   chatWs = ws;
@@ -296,6 +296,12 @@ export function initChatSocket(roomId, options = {}) {
   ws.onopen = () => {
     if (chatWs !== ws) return;
     reconnectAttempts = 0;
+    try {
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    } catch (e) {
+      ws.close();
+      return;
+    }
     console.log('[Chat] WebSocket connected', currentRoomId);
   };
 

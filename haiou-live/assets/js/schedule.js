@@ -1,21 +1,28 @@
 /**
  * 海鸥直播 — 赛事赛程页
- * 数据来源：GET /api/schedule（ESPN 15天赛程）
+ * 数据来源：GET /api/schedule（北京时间）
  */
 
 import { href, esc } from './config.js';
 import { mobileFloatAd, bindFloatBarEvents } from './ui.js';
 
+function scoreText(m) {
+  if (m.homeScore === '' || m.homeScore == null || m.awayScore === '' || m.awayScore == null) return '';
+  return ` ${esc(m.homeScore)}-${esc(m.awayScore)}`;
+}
+
 function statusBadge(m) {
   if (m.status === 'STATUS_IN_PROGRESS') {
-    return `<span class="wc-status is-live">🔴 LIVE ${esc(m.detail || '')}</span>`;
+    return `<span class="wc-status is-live">🔴 LIVE ${esc(m.detail || '')}${scoreText(m)}</span>`;
   }
-  // ESPN 足球用 STATUS_FULL_TIME，篮球用 STATUS_FINAL，还有其他变体
   if (m.status === 'STATUS_FINAL' || m.status === 'STATUS_FULL_TIME' || m.status === 'STATUS_FULL') {
-    return `<span class="wc-status is-end">完赛</span>`;
+    return `<span class="wc-status is-end">完赛${scoreText(m)}</span>`;
   }
   if (m.status === 'STATUS_HALFTIME') {
-    return `<span class="wc-status is-live">⏸️ 中场</span>`;
+    return `<span class="wc-status is-live">⏸️ 中场${scoreText(m)}</span>`;
+  }
+  if (m.status === 'STATUS_DELAYED') {
+    return '<span class="wc-status is-wait">延迟</span>';
   }
   return `<span class="wc-status is-wait">${esc(m.time || '--:--')}</span>`;
 }
@@ -42,7 +49,7 @@ function renderPcSchedule(days) {
             </div>
             <div class="wc-card-meta">
               <span>${statusBadge(m)}</span>
-              <span>${esc(m.venue || '')}</span>
+              <span title="比赛场馆">${esc(m.venue || '')}</span>
             </div>
           </div>
         `).join('')}
@@ -76,9 +83,23 @@ function renderMobileSchedule(days) {
   `).join('');
 }
 
+function formatUpdated(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).format(date);
+}
+
 async function loadSchedule() {
   try {
-    const res = await fetch(href('api/schedule') + '?t=' + Date.now());
+    const res = await fetch(href('api/schedule'));
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data.ok) throw new Error('Invalid');
@@ -87,13 +108,12 @@ async function loadSchedule() {
     const total = data.total || 0;
     const liveCount = data.live || 0;
 
-    // 更新统计
     const pcTotal = document.querySelector('#wcTotalPc');
     const pcLive = document.querySelector('#wcLivePc');
     const mobileTotal = document.querySelector('#wcTotalMobile');
     if (pcTotal) pcTotal.textContent = total + ' 场';
-    if (pcLive && liveCount > 0) pcLive.innerHTML = `<span class="wc-live-dot"></span>${liveCount} 场进行中`;
-    if (mobileTotal) mobileTotal.textContent = '共 ' + total + ' 场 · ' + (data.updated || '').slice(0, 16);
+    if (pcLive) pcLive.innerHTML = liveCount > 0 ? `<span class="wc-live-dot"></span>${liveCount} 场进行中` : '';
+    if (mobileTotal) mobileTotal.textContent = '共 ' + total + ' 场 · ' + formatUpdated(data.updated);
 
     const pcBody = document.querySelector('#wcSchedulePc');
     const mobileBody = document.querySelector('#wcScheduleMobile');
