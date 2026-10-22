@@ -28,6 +28,18 @@ var fallback = {
 };
 export var state = { cfg: { ...fallback }, q: {}, initDone: false };
 
+function getSiteBasePath() {
+  var pathname = window.location && window.location.pathname ? window.location.pathname : '/';
+  var match = pathname.match(/^(\/[^/]+)\/(?:.*)$/);
+  return match ? match[1] : '';
+}
+
+export function getApiBase() {
+  if (window.__APP_API_BASE__) return String(window.__APP_API_BASE__).replace(/\/$/, '');
+  var base = getSiteBasePath();
+  return base ? (base + '/api') : '/api';
+}
+
 // ===================== 页面数据 =====================
 
 export var base = (function () {
@@ -48,13 +60,15 @@ export function href(path) {
   if (!path) return '#';
   if (/^javascript:/i.test(path)) return '#';
   if (/^data:/i.test(path)) return '#';
-  if (path === 'index.html' || path === './index.html' || path === '/index.html') return '/';
+  if (path === 'index.html' || path === './index.html' || path === '/index.html') return getSiteBasePath() ? (getSiteBasePath() + '/') : '/';
   if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith('#')) return path;
-  if (path.startsWith('/')) return path;
+  if (path.startsWith('/')) {
+    return getSiteBasePath() ? (getSiteBasePath() + path) : path;
+  }
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
-  return '/' + path;
+  return getSiteBasePath() ? (getSiteBasePath() + '/' + path) : '/' + path;
 }
 
 export function asset(path) {
@@ -63,10 +77,12 @@ export function asset(path) {
   if (/^(https?:)?\/\//i.test(path)) return path;
   if (/^data:image\/(?:gif|png|jpe?g|webp|svg\+xml);/i.test(path)) return path;
   if (/^data:/i.test(path)) return '';
-  if (path.startsWith('/')) return path;
+  if (path.startsWith('/')) {
+    return getSiteBasePath() ? (getSiteBasePath() + path) : path;
+  }
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
-  return '/' + path;
+  return getSiteBasePath() ? (getSiteBasePath() + '/' + path) : '/' + path;
 }
 
 // ===================== HTML 转义 =====================
@@ -174,7 +190,8 @@ export async function loadConfig() {
   // 2. 从后端 API 获取 rooms（含 streams）。非本地环境失败时，不再沿用 JSON 里的旧房间/旧播放源。
   var roomsLoadedFromApi = false;
   try {
-    var apiRes = await fetch('/api/public/rooms?t=' + Date.now());
+    var apiBase = getApiBase();
+    var apiRes = await fetch(apiBase + '/public/rooms?t=' + Date.now());
     if (!apiRes.ok) throw new Error('HTTP ' + apiRes.status);
     var apiData = await apiRes.json();
     if (!apiData.ok || !Array.isArray(apiData.rooms)) throw new Error('invalid rooms response');
@@ -250,3 +267,4 @@ export function filterRoomsForTab(tab) {
   if (tab === 'analysis') return state.cfg.rooms.filter(function (r) { return r.category === 'analysis'; });
   return state.cfg.rooms;
 }
+
