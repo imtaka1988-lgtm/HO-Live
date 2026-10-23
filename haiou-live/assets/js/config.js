@@ -12,6 +12,8 @@
  * 所有模块通过 import { state, $, esc, ... } from './config.js' 使用。
  */
 
+import { getSiteBasePathFromPath } from './site-base-path.mjs';
+
 // ===================== 全局状态 =====================
 
 var fallback = {
@@ -30,8 +32,7 @@ export var state = { cfg: { ...fallback }, q: {}, initDone: false };
 
 function getSiteBasePath() {
   var pathname = window.location && window.location.pathname ? window.location.pathname : '/';
-  var match = pathname.match(/^(\/[^/]+)\/(?:.*)$/);
-  return match ? match[1] : '';
+  return getSiteBasePathFromPath(pathname);
 }
 
 export function getApiBase() {
