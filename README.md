@@ -1,45 +1,41 @@
 # 海鸥直播 / HO-Live
 
-> 当前状态：2026-06-20 服务器稳定同步版。以线上服务器 `/var/www` 当前可运行代码为基准；不要再把实验性改动直接拉到生产目录。
+> **重要：本 README 曾包含 2026-06-20 的历史服务器状态记录。该记录不代表当前服务器、域名或线上版本仍存在或可用。当前没有完成生产部署验证；不要直接照抄其中的旧服务器路径或操作命令。**
 
-## 当前稳定基线
+## 当前代码与恢复点
 
-```text
-服务器线上目录：/var/www
-前端目录：/var/www/haiou-live
-后端服务：haiou-api
-PM2 进程名：haiou-api
-Nginx 域名：s6.lol / www.s6.lol
-API 代理：127.0.0.1:3001
-当前服务器稳定提交：8b00920 fix: make room profile data room-specific (#52)
-```
-
-当前服务器版本已经验证：
+本轮上线准备修复在独立分支和 Draft Pull Request 中进行，尚未合并或部署。
 
 ```text
-Nginx：active running
-PM2：haiou-api online
-磁盘空间：正常
-内存：正常
-IO wait：正常
-公网访问：已恢复
+修复前提交：740259fa29880cf9bd82bb5c8ade2ca68b09c01d
+修复前备份分支：backup/main-before-readiness-fixes-2026-10-23
+修复分支：fix/production-readiness-2026-10-23
+Pull Request：https://github.com/imtaka1988-lgtm/HO-Live/pull/56
 ```
 
-## 生产操作原则
+恢复和回退说明见 [docs/BACKUP_AND_ROLLBACK.md](docs/BACKUP_AND_ROLLBACK.md)。
 
-```text
-1. 线上可用优先，不做大范围重构。
-2. 不在 /var/www 直接执行 git reset --hard。
-3. 不在 /var/www 直接粗暴 git pull。
-4. 前端小改动只更新对应文件。
-5. 后端没改时，不重启 PM2。
-6. 任何部署前先备份、先看 diff、再执行。
-7. GitHub main 必须保持和线上稳定代码一致。
-```
+## 项目结构
 
-## 禁止提交到 GitHub 的内容
+- `haiou-live/`：静态网页与前端资源。
+- `haiou-api/`：Node.js API、WebSocket 聊天服务和数据库脚本。
+- `docs/SERVER_MIGRATION.md`：新服务器安装、旧库恢复、环境配置、验证和上线清单。
 
-以下内容不能进入版本库：
+## 新装与迁移
+
+请先阅读 [服务器迁移手册](docs/SERVER_MIGRATION.md)。新安装与恢复旧数据库是两条不同流程：
+
+- 新安装：创建空数据库，运行 `npm run bootstrap-schema`，再运行 `npm run migrate`。
+- 从旧服务器迁移：先导入经过校验的数据库备份，再运行 `npm run migrate`。
+- 运行完整 API 检查：进入 `haiou-api/`，配置好环境变量后执行 `npm ci` 和 `npm run verify`。
+
+这些命令需要 Node.js、MySQL 和合适的数据库权限。本仓库的自动化检查通过并不等于已经完成实际 MySQL 初始化、浏览器端到端验证或正式直播推流测试。
+
+## 备份边界
+
+Git 备份分支保存已提交并受 Git 跟踪的代码文件和历史，不包含运行时 MySQL 数据、未跟踪的上传文件、`.env`、密钥、证书、外部直播服务配置、DNS 或域名注册状态。生产环境存在后，应独立备份数据库和媒体文件，并将秘密保存在受控位置，不能提交到 Git。
+
+禁止提交：
 
 ```text
 .env
@@ -51,60 +47,15 @@ haiou-live/assets/data/replays.local.json
 *.log
 ```
 
-原因：
+## 上线前禁止事项
 
-```text
-.env 包含数据库密码和 JWT_SECRET
-node_modules 是依赖产物
-uploads 是线上运行数据
-bak / tar.gz 是历史备份垃圾
-log 是运行日志
-```
+- 不要直接在 `main` 上试验修复。
+- 不要在未备份数据库前运行迁移。
+- 不要把代码回退当成数据库回退。
+- 不要在未验证源环境、目标环境、备份和回退步骤前执行生产部署。
+- 不要把历史记录中出现的服务器路径、域名或服务状态当作当前事实。
 
-## 安全部署方式
+## 历史记录（仅供参考）
 
-推荐流程：
+旧 README 在 2026-06-20 记录过服务器目录 `/var/www`、域名 `s6.lol / www.s6.lol` 以及一条历史稳定提交。上述信息只反映当时的记录，当前是否仍有效尚未验证。
 
-```bash
-cd /root/HO-Live-temp
-
-git fetch origin
-git status
-git diff --name-only HEAD origin/main
-```
-
-确认只涉及安全文件后，再把具体文件复制到生产目录。示例：
-
-```bash
-cp /root/HO-Live-temp/haiou-live/assets/js/rooms.js /var/www/haiou-live/assets/js/rooms.js
-```
-
-前端静态文件更新后通常不需要重启 PM2。最多检查 Nginx：
-
-```bash
-nginx -t
-systemctl reload nginx
-```
-
-只有后端代码或环境变量变化时，才允许：
-
-```bash
-pm2 restart haiou-api --update-env
-```
-
-## 回退方式
-
-如果前端文件更新后异常，优先回退单个文件，不要整仓重置。
-
-```bash
-cp /var/www/haiou-live/assets/js/rooms.js.bak /var/www/haiou-live/assets/js/rooms.js
-```
-
-如果必须回退 Git 版本，先确认云盘 IO 正常，再执行，且必须备份。
-
-## 当前说明
-
-```text
-2026-06-20：服务器因生产目录强制同步触发云盘 IO 告警，已恢复。
-后续所有同步必须小步、低 IO、可回滚。
-```
