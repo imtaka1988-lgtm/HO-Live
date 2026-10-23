@@ -102,28 +102,57 @@ ODDS_API_KEY
 
 域名变化时，必须同时修改 `CORS_ORIGIN` 和 `CHAT_ALLOWED_ORIGINS`。直播服务回调默认通过 `X-Live-Callback-Key` 请求头传密钥，不建议把密钥放进 URL；只有供应商无法发送请求头时，才临时启用 `LIVE_CALLBACK_ALLOW_QUERY_KEY=1`。
 
-## 5. 恢复数据库并执行迁移
+## 5. 数据库初始化或恢复，并执行迁移
 
-先创建数据库和迁移账号，再导入：
+### 全新安装（没有旧数据库备份）
+
+先创建一个空数据库，并创建仅允许从 API 服务器连接的数据库账号。数据库名应与 `.env` 中的 `DB_NAME` 一致：
+
+```sql
+CREATE DATABASE haiou_live CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- 按实际 API 服务器来源限制主机部分；不要无条件开放到 '%'。
+CREATE USER 'haiou_app'@'127.0.0.1' IDENTIFIED BY '替换为强数据库密码';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX
+  ON haiou_live.* TO 'haiou_app'@'127.0.0.1';
+```
+
+把数据库连接参数安全地填入 `haiou-api/.env`，进入 API 目录后按顺序执行：
+
+```bash
+cd /var/www/haiou-api
+npm ci --omit=dev
+npm run bootstrap-schema
+npm run migrate
+npm run verify
+```
+
+`npm run bootstrap-schema` 只负责创建全新安装所需的核心表：`rooms`、`room_streams`、`users` 和 `chat_messages`。它使用 `CREATE TABLE IF NOT EXISTS`，不会删除现有表或行，但不会自动修复已存在的错误表结构；不要把它当作旧库修复工具。随后 `npm run migrate` 会创建管理员和相关扩展表，并补充可增量迁移的字段及索引。
+
+首次安装后需要通过 `npm run create-admin` 创建管理员，并在后台添加直播房间和播放线路。不要把真实密码提交到 Git。
+
+### 从旧服务器恢复数据
+
+先创建目标数据库，再将经过校验的旧库备份导入；**不要在导入前对一个已有但尚未备份的数据库进行结构修改**：
 
 ```bash
 mysql haiou_live < /var/backups/ho-live/haiou_live.sql
 ```
 
-迁移需要临时拥有 `ALTER`、`CREATE` 和 `INDEX` 权限：
+恢复后再运行迁移：
 
 ```bash
 cd /var/www/haiou-api
 npm run migrate
+npm run verify
 ```
 
-迁移会幂等地补齐主播、推流配置、用户关注、经验日志、站内信、直播回调和 `room_streams` 扩展字段。执行成功后，可把 API 运行账号收紧为业务所需的 `SELECT/INSERT/UPDATE/DELETE` 权限。
+迁移需要临时拥有 `ALTER`、`CREATE` 和 `INDEX` 权限。执行成功并完成验证后，可把 API 运行账号收紧为业务所需的 `SELECT/INSERT/UPDATE/DELETE` 权限。
 
 若数据库备份中没有可用管理员，使用一次性环境变量创建或重置管理员：
 
 ```bash
-ADMIN_USERNAME=admin \
-ADMIN_PASSWORD='替换为至少12位的强密码' \
+ADMIN_USERNAME=admin \\
+ADMIN_PASSWORD='替换为至少12位的强密码' \\
 npm run create-admin
 ```
 
