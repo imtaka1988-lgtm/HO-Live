@@ -1,11 +1,14 @@
 /** 海鸥直播 V4.2 — 首页与直播列表模块 */
-import { state, href, asset, esc, getHost, filterRoomsForTab, currentTab } from './config.js';
+import { state, href, asset, esc, getHost, filterRoomsForTab, currentTab, getApiBase } from './config.js';
+import { roomListSignature } from './room-list-signature.mjs';
 import { liveCard, horizontalMatchCard, mobileFloatAd, bindFloatBarEvents } from './ui.js';
 import { renderHomeReplaySection, initHomeReplays } from './replays.js';
 
 const HERO_CARD_LIMIT = 5;
 const HERO_REFRESH_MS = 30000;
+const ROOM_LIST_REFRESH_MS = 30000;
 let heroRefreshInFlight = false;
+let roomListRefreshInFlight = false;
 
 function roomSortValue(room) {
   const n = Number(room && room.sort !== undefined ? room.sort : 0);
@@ -177,6 +180,39 @@ function startHeroAutoRefresh() {
   window._heroAutoRefreshTimer = setInterval(refreshHeroRooms, HERO_REFRESH_MS);
 }
 
+async function refreshLiveRoomList() {
+  if (roomListRefreshInFlight || !document.body || document.body.dataset.page !== 'live') return;
+  roomListRefreshInFlight = true;
+  const previousSignature = roomListSignature(filterRoomsForTab());
+
+  try {
+    const res = await fetch(getApiBase() + '/public/rooms?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.ok || !Array.isArray(data.rooms)) return;
+
+    state.cfg.rooms = normalizeApiRooms(data.rooms);
+    const visibleRooms = filterRoomsForTab();
+    if (previousSignature === roomListSignature(visibleRooms)) return;
+
+    const html = visibleRooms.map(room => liveCard(room)).join('');
+    const pcGrid = document.querySelector('#pcLiveRoomsGrid');
+    const mobileGrid = document.querySelector('#mobileLiveRoomsGrid');
+    if (pcGrid) pcGrid.innerHTML = html;
+    if (mobileGrid) mobileGrid.innerHTML = html;
+  } catch (e) {
+    console.warn('[Live list] refresh failed', e);
+  } finally {
+    roomListRefreshInFlight = false;
+  }
+}
+
+function startLiveRoomListAutoRefresh() {
+  if (window._liveRoomListRefreshTimer) clearInterval(window._liveRoomListRefreshTimer);
+  void refreshLiveRoomList();
+  window._liveRoomListRefreshTimer = setInterval(refreshLiveRoomList, ROOM_LIST_REFRESH_MS);
+}
+
 export function renderHome() {
   const cfg = state.cfg;
   const heroRooms = getHeroRooms(cfg.rooms);
@@ -205,6 +241,6 @@ function renderMobileHome(){
 
 export function renderLive(){
   const labels=[['all','全部'],['football','足球'],['basketball','篮球'],['analysis','分析']];
-  const rooms=filterRoomsForTab();setTimeout(bindFloatBarEvents,100);
-  return `<main class="page-shell pc-only"><div class="container"><div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div><div class="live-grid">${rooms.map(r=>liveCard(r)).join('')}</div></div></main><main class="mobile-page"><div class="m-live-grid" style="padding-top:14px">${rooms.map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
+  const rooms=filterRoomsForTab();setTimeout(bindFloatBarEvents,100);setTimeout(startLiveRoomListAutoRefresh,0);
+  return `<main class="page-shell pc-only"><div class="container"><div class="tab-row">${labels.map(([k,t])=>`<a class="${(currentTab===k||(!new URLSearchParams(location.search).get('tab')&&k==='all'))?'is-active':''}" href="${href(`pages/live.html${k==='all'?'':`?tab=${k}`}`)}">${t}</a>`).join('')}</div><div class="live-grid" id="pcLiveRoomsGrid">${rooms.map(r=>liveCard(r)).join('')}</div></div></main><main class="mobile-page"><div class="m-live-grid" id="mobileLiveRoomsGrid" style="padding-top:14px">${rooms.map(r=>liveCard(r)).join('')}</div>${mobileFloatAd()}</main>`;
 }
