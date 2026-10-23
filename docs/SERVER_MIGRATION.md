@@ -151,8 +151,8 @@ npm run verify
 若数据库备份中没有可用管理员，使用一次性环境变量创建或重置管理员：
 
 ```bash
-ADMIN_USERNAME=admin \\
-ADMIN_PASSWORD='替换为至少12位的强密码' \\
+ADMIN_USERNAME=admin \
+ADMIN_PASSWORD='替换为至少12位的强密码' \
 npm run create-admin
 ```
 
