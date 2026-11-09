@@ -12,6 +12,8 @@
  * 所有模块通过 import { state, $, esc, ... } from './config.js' 使用。
  */
 
+import { getSiteBasePathFromModuleUrl } from './site-base-path.mjs';
+
 // ===================== 全局状态 =====================
 
 var fallback = {
@@ -28,16 +30,11 @@ var fallback = {
 };
 export var state = { cfg: { ...fallback }, q: {}, initDone: false };
 
-function getSiteBasePath() {
-  var pathname = window.location && window.location.pathname ? window.location.pathname : '/';
-  var match = pathname.match(/^(\/[^/]+)\/(?:.*)$/);
-  return match ? match[1] : '';
-}
+const siteBasePath = getSiteBasePathFromModuleUrl(import.meta.url);
 
 export function getApiBase() {
   if (window.__APP_API_BASE__) return String(window.__APP_API_BASE__).replace(/\/$/, '');
-  var base = getSiteBasePath();
-  return base ? (base + '/api') : '/api';
+  return siteBasePath + '/api';
 }
 
 // ===================== 页面数据 =====================
@@ -60,15 +57,13 @@ export function href(path) {
   if (!path) return '#';
   if (/^javascript:/i.test(path)) return '#';
   if (/^data:/i.test(path)) return '#';
-  if (path === 'index.html' || path === './index.html' || path === '/index.html') return getSiteBasePath() ? (getSiteBasePath() + '/') : '/';
+  if (path === 'index.html' || path === './index.html' || path === '/index.html') return siteBasePath + '/';
   if (/^https?:\/\//i.test(path)) return path;
   if (path.startsWith('#')) return path;
-  if (path.startsWith('/')) {
-    return getSiteBasePath() ? (getSiteBasePath() + path) : path;
-  }
+  if (path.startsWith('/')) return siteBasePath + path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
-  return getSiteBasePath() ? (getSiteBasePath() + '/' + path) : '/' + path;
+  return siteBasePath + '/' + path;
 }
 
 export function asset(path) {
@@ -77,12 +72,10 @@ export function asset(path) {
   if (/^(https?:)?\/\//i.test(path)) return path;
   if (/^data:image\/(?:gif|png|jpe?g|webp|svg\+xml);/i.test(path)) return path;
   if (/^data:/i.test(path)) return '';
-  if (path.startsWith('/')) {
-    return getSiteBasePath() ? (getSiteBasePath() + path) : path;
-  }
+  if (path.startsWith('/')) return siteBasePath + path;
   if (path.startsWith('./')) path = path.slice(2);
   while (path.startsWith('../')) path = path.slice(3);
-  return getSiteBasePath() ? (getSiteBasePath() + '/' + path) : '/' + path;
+  return siteBasePath + '/' + path;
 }
 
 // ===================== HTML 转义 =====================
