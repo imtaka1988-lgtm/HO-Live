@@ -55,8 +55,8 @@ cd ho-live-release
 
 git checkout <已审核的提交 SHA>
 
-rsync -a --delete haiou-live/ /var/www/haiou-live/
-rsync -a --delete haiou-api/ /var/www/haiou-api/
+rsync -a --delete --exclude='/uploads/' --exclude='/assets/data/replays.local.json' haiou-live/ /var/www/haiou-live/
+rsync -a --delete --exclude='/.env' --exclude='/node_modules/' haiou-api/ /var/www/haiou-api/
 ```
 
 安装 API 依赖：
@@ -70,7 +70,7 @@ npm ci --omit=dev
 
 ```bash
 cd /var/www/haiou-api
-cp .env.example .env
+test -f .env || cp .env.example .env
 chmod 600 .env
 ```
 

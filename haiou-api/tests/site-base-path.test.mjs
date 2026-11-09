@@ -1,37 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getSiteBasePathFromPath } from "../../haiou-live/assets/js/site-base-path.mjs";
+import { getSiteBasePathFromModuleUrl } from "../../haiou-live/assets/js/site-base-path.mjs";
 
-test("root-domain pages do not become a fake deployment prefix", () => {
-  assert.equal(getSiteBasePathFromPath("/"), "");
-  assert.equal(getSiteBasePathFromPath("/index.html"), "");
-  assert.equal(getSiteBasePathFromPath("/pages/live.html"), "");
-  assert.equal(getSiteBasePathFromPath("/pages/room.html"), "");
-  assert.equal(getSiteBasePathFromPath("/assets/js/main.js"), "");
-  assert.equal(getSiteBasePathFromPath("/api/public/rooms"), "");
-  assert.equal(getSiteBasePathFromPath("/admin/index.html"), "");
+test("root-domain deployments use no prefix even when the module URL is versioned", () => {
+  assert.equal(getSiteBasePathFromModuleUrl("https://example.com/assets/js/config.js?v=1"), "");
 });
 
-test("GitHub Pages project-subpath hosting keeps the repository prefix", () => {
-  assert.equal(getSiteBasePathFromPath("/HO-Live/"), "/HO-Live");
-  assert.equal(getSiteBasePathFromPath("/HO-Live/index.html"), "/HO-Live");
-  assert.equal(getSiteBasePathFromPath("/HO-Live/pages/live.html"), "/HO-Live");
-  assert.equal(getSiteBasePathFromPath("/HO-Live/pages/room.html"), "/HO-Live");
-  assert.equal(getSiteBasePathFromPath("/HO-Live/assets/js/main.js"), "/HO-Live");
+test("GitHub Pages keeps both the repository and front-end directory", () => {
+  const moduleUrl = "https://example.github.io/HO-Live/haiou-live/assets/js/config.js";
+  assert.equal(getSiteBasePathFromModuleUrl(moduleUrl), "/HO-Live/haiou-live");
 });
 
-test("custom subdirectory deployments keep their first path segment", () => {
-  assert.equal(getSiteBasePathFromPath("/stage/pages/live.html"), "/stage");
-  assert.equal(getSiteBasePathFromPath("/preview/index.html"), "/preview");
-});
-
-test("query strings and fragments do not affect the detected prefix", () => {
-  assert.equal(getSiteBasePathFromPath("/pages/live.html?tab=all"), "");
-  assert.equal(getSiteBasePathFromPath("/HO-Live/pages/room.html#player"), "/HO-Live");
-});
-
-test("empty and relative input safely resolve to no prefix", () => {
-  assert.equal(getSiteBasePathFromPath(""), "");
-  assert.equal(getSiteBasePathFromPath("pages/live.html"), "");
-  assert.equal(getSiteBasePathFromPath(null), "");
+test("nested deployments keep the full prefix even when a folder is named pages", () => {
+  const moduleUrl = "https://example.com/stage/pages/assets/js/config.js";
+  assert.equal(getSiteBasePathFromModuleUrl(moduleUrl), "/stage/pages");
 });
